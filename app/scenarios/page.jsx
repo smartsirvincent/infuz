@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
 
-const TYPES = ['情境', '棚拍', '漫畫', '組合', '創意', '精緻時尚', '街頭潮流'];
+const TYPES = ['情境', '棚拍', '創意', '時尚', '街頭潮流', '組合'];
 const EMPTY = { id: '', type: '情境', name: '', prompt: '' };
 
 export default function ScenariosPage() {

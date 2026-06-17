@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
 
+const GENDERS = ['女性', '男性'];
 const EMPTY = {
   id: '', name: '', style: '', reference_image: '',
-  skin_tone: '', hairstyle: '', notes: '',
+  skin_tone: '', hairstyle: '', notes: '', gender: '女性',
 };
 
 export default function ModelsPage() {
@@ -55,7 +56,10 @@ export default function ModelsPage() {
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-mono text-stone-500">{m.id}</div>
-                <div className="text-base font-medium text-stone-900">{m.name}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-medium text-stone-900">{m.name}</span>
+                  {m.gender && <span className={`rounded px-1.5 py-0.5 text-[10px] ${m.gender === '女性' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}`}>{m.gender}</span>}
+                </div>
                 <p className="mt-1 line-clamp-3 text-xs text-stone-600">{m.style}</p>
                 <div className="mt-1 flex gap-2 text-[11px] text-stone-500">
                   {m.skin_tone && <span>膚色: {m.skin_tone}</span>}
@@ -102,6 +106,15 @@ function ModelEditModal({ item, setItem, saving, onSave, onCancel }) {
           </Field>
           <Field label="名稱 *">
             <TextInput value={item.name} onChange={(v) => patch('name', v)} placeholder="例: 小紅" />
+          </Field>
+          <Field label="性別">
+            <select
+              value={item.gender || '女性'}
+              onChange={(e) => patch('gender', e.target.value)}
+              className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-1.5 text-sm"
+            >
+              {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
           </Field>
           <Field label="風格描述" full hint="盡量描述: 性別 / 年齡感 / 身材 / 五官特徵 / 妝感 / 性格 — AI 會用這段保持人物一致">
             <TextArea value={item.style} onChange={(v) => patch('style', v)} rows={5} placeholder="例: 韓系空氣感短髮 20 歲中期亞洲女性..." />

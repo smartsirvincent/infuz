@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   useEntityList, ProductPicker, ModelPicker, ScenarioPicker, ResultPanel,
+  CompositionUploader, GenerationOptions, SwapProductModal,
 } from '@/components/MaterialPickers';
 
 export default function MaterialComboPage() {
@@ -14,14 +15,53 @@ export default function MaterialComboPage() {
   const [topId, setTopId] = useState('');
   const [bottomId, setBottomId] = useState('');
   const [modelId, setModelId] = useState('');
+  const [modelGender, setModelGender] = useState('');
   const [scenarioId, setScenarioId] = useState('');
   const [extraPrompt, setExtraPrompt] = useState('');
+
+  const [compositionRefUrl, setCompositionRefUrl] = useState(null);
+  const [compositionPrompt, setCompositionPrompt] = useState('');
+
+  const [textMode, setTextMode] = useState('none');
+  const [promoInfo, setPromoInfo] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [noFace, setNoFace] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  async function handleGenerate() {
+  const [swapping, setSwapping] = useState(null); // 'top' | 'bottom' | null
+
+  const topProduct = products.items.find((p) => p.id === topId);
+  const bottomProduct = products.items.find((p) => p.id === bottomId);
+
+  async function runGenerate(overrideTop, overrideBottom) {
+    setError('');
+    setGenerating(true);
+    setResult(null);
+    try {
+      const r = await fetch('/api/infuz/generate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'combo',
+          topId: overrideTop || topId,
+          bottomId: overrideBottom || bottomId,
+          modelId, scenarioId,
+          textMode, promoInfo, slogan, noFace,
+          compositionRefUrl, compositionPrompt,
+          extraPrompt,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setResult(d);
+    } catch (e) { setError(e.message); }
+    finally { setGenerating(false); }
+  }
+
+  function handleGenerate() {
     if (!topId || !bottomId || !modelId || !scenarioId) {
       setError('上衣 / 下身 / 模特 / 情境 都必選');
       return;
@@ -30,32 +70,24 @@ export default function MaterialComboPage() {
       setError('上衣和下身不可選同一件');
       return;
     }
-    setError('');
-    setGenerating(true);
-    setResult(null);
-    try {
-      const res = await fetch('/api/infuz/generate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ mode: 'combo', topId, bottomId, modelId, scenarioId, extraPrompt }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setResult(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setGenerating(false);
-    }
+    runGenerate();
   }
 
-  function reset() {
-    setResult(null);
-    setError('');
+  async function handleSwap(newId) {
+    if (swapping === 'top') {
+      setTopId(newId); setSwapping(null);
+      await runGenerate(newId, null);
+    } else if (swapping === 'bottom') {
+      setBottomId(newId); setSwapping(null);
+      await runGenerate(null, newId);
+    }
   }
 
   const loading = products.loading || models.loading || scenarios.loading;
   const dataErr = products.error || models.error || scenarios.error;
+  const productSummary = topProduct && bottomProduct
+    ? `上衣 ${topProduct.name} + 下身 ${bottomProduct.name}`
+    : '';
 
   return (
     <main className="space-y-5">
@@ -64,7 +96,7 @@ export default function MaterialComboPage() {
           <h1 className="text-2xl font-semibold text-stone-900">👯 搭配素材</h1>
           <Link href="/material" className="text-xs text-stone-500 hover:underline">← 切換模式</Link>
         </div>
-        <p className="mt-1 text-sm text-stone-600">挑上衣 + 下身 + 1 模特 + 1 情境,AI 合成 1:1 整套穿搭視覺。</p>
+        <p className="mt-1 text-sm text-stone-600">挑上衣 + 下身 + 1 模特 + 1 情境 → AI 1:1 整套穿搭視覺。</p>
       </div>
 
       {loading && <div className="card text-center text-stone-500">載入資料庫中…</div>}
@@ -79,7 +111,7 @@ export default function MaterialComboPage() {
                 products={products.items}
                 value={topId}
                 onChange={setTopId}
-                categoryFilter="上衣"
+                lockCategory="上衣"
               />
             </div>
             <div className="card border-amber-200 bg-amber-50/30">
@@ -88,18 +120,39 @@ export default function MaterialComboPage() {
                 products={products.items}
                 value={bottomId}
                 onChange={setBottomId}
-                categoryFilter="下身"
+                lockCategory="下身"
               />
             </div>
           </div>
 
           <div className="card">
-            <ModelPicker models={models.items} value={modelId} onChange={setModelId} />
+            <ModelPicker
+              models={models.items}
+              value={modelId}
+              onChange={setModelId}
+              genderFilter={modelGender}
+              onGenderChange={setModelGender}
+            />
           </div>
 
           <div className="card">
             <ScenarioPicker scenarios={scenarios.items} value={scenarioId} onChange={setScenarioId} />
           </div>
+
+          <CompositionUploader
+            uploadedUrl={compositionRefUrl}
+            setUploadedUrl={setCompositionRefUrl}
+            compositionPrompt={compositionPrompt}
+            setCompositionPrompt={setCompositionPrompt}
+          />
+
+          <GenerationOptions
+            textMode={textMode} setTextMode={setTextMode}
+            promoInfo={promoInfo} setPromoInfo={setPromoInfo}
+            slogan={slogan} setSlogan={setSlogan}
+            noFace={noFace} setNoFace={setNoFace}
+            productSummary={productSummary}
+          />
 
           <div className="card">
             <label className="label text-xs">額外視覺指示（選填）</label>
@@ -126,7 +179,34 @@ export default function MaterialComboPage() {
             </button>
           </div>
 
-          <ResultPanel result={result} onReset={reset} generating={generating} error={null} />
+          <ResultPanel
+            result={result}
+            onReset={() => { setResult(null); setError(''); }}
+            generating={generating}
+            error={null}
+            onSwapTop={() => setSwapping('top')}
+            onSwapBottom={() => setSwapping('bottom')}
+            mode="combo"
+          />
+
+          <SwapProductModal
+            open={swapping === 'top'}
+            products={products.items}
+            currentId={topId}
+            lockCategory="上衣"
+            onPick={handleSwap}
+            onCancel={() => setSwapping(null)}
+            title="🔁 換上衣再生"
+          />
+          <SwapProductModal
+            open={swapping === 'bottom'}
+            products={products.items}
+            currentId={bottomId}
+            lockCategory="下身"
+            onPick={handleSwap}
+            onCancel={() => setSwapping(null)}
+            title="🔁 換下身再生"
+          />
         </>
       )}
     </main>

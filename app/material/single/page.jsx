@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   useEntityList, ProductPicker, ModelPicker, ScenarioPicker, ResultPanel,
+  CompositionUploader, GenerationOptions, SwapProductModal,
 } from '@/components/MaterialPickers';
 
 export default function MaterialSinglePage() {
@@ -13,40 +14,65 @@ export default function MaterialSinglePage() {
 
   const [productId, setProductId] = useState('');
   const [modelId, setModelId] = useState('');
+  const [modelGender, setModelGender] = useState('');
   const [scenarioId, setScenarioId] = useState('');
   const [extraPrompt, setExtraPrompt] = useState('');
+
+  // 模仿構圖
+  const [compositionRefUrl, setCompositionRefUrl] = useState(null);
+  const [compositionPrompt, setCompositionPrompt] = useState('');
+
+  // 生圖選項
+  const [textMode, setTextMode] = useState('none');
+  const [promoInfo, setPromoInfo] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [noFace, setNoFace] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  async function handleGenerate() {
-    if (!productId || !modelId || !scenarioId) {
-      setError('產品 / 模特 / 情境 都必選');
-      return;
-    }
+  // 換產品 modal
+  const [swapping, setSwapping] = useState(false);
+
+  const selectedProduct = products.items.find((p) => p.id === productId);
+
+  async function runGenerate(overrideProductId) {
     setError('');
     setGenerating(true);
     setResult(null);
     try {
-      const res = await fetch('/api/infuz/generate', {
+      const r = await fetch('/api/infuz/generate', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ mode: 'single', productId, modelId, scenarioId, extraPrompt }),
+        body: JSON.stringify({
+          mode: 'single',
+          productId: overrideProductId || productId,
+          modelId, scenarioId,
+          textMode, promoInfo, slogan, noFace,
+          compositionRefUrl, compositionPrompt,
+          extraPrompt,
+        }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setResult(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setGenerating(false);
-    }
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setResult(d);
+    } catch (e) { setError(e.message); }
+    finally { setGenerating(false); }
   }
 
-  function reset() {
-    setResult(null);
-    setError('');
+  function handleGenerate() {
+    if (!productId || !modelId || !scenarioId) {
+      setError('產品 / 模特 / 情境 都必選');
+      return;
+    }
+    runGenerate();
+  }
+
+  async function handleSwapProduct(newId) {
+    setSwapping(false);
+    setProductId(newId);
+    await runGenerate(newId);
   }
 
   const loading = products.loading || models.loading || scenarios.loading;
@@ -59,7 +85,7 @@ export default function MaterialSinglePage() {
           <h1 className="text-2xl font-semibold text-stone-900">👕 單件素材</h1>
           <Link href="/material" className="text-xs text-stone-500 hover:underline">← 切換模式</Link>
         </div>
-        <p className="mt-1 text-sm text-stone-600">挑 1 件衣服 + 1 模特 + 1 情境,AI 合成 1:1 視覺。</p>
+        <p className="mt-1 text-sm text-stone-600">挑 1 件衣服 + 1 模特 + 1 情境 → AI 1:1 視覺。</p>
       </div>
 
       {loading && <div className="card text-center text-stone-500">載入資料庫中…</div>}
@@ -77,13 +103,34 @@ export default function MaterialSinglePage() {
               />
             </div>
             <div className="card">
-              <ModelPicker models={models.items} value={modelId} onChange={setModelId} />
+              <ModelPicker
+                models={models.items}
+                value={modelId}
+                onChange={setModelId}
+                genderFilter={modelGender}
+                onGenderChange={setModelGender}
+              />
             </div>
           </div>
 
           <div className="card">
             <ScenarioPicker scenarios={scenarios.items} value={scenarioId} onChange={setScenarioId} />
           </div>
+
+          <CompositionUploader
+            uploadedUrl={compositionRefUrl}
+            setUploadedUrl={setCompositionRefUrl}
+            compositionPrompt={compositionPrompt}
+            setCompositionPrompt={setCompositionPrompt}
+          />
+
+          <GenerationOptions
+            textMode={textMode} setTextMode={setTextMode}
+            promoInfo={promoInfo} setPromoInfo={setPromoInfo}
+            slogan={slogan} setSlogan={setSlogan}
+            noFace={noFace} setNoFace={setNoFace}
+            productSummary={selectedProduct ? `${selectedProduct.name} (${selectedProduct.category}, ${selectedProduct.colors})` : ''}
+          />
 
           <div className="card">
             <label className="label text-xs">額外視覺指示（選填）</label>
@@ -110,7 +157,23 @@ export default function MaterialSinglePage() {
             </button>
           </div>
 
-          <ResultPanel result={result} onReset={reset} generating={generating} error={generating ? null : null} />
+          <ResultPanel
+            result={result}
+            onReset={() => { setResult(null); setError(''); }}
+            generating={generating}
+            error={null}
+            onSwapTop={() => setSwapping(true)}
+            mode="single"
+          />
+
+          <SwapProductModal
+            open={swapping}
+            products={products.items}
+            currentId={productId}
+            onPick={handleSwapProduct}
+            onCancel={() => setSwapping(false)}
+            title="🔁 換另一件再生 (同模特 / 同情境)"
+          />
         </>
       )}
     </main>

@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
 
 const CATEGORIES = ['上衣', '下身', '外套', '洋裝', '配件', '其他'];
+const GENDERS = ['女性', '男性', '中性'];
 const EMPTY = {
   id: '', sku: '', name: '', features: '', colors: '',
   image_front: '', image_back: '', image_detail: '',
-  purchase_url: '', price: '', category: '下身',
+  purchase_url: '', price: '', category: '下身', gender: '女性',
 };
 
 export default function ProductsPage() {
@@ -15,6 +16,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
 
   function startNew() {
     setEditing({ ...EMPTY });
@@ -42,6 +44,7 @@ export default function ProductsPage() {
   const filtered = items.filter((it) => {
     if (filter && !`${it.id} ${it.name} ${it.colors}`.toLowerCase().includes(filter.toLowerCase())) return false;
     if (categoryFilter && it.category !== categoryFilter) return false;
+    if (genderFilter && it.gender !== genderFilter) return false;
     return true;
   });
 
@@ -72,6 +75,14 @@ export default function ProductsPage() {
           <option value="">全部分類</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <select
+          value={genderFilter}
+          onChange={(e) => setGenderFilter(e.target.value)}
+          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">全部性別</option>
+          {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+        </select>
       </div>
 
       {loading ? (
@@ -90,6 +101,7 @@ export default function ProductsPage() {
                 <div className="text-[11px] font-mono text-stone-500">{p.id}</div>
                 <div className="truncate text-sm font-medium text-stone-900">{p.name || '(無名)'}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-stone-500">
+                  {p.gender && <span className={`rounded px-1.5 py-0.5 ${p.gender === '女性' ? 'bg-pink-100 text-pink-700' : p.gender === '男性' ? 'bg-blue-100 text-blue-700' : 'bg-stone-100'}`}>{p.gender}</span>}
                   {p.category && <span className="rounded bg-stone-100 px-1.5 py-0.5">{p.category}</span>}
                   {p.colors && <span>{p.colors}</span>}
                   {p.price && <span className="text-emerald-700">${p.price}</span>}
@@ -140,6 +152,15 @@ function ProductEditModal({ item, setItem, saving, onSave, onCancel }) {
               className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-1.5 text-sm"
             >
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
+          <Field label="性別">
+            <select
+              value={item.gender || '女性'}
+              onChange={(e) => patch('gender', e.target.value)}
+              className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-1.5 text-sm"
+            >
+              {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </Field>
           <Field label="產品名稱 *" full>

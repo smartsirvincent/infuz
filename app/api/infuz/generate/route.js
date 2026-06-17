@@ -1,5 +1,4 @@
-// /api/infuz/generate — 從 3 個 DB 選資料,組 prompt,KIE 生 1:1,上 Cloudinary
-// mode: 'single' (1 產品) or 'combo' (上衣 + 下身)
+// /api/infuz/generate — 從 3 個 DB + 選項組 prompt → KIE 1:1 → Cloudinary
 import { NextResponse } from 'next/server';
 import { submitImageV2, pollImageV2, downloadImage } from '@/lib/kie-image.js';
 import { uploadToCloudinary, hasCloudinary } from '@/lib/cloudinary.js';
@@ -15,20 +14,15 @@ async function findById(kind, id) {
   return found;
 }
 
-/**
- * 替換情境 prompt 中的 {{product}} 為實際產品名稱字串
- */
-function fillTemplate(template, productLabel) {
-  if (!template) return '';
-  return template
-    .replace(/\{\{\s*product\s*\}\}/gi, productLabel)
-    .replace(/\{\{\s*item\s*\}\}/gi, productLabel);
+function fillTemplate(t, label) {
+  return (t || '').replace(/\{\{\s*(product|item)\s*\}\}/gi, label);
 }
 
 function buildModelBlock(model) {
   if (!model) return '';
   const parts = ['Featured model character:'];
   if (model.name) parts.push(`name "${model.name}" (id ${model.id}).`);
+  if (model.gender) parts.push(`Gender: ${model.gender}.`);
   if (model.style) parts.push(`Description: ${model.style.slice(0, 400)}`);
   if (model.skin_tone) parts.push(`Skin tone: ${model.skin_tone}.`);
   if (model.hairstyle) parts.push(`Hairstyle: ${model.hairstyle}.`);
@@ -36,20 +30,29 @@ function buildModelBlock(model) {
   return parts.join(' ');
 }
 
-function buildProductBlock(product, role = 'item') {
-  if (!product) return '';
+function buildProductBlock(p, role = 'GARMENT') {
+  if (!p) return '';
   const parts = [];
-  parts.push(`${role.toUpperCase()}: "${product.name || product.id}" (SKU ${product.id}).`);
-  if (product.colors) parts.push(`Available colors: ${product.colors}.`);
-  if (product.features) {
-    parts.push(`Product details: ${product.features.replace(/\n+/g, ' ').slice(0, 300)}`);
-  }
+  parts.push(`${role}: "${p.name || p.id}" (SKU ${p.id}).`);
+  if (p.colors) parts.push(`Colors: ${p.colors}.`);
+  if (p.gender) parts.push(`Target gender: ${p.gender}.`);
+  if (p.features) parts.push(`Details: ${p.features.replace(/\n+/g, ' ').slice(0, 300)}`);
   return parts.join(' ');
 }
 
-const PACKAGING_RULES = [
-  'CRITICAL PRODUCT FIDELITY: Preserve the EXACT original colors, shape, silhouette, fabric texture, prints, embroidery, hardware, stitching, and any visible logos or tags. Do NOT recolor, alter, or restyle the garment. Only the background / scene / lighting around it may change.',
-  'ABSOLUTELY FORBIDDEN — HARD RULE: Under NO circumstances may you invent, redesign, replace, modify, or stylize the garment. The clothing in the output image MUST be pixel-faithful to the reference. Do NOT swap silhouettes. Do NOT redraw prints. Do NOT recolor. If you cannot keep the garment identical, output it as-is from the reference rather than imagining a new variant. This rule overrides any other creative direction.',
+function buildTextOverlay({ textMode, promoInfo, slogan }) {
+  if (textMode === 'promo' && promoInfo?.trim()) {
+    return `TEXT TO RENDER: Render the promotional text "${promoInfo.trim()}" as a bold, eye-catching overlay integrated into the composition (banner / sticker / corner badge style). It MUST appear in the image. STRICTLY no other text, no extra captions, no watermarks, no hashtags.`;
+  }
+  if (textMode === 'slogan' && slogan?.trim()) {
+    return `TEXT TO RENDER: Render the slogan "${slogan.trim()}" as a bold, typographically integrated overlay within the composition. It MUST appear in the image. STRICTLY no other text, no extra captions, no watermarks, no hashtags, no product names as separate text.`;
+  }
+  return 'TEXT RENDERING — STRICT: Do NOT render any visible text whatsoever in the image. No headlines, no labels, no watermarks, no signage, no hashtags. Pure visual composition only.';
+}
+
+const FIDELITY = [
+  'CRITICAL PRODUCT FIDELITY: Preserve EXACT original colors, shape, silhouette, fabric texture, prints, embroidery, hardware, stitching, and any visible logos. Do NOT recolor, alter, or restyle the garment.',
+  'ABSOLUTELY FORBIDDEN — HARD RULE: Under NO circumstances may you invent, redesign, replace, modify, or stylize the garment. The clothing in the output MUST be pixel-faithful to the reference. This rule overrides any other creative direction.',
 ];
 
 export async function POST(req) {
@@ -60,6 +63,13 @@ export async function POST(req) {
     const {
       mode = 'single',
       productId, topId, bottomId, modelId, scenarioId,
+      // 新欄位
+      textMode = 'none',     // 'none' | 'promo' | 'slogan'
+      promoInfo = '',
+      slogan = '',
+      noFace = false,
+      compositionRefUrl = '',
+      compositionPrompt = '',
       extraPrompt = '',
     } = await req.json();
 
@@ -72,7 +82,6 @@ export async function POST(req) {
       return NextResponse.json({ error: 'topId + bottomId required for mode=combo' }, { status: 400 });
     }
 
-    // === Load DB rows ===
     const model = await findById('models', modelId);
     const scenario = await findById('scenarios', scenarioId);
 
@@ -90,57 +99,74 @@ export async function POST(req) {
     }
 
     // === Build prompt ===
-    const promptParts = [];
+    const parts = [];
 
-    // 1. 情境模板（{{product}} → 產品名稱）
-    promptParts.push(fillTemplate(scenario.prompt || '', productLabel));
+    // 1. 情境 (替換 {{product}})
+    parts.push(fillTemplate(scenario.prompt || '', productLabel));
 
-    // 2. 產品細節
+    // 2. 產品
     if (mode === 'single') {
-      promptParts.push(buildProductBlock(products[0], 'garment'));
+      parts.push(buildProductBlock(products[0], 'GARMENT'));
     } else {
-      promptParts.push(buildProductBlock(products[0], 'TOP'));
-      promptParts.push(buildProductBlock(products[1], 'BOTTOM'));
-      promptParts.push('Both pieces are worn together by the same model as a complete outfit. Show top and bottom clearly visible in the composition.');
+      parts.push(buildProductBlock(products[0], 'TOP'));
+      parts.push(buildProductBlock(products[1], 'BOTTOM'));
+      parts.push('Both pieces are worn together by the same model as a complete outfit. Show top and bottom clearly visible in the composition.');
     }
 
-    // 3. 模特兒描述
-    promptParts.push(buildModelBlock(model));
+    // 3. 模特
+    parts.push(buildModelBlock(model));
 
-    // 4. 多參考圖角色說明
-    // 順序: [產品圖 1..N, 模特參考圖]
+    // 4. 不要人臉
+    if (noFace) {
+      parts.push('FACE HIDDEN: Crop, angle, or pose so the model\'s face is NOT clearly visible. Use back view, side profile cut off, head out of frame, or focus the composition on the body and garment. The model\'s identity should not be readable.');
+    }
+
+    // 5. 模仿構圖 (vision 中文 prompt)
+    if (compositionPrompt?.trim()) {
+      parts.push(`Composition guidance (mirror this framing / angle / layout only, NOT specific content): ${compositionPrompt.trim()}`);
+    }
+
+    // 6. 多參考圖角色說明
     const refImages = [];
     for (const p of products) {
       if (p.image_front) refImages.push(p.image_front);
     }
     if (model.reference_image) refImages.push(model.reference_image);
+    if (compositionRefUrl) refImages.push(compositionRefUrl);
+
     const refLabels = [];
+    let idx = 1;
     if (mode === 'single') {
-      refLabels.push('[1] Garment appearance source');
-      if (model.reference_image) refLabels.push(`[${refImages.length}] Model character reference`);
+      if (products[0].image_front) { refLabels.push(`[${idx}] Garment appearance`); idx += 1; }
     } else {
-      refLabels.push('[1] TOP appearance source');
-      refLabels.push('[2] BOTTOM appearance source');
-      if (model.reference_image) refLabels.push(`[${refImages.length}] Model character reference`);
+      if (products[0].image_front) { refLabels.push(`[${idx}] TOP appearance`); idx += 1; }
+      if (products[1].image_front) { refLabels.push(`[${idx}] BOTTOM appearance`); idx += 1; }
     }
-    promptParts.push(`Reference images (in order): ${refLabels.join(', ')}. Combine these references to compose ONE final image with the model wearing the garment(s) in the scene described above.`);
+    if (model.reference_image) { refLabels.push(`[${idx}] Model character reference`); idx += 1; }
+    if (compositionRefUrl) { refLabels.push(`[${idx}] Composition inspiration ONLY (do NOT copy its content / colors / specific garments)`); idx += 1; }
+    if (refLabels.length > 0) {
+      parts.push(`Reference images (in order): ${refLabels.join(', ')}. Combine references appropriately for ONE final composition.`);
+    }
 
-    // 5. 強制 fidelity
-    promptParts.push(...PACKAGING_RULES);
+    // 7. 文字渲染指令
+    parts.push(buildTextOverlay({ textMode, promoInfo, slogan }));
 
-    // 6. 整體品質
-    promptParts.push('Photorealistic fashion photography, high quality, social media ready, natural lighting consistent with the scene, 1:1 square format.');
+    // 8. Fidelity hard rules
+    parts.push(...FIDELITY);
 
-    // 7. 額外指示
-    if (extraPrompt) promptParts.push(`Extra direction: ${extraPrompt}`);
+    // 9. 品質 + 比例
+    parts.push('Photorealistic fashion photography, high quality, social media ready, natural lighting consistent with the scene, 1:1 square format.');
 
-    const fullPrompt = promptParts.filter(Boolean).join(' ');
+    // 10. 額外
+    if (extraPrompt) parts.push(`Extra direction: ${extraPrompt}`);
 
-    // === KIE 生圖 ===
+    const fullPrompt = parts.filter(Boolean).join(' ');
+
+    // === KIE ===
     const t0 = Date.now();
     const taskId = await submitImageV2({
       prompt: fullPrompt,
-      referenceImages: refImages.slice(0, 4), // KIE 最多 4 張
+      referenceImages: refImages.slice(0, 4),
       aspect_ratio: '1:1',
     });
     const kieUrl = await pollImageV2(taskId);
