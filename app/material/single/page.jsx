@@ -36,6 +36,13 @@ export default function MaterialSinglePage() {
   const [swapping, setSwapping] = useState(false);
 
   const selectedProduct = products.items.find((p) => p.id === productId);
+  const selectedScenario = scenarios.items.find((s) => s.id === scenarioId);
+  const dispatchContext = selectedProduct ? {
+    mode: 'single',
+    products: [selectedProduct],
+    scenario: selectedScenario?.name || '',
+    slogan, promoInfo,
+  } : null;
 
   async function runGenerate(overrideProductId) {
     setError('');
@@ -164,6 +171,7 @@ export default function MaterialSinglePage() {
             error={null}
             onSwapTop={() => setSwapping(true)}
             mode="single"
+            dispatchContext={dispatchContext}
           />
 
           <SwapProductModal

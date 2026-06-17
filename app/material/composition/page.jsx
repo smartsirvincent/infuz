@@ -35,6 +35,14 @@ export default function MaterialCompositionPage() {
     .map((id) => products.items.find((p) => p.id === id))
     .filter(Boolean);
   const productSummary = selectedProducts.map((p) => p.name).join(' + ').slice(0, 200);
+  const selectedScenario = scenarios.items.find((s) => s.id === scenarioId);
+  const dispatchContext = selectedProducts.length >= 2 ? {
+    mode: 'composition',
+    displayMode,
+    products: selectedProducts,
+    scenario: selectedScenario?.name || '',
+    slogan, promoInfo,
+  } : null;
 
   // composition 模式 + display 子模式 → 不需要模特,reference 上限 6
   // composition 模式 + model 子模式 → 需要模特,reference 上限 5 (3 product + 1 model + 1 composition)
@@ -211,6 +219,7 @@ export default function MaterialCompositionPage() {
             generating={generating}
             error={null}
             mode="composition"
+            dispatchContext={dispatchContext}
           />
         </>
       )}

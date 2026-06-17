@@ -22,8 +22,13 @@ async function saveAsset({ mode, displayMode, products, model, scenario, imageUr
       price: p.price || '',
       colors: p.colors || '',
     }));
-    await appendItems('assets', {
+    // postNumber 自動遞增 (依現有 assets 數量 + 1)
+    const cur = await loadDb('assets');
+    const existingMax = (cur.items || []).reduce((m, a) => Math.max(m, Number(a.postNumber) || 0), 0);
+    const postNumber = existingMax + 1;
+    const newAsset = {
       id: genAssetId(),
+      postNumber,
       mode,
       displayMode: displayMode || '',
       products: productSnapshots,
@@ -41,10 +46,15 @@ async function saveAsset({ mode, displayMode, products, model, scenario, imageUr
       promoInfo: promoInfo || '',
       noFace: !!noFace,
       hasCompositionRef: !!compositionRefUrl,
+      copy: '', // 由 client 之後呼叫 suggest-copy 填入
+      dispatched: {},
       createdAt: new Date().toISOString(),
-    });
+    };
+    await appendItems('assets', newAsset);
+    return newAsset;
   } catch (e) {
     console.error('[saveAsset] failed (non-fatal):', e.message);
+    return null;
   }
 }
 
@@ -245,7 +255,7 @@ export async function POST(req) {
     const kieMs = Date.now() - t0;
 
     // 存進素材資料庫 (失敗不致命)
-    await saveAsset({
+    const asset = await saveAsset({
       mode, displayMode, products, model, scenario,
       imageUrl: up.url,
       cloudinaryPublicId: up.publicId,
@@ -260,6 +270,8 @@ export async function POST(req) {
       kieTaskId: taskId,
       kieMs,
       prompt: fullPrompt,
+      assetId: asset?.id || '',
+      postNumber: asset?.postNumber || 0,
     });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });

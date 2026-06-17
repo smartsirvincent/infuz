@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { DispatchPanel } from '@/components/MaterialPickers';
 
 const MODES = [
   { value: '', label: '全部' },
@@ -17,6 +18,7 @@ export default function AssetsPage() {
   const [modeFilter, setModeFilter] = useState('');
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(null); // 點圖放大
+  const [expandedId, setExpandedId] = useState(null); // 哪張展開 dispatch panel
 
   async function refresh() {
     setLoading(true);
@@ -174,12 +176,31 @@ export default function AssetsPage() {
                 ))}
 
                 <div className="text-[10px] text-stone-500">
+                  {a.postNumber > 0 && <>#{a.postNumber} · </>}
                   {a.modelName && <>模特: {a.modelName} · </>}
                   {a.scenarioName && <>情境: {a.scenarioName} · </>}
                   {a.createdAt && <>{new Date(a.createdAt).toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' })}</>}
                 </div>
 
+                {(a.dispatched?.schedule || a.dispatched?.post) && (
+                  <div className="flex gap-1 text-[10px]">
+                    {a.dispatched?.schedule && (
+                      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">📅 已排程</span>
+                    )}
+                    {a.dispatched?.post && (
+                      <span className="rounded bg-rose-100 px-1.5 py-0.5 text-rose-700">🚀 已發文</span>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}
+                    className="rounded-md bg-blue-600 px-2 py-1 text-[11px] text-white hover:bg-blue-700"
+                  >
+                    {expandedId === a.id ? '收起 ▲' : '📤 發佈 / 重發'}
+                  </button>
                   <a
                     href={a.imageUrl}
                     target="_blank"
@@ -194,7 +215,7 @@ export default function AssetsPage() {
                     onClick={() => copyText(a.imageUrl, '圖片網址')}
                     className="rounded-md border border-stone-300 px-2 py-1 text-[11px] text-stone-700 hover:bg-stone-50"
                   >
-                    📎 複製圖片網址
+                    📎 圖片網址
                   </button>
                   <button
                     type="button"
@@ -202,10 +223,24 @@ export default function AssetsPage() {
                     disabled={busy}
                     className="rounded-md border border-red-200 bg-white px-2 py-1 text-[11px] text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
-                    🗑 刪除
+                    🗑 刪
                   </button>
                 </div>
               </div>
+
+              {expandedId === a.id && (
+                <DispatchPanel
+                  assetId={a.id}
+                  postNumber={a.postNumber}
+                  mode={a.mode}
+                  displayMode={a.displayMode}
+                  products={a.products || []}
+                  scenario={a.scenarioName}
+                  slogan={a.slogan}
+                  promoInfo={a.promoInfo}
+                  initialCopy={a.copy}
+                />
+              )}
             </article>
           ))}
           {filtered.length === 0 && (

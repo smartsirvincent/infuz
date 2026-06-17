@@ -596,7 +596,153 @@ function ModeRadio({ active, onClick, label, hint }) {
   );
 }
 
-export function ResultPanel({ result, onReset, generating, error, onSwapTop, onSwapBottom, mode }) {
+/**
+ * 拼出生成的 asset 對應的 dispatch panel
+ * - 自動拉 settings 的預設 platforms
+ * - 自動跑 suggest-copy 拿文案
+ */
+export function DispatchPanel({ assetId, postNumber, mode, displayMode, products, scenario, slogan, promoInfo, initialCopy }) {
+  const [platforms, setPlatforms] = useState({ fb: false, ig: true, threads: true });
+  const [copy, setCopy] = useState(initialCopy || '');
+  const [generatingCopy, setGeneratingCopy] = useState(!initialCopy);
+  const [dispatching, setDispatching] = useState(null); // 'schedule' | 'post' | null
+  const [status, setStatus] = useState('');
+  const [done, setDone] = useState({ schedule: false, post: false });
+
+  // 載 settings → defaultPlatforms
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/infuz/settings', { cache: 'no-store' });
+        const d = await r.json();
+        const main = (d.items || []).find((x) => x.id === 'main');
+        if (main?.defaultPlatforms) {
+          setPlatforms({
+            fb: !!main.defaultPlatforms.fb,
+            ig: !!main.defaultPlatforms.ig,
+            threads: !!main.defaultPlatforms.threads,
+          });
+        }
+      } catch (_) {}
+    })();
+  }, []);
+
+  // 自動產文案 (有 initialCopy 就跳過)
+  useEffect(() => {
+    if (initialCopy) {
+      setCopy(initialCopy);
+      setGeneratingCopy(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setGeneratingCopy(true);
+      try {
+        const r = await fetch('/api/infuz/suggest-copy', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ mode, displayMode, products, scenario, slogan, promoInfo }),
+        });
+        const d = await r.json();
+        if (!cancelled) setCopy(d.copy || '');
+      } catch (_) {
+      } finally {
+        if (!cancelled) setGeneratingCopy(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [assetId]);
+
+  async function dispatch(action) {
+    if (!assetId) {
+      setStatus('沒有 assetId,無法發送');
+      return;
+    }
+    setDispatching(action);
+    setStatus('');
+    try {
+      const r = await fetch('/api/infuz/dispatch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ assetId, action, platforms, copy }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setStatus(`✓ ${action === 'schedule' ? '已傳到排程' : '已直接發文'}`);
+      setDone({ ...done, [action]: true });
+    } catch (e) {
+      setStatus('⚠ ' + e.message);
+    } finally { setDispatching(null); }
+  }
+
+  return (
+    <div className="mt-4 space-y-3 rounded-lg border border-stone-200 bg-stone-50/50 p-4">
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-stone-800">📤 發佈設定</h3>
+        {postNumber > 0 && <span className="text-[10px] text-stone-500">貼文編號 #{postNumber}</span>}
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="label text-xs !mb-0">AI 文案 (可改)</label>
+          {generatingCopy && <span className="text-[10px] text-stone-500">✨ 生成中…</span>}
+        </div>
+        <textarea
+          className="input min-h-[120px] text-sm leading-relaxed"
+          value={copy}
+          onChange={(e) => setCopy(e.target.value)}
+          placeholder={generatingCopy ? 'AI 正在寫…' : '文案'}
+        />
+      </div>
+
+      <div>
+        <label className="label text-xs">發佈平台 (可複選)</label>
+        <div className="flex flex-wrap gap-3">
+          {[
+            { key: 'threads', label: 'Threads', emoji: '🧵' },
+            { key: 'ig', label: 'IG', emoji: '📷' },
+            { key: 'fb', label: 'FB', emoji: '👍' },
+          ].map((p) => (
+            <label key={p.key} className="flex items-center gap-2 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm cursor-pointer hover:bg-stone-50">
+              <input
+                type="checkbox"
+                checked={platforms[p.key]}
+                onChange={(e) => setPlatforms({ ...platforms, [p.key]: e.target.checked })}
+                className="size-4 rounded border-stone-300 text-emerald-600"
+              />
+              <span>{p.emoji} {p.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {status && (
+        <div className={`text-xs ${status.startsWith('⚠') ? 'text-red-600' : 'text-emerald-700'}`}>{status}</div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => dispatch('schedule')}
+          disabled={dispatching !== null || done.schedule}
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.schedule ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+        >
+          {dispatching === 'schedule' ? '送出中…' : done.schedule ? '✓ 已排程' : '📅 傳到排程'}
+        </button>
+        <button
+          type="button"
+          onClick={() => dispatch('post')}
+          disabled={dispatching !== null || done.post}
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-600 text-white hover:bg-rose-700'}`}
+        >
+          {dispatching === 'post' ? '送出中…' : done.post ? '✓ 已發文' : '🚀 直接發文'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function ResultPanel({ result, onReset, generating, error, onSwapTop, onSwapBottom, mode, dispatchContext }) {
   if (generating) {
     return (
       <div className="card text-center">
@@ -618,7 +764,9 @@ export function ResultPanel({ result, onReset, generating, error, onSwapTop, onS
   return (
     <div className="card">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-stone-900">🎉 生成完成</h2>
+        <h2 className="text-lg font-semibold text-stone-900">
+          🎉 生成完成 {result.postNumber > 0 && <span className="ml-1 text-xs text-stone-500">(編號 #{result.postNumber})</span>}
+        </h2>
         <button onClick={onReset} className="text-xs text-stone-500 hover:text-stone-900">清除</button>
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -647,6 +795,15 @@ export function ResultPanel({ result, onReset, generating, error, onSwapTop, onS
           </a>
         </div>
       </div>
+
+      {/* === Dispatch panel === */}
+      {result.assetId && dispatchContext && (
+        <DispatchPanel
+          assetId={result.assetId}
+          postNumber={result.postNumber}
+          {...dispatchContext}
+        />
+      )}
     </div>
   );
 }

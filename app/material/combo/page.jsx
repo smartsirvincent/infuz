@@ -35,6 +35,13 @@ export default function MaterialComboPage() {
 
   const topProduct = products.items.find((p) => p.id === topId);
   const bottomProduct = products.items.find((p) => p.id === bottomId);
+  const selectedScenario = scenarios.items.find((s) => s.id === scenarioId);
+  const dispatchContext = (topProduct && bottomProduct) ? {
+    mode: 'combo',
+    products: [topProduct, bottomProduct],
+    scenario: selectedScenario?.name || '',
+    slogan, promoInfo,
+  } : null;
 
   async function runGenerate(overrideTop, overrideBottom) {
     setError('');
@@ -187,6 +194,7 @@ export default function MaterialComboPage() {
             onSwapTop={() => setSwapping('top')}
             onSwapBottom={() => setSwapping('bottom')}
             mode="combo"
+            dispatchContext={dispatchContext}
           />
 
           <SwapProductModal
