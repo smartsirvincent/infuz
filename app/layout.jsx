@@ -15,11 +15,13 @@ export default function RootLayout({ children }) {
               <span className="bg-gradient-to-r from-brand-500 to-purple-500 bg-clip-text text-xl tracking-tight text-transparent">Infuz</span>
               <span className="hidden text-sm font-medium text-stone-500 sm:inline">AI 系統</span>
             </a>
-            <nav className="flex items-center gap-1 text-sm sm:gap-2">
-              <NavLink href="/brand" icon="🏷" label="品牌資訊" />
+            <nav className="flex flex-wrap items-center gap-1 text-sm sm:gap-2">
+              <NavLink href="/products" icon="👕" label="產品" />
+              <NavLink href="/models" icon="👤" label="模特" />
+              <NavLink href="/scenarios" icon="🎬" label="情境" />
+              <NavLink href="/material" icon="✨" label="素材" />
               <NavLink href="/text" icon="📝" label="文字貼文" />
               <NavLink href="/image-plan" icon="🖼️" label="圖片貼文" />
-              <NavLink href="/material" icon="✨" label="素材產生" />
             </nav>
           </div>
         </header>
