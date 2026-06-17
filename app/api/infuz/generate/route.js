@@ -10,7 +10,7 @@ function genAssetId() {
   return `MAT-${ts}-${r}`;
 }
 
-async function saveAsset({ mode, products, model, scenario, imageUrl, cloudinaryPublicId, kieTaskId, kieMs, textMode, slogan, promoInfo, noFace, compositionRefUrl }) {
+async function saveAsset({ mode, displayMode, products, model, scenario, imageUrl, cloudinaryPublicId, kieTaskId, kieMs, textMode, slogan, promoInfo, noFace, compositionRefUrl }) {
   try {
     const productSnapshots = products.map((p) => ({
       id: p.id,
@@ -25,6 +25,7 @@ async function saveAsset({ mode, products, model, scenario, imageUrl, cloudinary
     await appendItems('assets', {
       id: genAssetId(),
       mode,
+      displayMode: displayMode || '',
       products: productSnapshots,
       modelId: model?.id || '',
       modelName: model?.name || '',
@@ -105,9 +106,11 @@ export async function POST(req) {
     }
     const {
       mode = 'single',
-      productId, topId, bottomId, modelId, scenarioId,
-      // 新欄位
-      textMode = 'none',     // 'none' | 'promo' | 'slogan'
+      productId, topId, bottomId,
+      productIds = [],        // 組合模式: 多個 product id
+      displayMode = 'display', // 組合模式: 'display' (純陳列) | 'model' (搭配模特兒)
+      modelId, scenarioId,
+      textMode = 'none',
       promoInfo = '',
       slogan = '',
       noFace = false,
@@ -116,7 +119,6 @@ export async function POST(req) {
       extraPrompt = '',
     } = await req.json();
 
-    if (!modelId) return NextResponse.json({ error: 'modelId required' }, { status: 400 });
     if (!scenarioId) return NextResponse.json({ error: 'scenarioId required' }, { status: 400 });
     if (mode === 'single' && !productId) {
       return NextResponse.json({ error: 'productId required for mode=single' }, { status: 400 });
@@ -124,9 +126,17 @@ export async function POST(req) {
     if (mode === 'combo' && (!topId || !bottomId)) {
       return NextResponse.json({ error: 'topId + bottomId required for mode=combo' }, { status: 400 });
     }
+    if (mode === 'composition' && (!Array.isArray(productIds) || productIds.length < 2)) {
+      return NextResponse.json({ error: 'composition 模式至少要 2 件產品' }, { status: 400 });
+    }
+    // single + combo 一定要 model; composition 在 model 模式才要
+    const needsModel = mode !== 'composition' || displayMode === 'model';
+    if (needsModel && !modelId) {
+      return NextResponse.json({ error: 'modelId required' }, { status: 400 });
+    }
 
-    const model = await findById('models', modelId);
     const scenario = await findById('scenarios', scenarioId);
+    const model = needsModel ? await findById('models', modelId) : null;
 
     let products = [];
     let productLabel = '';
@@ -134,11 +144,17 @@ export async function POST(req) {
       const p = await findById('products', productId);
       products = [p];
       productLabel = p.name || p.id;
-    } else {
+    } else if (mode === 'combo') {
       const top = await findById('products', topId);
       const bottom = await findById('products', bottomId);
       products = [top, bottom];
       productLabel = `the outfit (top: "${top.name || top.id}", bottom: "${bottom.name || bottom.id}")`;
+    } else if (mode === 'composition') {
+      products = [];
+      for (const id of productIds) {
+        products.push(await findById('products', id));
+      }
+      productLabel = `the collection (${products.length} pieces: ${products.map((p) => `"${p.name || p.id}"`).join(', ')})`;
     }
 
     // === Build prompt ===
@@ -150,14 +166,21 @@ export async function POST(req) {
     // 2. 產品
     if (mode === 'single') {
       parts.push(buildProductBlock(products[0], 'GARMENT'));
-    } else {
+    } else if (mode === 'combo') {
       parts.push(buildProductBlock(products[0], 'TOP'));
       parts.push(buildProductBlock(products[1], 'BOTTOM'));
       parts.push('Both pieces are worn together by the same model as a complete outfit. Show top and bottom clearly visible in the composition.');
+    } else if (mode === 'composition') {
+      products.forEach((p, i) => parts.push(buildProductBlock(p, `ITEM ${i + 1}`)));
+      if (displayMode === 'display') {
+        parts.push(`Composition style: FLAT-LAY / MERCHANDISE DISPLAY photography. Arrange all ${products.length} pieces neatly together on a clean background — show every piece clearly with consistent lighting. Top-down or eye-level overhead view. NO MODEL, NO PEOPLE, NO HANDS, NO HUMAN PRESENCE. Items can overlap slightly to suggest styling pairings but each must be identifiable.`);
+      } else {
+        parts.push(`Composition style: Model wearing or styling all ${products.length} pieces together in a coherent outfit / look. Show each item clearly. If pieces can't be worn simultaneously (e.g., 2 pairs of pants), show one being worn and the others styled in-hand or arranged in the scene.`);
+      }
     }
 
-    // 3. 模特
-    parts.push(buildModelBlock(model));
+    // 3. 模特 (composition + display 模式不需要)
+    if (model) parts.push(buildModelBlock(model));
 
     // 4. 不要人臉
     if (noFace) {
@@ -171,22 +194,26 @@ export async function POST(req) {
 
     // 6. 多參考圖角色說明
     const refImages = [];
-    for (const p of products) {
-      if (p.image_front) refImages.push(p.image_front);
-    }
-    if (model.reference_image) refImages.push(model.reference_image);
-    if (compositionRefUrl) refImages.push(compositionRefUrl);
-
     const refLabels = [];
     let idx = 1;
     if (mode === 'single') {
-      if (products[0].image_front) { refLabels.push(`[${idx}] Garment appearance`); idx += 1; }
-    } else {
-      if (products[0].image_front) { refLabels.push(`[${idx}] TOP appearance`); idx += 1; }
-      if (products[1].image_front) { refLabels.push(`[${idx}] BOTTOM appearance`); idx += 1; }
+      if (products[0].image_front) {
+        refImages.push(products[0].image_front);
+        refLabels.push(`[${idx}] Garment appearance`); idx += 1;
+      }
+    } else if (mode === 'combo') {
+      if (products[0].image_front) { refImages.push(products[0].image_front); refLabels.push(`[${idx}] TOP appearance`); idx += 1; }
+      if (products[1].image_front) { refImages.push(products[1].image_front); refLabels.push(`[${idx}] BOTTOM appearance`); idx += 1; }
+    } else if (mode === 'composition') {
+      for (const p of products) {
+        if (p.image_front) {
+          refImages.push(p.image_front);
+          refLabels.push(`[${idx}] ITEM "${p.name || p.id}" (SKU ${p.id}) appearance`); idx += 1;
+        }
+      }
     }
-    if (model.reference_image) { refLabels.push(`[${idx}] Model character reference`); idx += 1; }
-    if (compositionRefUrl) { refLabels.push(`[${idx}] Composition inspiration ONLY (do NOT copy its content / colors / specific garments)`); idx += 1; }
+    if (model?.reference_image) { refImages.push(model.reference_image); refLabels.push(`[${idx}] Model character reference`); idx += 1; }
+    if (compositionRefUrl) { refImages.push(compositionRefUrl); refLabels.push(`[${idx}] Composition inspiration ONLY (do NOT copy its content / colors / specific garments)`); idx += 1; }
     if (refLabels.length > 0) {
       parts.push(`Reference images (in order): ${refLabels.join(', ')}. Combine references appropriately for ONE final composition.`);
     }
@@ -205,11 +232,11 @@ export async function POST(req) {
 
     const fullPrompt = parts.filter(Boolean).join(' ');
 
-    // === KIE ===
+    // === KIE === (V2 接受最多 16 張,我們最多 10 張安全)
     const t0 = Date.now();
     const taskId = await submitImageV2({
       prompt: fullPrompt,
-      referenceImages: refImages.slice(0, 4),
+      referenceImages: refImages.slice(0, 10),
       aspect_ratio: '1:1',
     });
     const kieUrl = await pollImageV2(taskId);
@@ -219,7 +246,7 @@ export async function POST(req) {
 
     // 存進素材資料庫 (失敗不致命)
     await saveAsset({
-      mode, products, model, scenario,
+      mode, displayMode, products, model, scenario,
       imageUrl: up.url,
       cloudinaryPublicId: up.publicId,
       kieTaskId: taskId,

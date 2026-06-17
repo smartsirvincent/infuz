@@ -120,6 +120,142 @@ export function ProductPicker({ label, products, value, onChange, lockCategory }
   );
 }
 
+/**
+ * 多選產品 picker (給組合模式用)
+ * value = string[] (ids)
+ * 限制: maxItems (預設 6,KIE 參考圖 + model + composition ref 不能超過 10)
+ */
+export function ProductMultiPicker({ label, products, value = [], onChange, maxItems = 6 }) {
+  const [search, setSearch] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+
+  function toggle(id) {
+    if (value.includes(id)) {
+      onChange(value.filter((x) => x !== id));
+    } else {
+      if (value.length >= maxItems) {
+        alert(`最多 ${maxItems} 件`);
+        return;
+      }
+      onChange([...value, id]);
+    }
+  }
+  function removeItem(id) {
+    onChange(value.filter((x) => x !== id));
+  }
+
+  const filtered = products.filter((p) => {
+    if (categoryFilter && p.category !== categoryFilter) return false;
+    if (genderFilter && p.gender !== genderFilter) return false;
+    if (!search) return true;
+    return `${p.id} ${p.name} ${p.colors}`.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const selectedProducts = value
+    .map((id) => products.find((p) => p.id === id))
+    .filter(Boolean);
+
+  return (
+    <div>
+      <label className="label">{label}</label>
+
+      {/* 已選清單 */}
+      {selectedProducts.length > 0 && (
+        <div className="mb-2 rounded-lg border border-emerald-300 bg-emerald-50/40 p-2">
+          <div className="mb-1 text-[11px] text-emerald-700">
+            已選 <strong>{selectedProducts.length}</strong> / {maxItems} 件
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedProducts.map((p) => (
+              <span
+                key={p.id}
+                className="inline-flex items-center gap-1 rounded-md bg-white border border-emerald-200 px-2 py-1 text-[11px]"
+              >
+                {p.image_front && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={p.image_front} alt={p.name} className="size-5 rounded object-cover" />
+                )}
+                <span className="font-mono text-stone-500">{p.id}</span>
+                <span className="max-w-[100px] truncate text-stone-800">{p.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeItem(p.id)}
+                  className="ml-0.5 text-stone-400 hover:text-red-600"
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 篩選 */}
+      <div className="mb-2 space-y-1.5">
+        <div className="flex flex-wrap gap-1">
+          <FilterChip active={!genderFilter} onClick={() => setGenderFilter('')}>全部性別</FilterChip>
+          {PRODUCT_GENDERS.map((g) => (
+            <FilterChip key={g} active={genderFilter === g} onClick={() => setGenderFilter(g)}>{g}</FilterChip>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-1">
+          <FilterChip active={!categoryFilter} onClick={() => setCategoryFilter('')}>全部分類</FilterChip>
+          {PRODUCT_CATEGORIES.map((c) => (
+            <FilterChip key={c} active={categoryFilter === c} onClick={() => setCategoryFilter(c)}>{c}</FilterChip>
+          ))}
+        </div>
+        <input
+          className="input text-sm"
+          placeholder="🔍 搜尋 SKU / 名稱 / 顏色"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* 列表 (click toggle) */}
+      <div className="max-h-72 overflow-y-auto rounded-lg border border-stone-200 bg-white">
+        {filtered.length === 0 && (
+          <div className="px-3 py-6 text-center text-xs text-stone-500">沒有符合的產品</div>
+        )}
+        {filtered.map((p) => {
+          const checked = value.includes(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => toggle(p.id)}
+              className={`flex w-full items-center gap-3 border-b border-stone-100 px-2.5 py-2 text-left text-xs last:border-b-0 hover:bg-emerald-50 ${checked ? 'bg-emerald-50' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                readOnly
+                className="size-4 rounded border-stone-300 text-emerald-600"
+              />
+              {p.image_front ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={p.image_front} alt={p.name} className="size-12 rounded object-cover" loading="lazy" />
+              ) : (
+                <div className="flex size-12 items-center justify-center rounded bg-stone-100 text-xl">📷</div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="font-mono text-[10px] text-stone-500">{p.id}</div>
+                <div className="truncate font-medium text-stone-900">{p.name || '(無名)'}</div>
+                <div className="flex flex-wrap items-center gap-1 text-[10px] text-stone-500">
+                  {p.gender && <span className={`rounded px-1 ${p.gender === '女性' ? 'bg-pink-100 text-pink-700' : p.gender === '男性' ? 'bg-blue-100 text-blue-700' : 'bg-stone-100'}`}>{p.gender}</span>}
+                  {p.category && <span>{p.category}</span>}
+                  {p.colors && <span>· {p.colors}</span>}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function FilterChip({ active, onClick, children }) {
   return (
     <button
