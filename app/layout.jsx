@@ -20,6 +20,7 @@ export default function RootLayout({ children }) {
               <NavLink href="/models" icon="👤" label="模特" />
               <NavLink href="/scenarios" icon="🎬" label="情境" />
               <NavLink href="/material" icon="✨" label="素材" />
+              <NavLink href="/assets" icon="🗂" label="素材庫" />
               <NavLink href="/text" icon="📝" label="文字貼文" />
               <NavLink href="/image-plan" icon="🖼️" label="圖片貼文" />
             </nav>

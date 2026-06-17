@@ -10,7 +10,7 @@ import { loadDb, saveDb, appendItems, updateItem, deleteItem } from '@/lib/infuz
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
-const ALLOWED_KINDS = new Set(['products', 'models', 'scenarios']);
+const ALLOWED_KINDS = new Set(['products', 'models', 'scenarios', 'assets']);
 
 function validate(kind) {
   if (!ALLOWED_KINDS.has(kind)) {

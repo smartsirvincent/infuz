@@ -2,7 +2,50 @@
 import { NextResponse } from 'next/server';
 import { submitImageV2, pollImageV2, downloadImage } from '@/lib/kie-image.js';
 import { uploadToCloudinary, hasCloudinary } from '@/lib/cloudinary.js';
-import { loadDb } from '@/lib/infuz-db.js';
+import { loadDb, appendItems } from '@/lib/infuz-db.js';
+
+function genAssetId() {
+  const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+  const r = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `MAT-${ts}-${r}`;
+}
+
+async function saveAsset({ mode, products, model, scenario, imageUrl, cloudinaryPublicId, kieTaskId, kieMs, textMode, slogan, promoInfo, noFace, compositionRefUrl }) {
+  try {
+    const productSnapshots = products.map((p) => ({
+      id: p.id,
+      name: p.name || '',
+      purchase_url: p.purchase_url || '',
+      image_front: p.image_front || '',
+      gender: p.gender || '',
+      category: p.category || '',
+      price: p.price || '',
+      colors: p.colors || '',
+    }));
+    await appendItems('assets', {
+      id: genAssetId(),
+      mode,
+      products: productSnapshots,
+      modelId: model?.id || '',
+      modelName: model?.name || '',
+      scenarioId: scenario?.id || '',
+      scenarioName: scenario?.name || '',
+      scenarioType: scenario?.type || '',
+      imageUrl,
+      cloudinaryPublicId,
+      kieTaskId,
+      kieMs,
+      textMode: textMode || 'none',
+      slogan: slogan || '',
+      promoInfo: promoInfo || '',
+      noFace: !!noFace,
+      hasCompositionRef: !!compositionRefUrl,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error('[saveAsset] failed (non-fatal):', e.message);
+  }
+}
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -172,12 +215,23 @@ export async function POST(req) {
     const kieUrl = await pollImageV2(taskId);
     const buf = await downloadImage(kieUrl);
     const up = await uploadToCloudinary(buf, { folder: 'infuz/results' });
+    const kieMs = Date.now() - t0;
+
+    // 存進素材資料庫 (失敗不致命)
+    await saveAsset({
+      mode, products, model, scenario,
+      imageUrl: up.url,
+      cloudinaryPublicId: up.publicId,
+      kieTaskId: taskId,
+      kieMs,
+      textMode, slogan, promoInfo, noFace, compositionRefUrl,
+    });
 
     return NextResponse.json({
       url: up.url,
       cloudinaryPublicId: up.publicId,
       kieTaskId: taskId,
-      kieMs: Date.now() - t0,
+      kieMs,
       prompt: fullPrompt,
     });
   } catch (e) {
