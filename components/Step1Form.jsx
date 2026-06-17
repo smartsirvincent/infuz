@@ -59,6 +59,7 @@ export default function Step1Form({
   showThemeStrategy = false,        // 主題分配策略 radio (shared/per_sku) — 文字+圖片都用
   hideSubmit = false,
   loadOnly = false, // 只能載入,不能存/刪/匯出/匯入 (給 /text /image-plan /material 用)
+  hideProfileLoader = false, // 整個品牌切換 / 雲端載入 / 範例 區塊都隱藏 (給 Infuz 單品牌頁用)
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -309,6 +310,7 @@ export default function Step1Form({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* ===== 品牌設定 ===== */}
       <div className="card space-y-5">
+        {!hideProfileLoader && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-stone-900">品牌設定</h2>
@@ -453,6 +455,7 @@ export default function Step1Form({
             )}
           </div>
         </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
