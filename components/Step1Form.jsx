@@ -60,6 +60,7 @@ export default function Step1Form({
   hideSubmit = false,
   loadOnly = false, // 只能載入,不能存/刪/匯出/匯入 (給 /text /image-plan /material 用)
   hideProfileLoader = false, // 整個品牌切換 / 雲端載入 / 範例 區塊都隱藏 (給 Infuz 單品牌頁用)
+  hideProducts = false, // 隱藏產品清單,純品牌文案模式
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -280,10 +281,12 @@ export default function Step1Form({
         return;
       }
     }
-    const validProducts = (input.products || []).filter((p) => (p.name || '').trim());
-    if (validProducts.length === 0) {
-      setError('至少要有一個產品（含名稱）');
-      return;
+    if (!hideProducts) {
+      const validProducts = (input.products || []).filter((p) => (p.name || '').trim());
+      if (validProducts.length === 0) {
+        setError('至少要有一個產品（含名稱）');
+        return;
+      }
     }
 
     setLoading(true);
@@ -291,7 +294,7 @@ export default function Step1Form({
       const res = await fetch(recommendEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(buildPayload(input)),
+        body: JSON.stringify({ ...buildPayload(input), brand_only: hideProducts }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -586,39 +589,41 @@ export default function Step1Form({
       </div>
 
       {/* ===== 產品清單 ===== */}
-      <div className="card space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-stone-900">
-            產品 / SKU <span className="text-sm font-normal text-stone-500">({(input.products || []).length} 個)</span>
-          </h2>
-          <p className="text-xs text-stone-500">
-            每個 SKU 各自有特色 + 圖,「產品介紹」類主題會輪替每個 SKU
-          </p>
-        </div>
+      {!hideProducts && (
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-stone-900">
+              產品 / SKU <span className="text-sm font-normal text-stone-500">({(input.products || []).length} 個)</span>
+            </h2>
+            <p className="text-xs text-stone-500">
+              每個 SKU 各自有特色 + 圖,「產品介紹」類主題會輪替每個 SKU
+            </p>
+          </div>
 
-        <div className="space-y-3">
-          {(input.products || []).map((p, i) => (
-            <ProductCard
-              key={i}
-              index={i}
-              product={p}
-              onChange={(patch) => updateProduct(i, patch)}
-              onRemove={() => removeProduct(i)}
-              canRemove={(input.products || []).length > 1}
-              showImageGenControls={showImageStyles}
-              onToggleStyle={(key) => toggleProductImageStyle(i, key)}
-            />
-          ))}
-        </div>
+          <div className="space-y-3">
+            {(input.products || []).map((p, i) => (
+              <ProductCard
+                key={i}
+                index={i}
+                product={p}
+                onChange={(patch) => updateProduct(i, patch)}
+                onRemove={() => removeProduct(i)}
+                canRemove={(input.products || []).length > 1}
+                showImageGenControls={showImageStyles}
+                onToggleStyle={(key) => toggleProductImageStyle(i, key)}
+              />
+            ))}
+          </div>
 
-        <button
-          type="button"
-          onClick={addProduct}
-          className="w-full rounded-lg border-2 border-dashed border-stone-300 py-3 text-sm text-stone-500 hover:bg-stone-50"
-        >
-          + 新增產品 / SKU
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={addProduct}
+            className="w-full rounded-lg border-2 border-dashed border-stone-300 py-3 text-sm text-stone-500 hover:bg-stone-50"
+          >
+            + 新增產品 / SKU
+          </button>
+        </div>
+      )}
 
       {/* ===== 模式開關 ===== */}
       <div className="card space-y-2">

@@ -35,8 +35,8 @@ export default function ScenariosPage() {
       const upData = await upRes.json();
       if (!upRes.ok) throw new Error(upData.error || `上傳 HTTP ${upRes.status}`);
 
-      // 2. 視覺分析
-      const anRes = await fetch('/api/infuz/analyze-composition', {
+      // 2. 視覺分析 (含產品呈現方式 + 背景 + 道具 + 構圖)
+      const anRes = await fetch('/api/infuz/analyze-scenario', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ imageUrl: upData.url }),
@@ -44,14 +44,13 @@ export default function ScenariosPage() {
       const anData = await anRes.json();
       if (!anRes.ok) throw new Error(anData.error || `分析 HTTP ${anRes.status}`);
 
-      // 3. 自動開啟編輯 modal,prompt 預填
+      // 3. 自動開啟編輯 modal,prompt + 名稱 + 型態 預填
       setEditing({
         ...EMPTY,
         id: nextId(),
-        type: '情境',
-        name: '',
-        prompt: anData.composition_prompt || '',
-        // 額外保留參考圖 URL (可選欄位)
+        type: anData.suggested_type || '情境',
+        name: anData.suggested_name || '',
+        prompt: anData.scenario_prompt || '',
         reference_image: upData.url,
       });
     } catch (e) {

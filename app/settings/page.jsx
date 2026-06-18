@@ -144,14 +144,25 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold text-stone-800">📊 Google Sheet</h2>
         <div>
           <label className="label text-xs">排程 / 紀錄表 URL</label>
-          <input
-            type="url"
-            className="input text-sm"
-            placeholder="https://docs.google.com/spreadsheets/d/..."
-            value={settings.googleSheetUrl}
-            onChange={(e) => patch('googleSheetUrl', e.target.value)}
-          />
-          <p className="mt-1 text-[10px] text-stone-500">給用戶查閱用,系統只記錄,不會直接寫 (寫入靠 Make webhook → Sheet)。</p>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              className="input flex-1 text-sm"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              value={settings.googleSheetUrl}
+              onChange={(e) => patch('googleSheetUrl', e.target.value)}
+            />
+            <a
+              href={settings.googleSheetUrl || '#'}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => { if (!settings.googleSheetUrl) e.preventDefault(); }}
+              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ${settings.googleSheetUrl ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
+            >
+              🔗 開啟 Sheet
+            </a>
+          </div>
+          <p className="mt-1 text-[10px] text-stone-500">填入後右邊按鈕直接開啟,系統只記錄,不會直接寫 (寫入靠 Make webhook → Sheet)。</p>
         </div>
       </div>
 
@@ -210,22 +221,12 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        {settings.googleSheetUrl && (
-          <a
-            href={settings.googleSheetUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-stone-500 hover:underline"
-          >
-            開啟 Google Sheet →
-          </a>
-        )}
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50 ml-auto"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? '儲存中…' : '儲存設定'}
         </button>

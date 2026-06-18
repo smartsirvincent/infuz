@@ -24,6 +24,7 @@ export default function TextPage() {
   const [loadError, setLoadError] = useState('');
   const [themes, setThemes] = useState([]);
   const [result, setResult] = useState(null);
+  const [brandOnly, setBrandOnly] = useState(false);
 
   // 自動載入 Infuz DB 資料
   useEffect(() => {
@@ -60,9 +61,21 @@ export default function TextPage() {
       <div className="card border-emerald-200 bg-emerald-50/40">
         <h1 className="flex items-center gap-2 text-xl font-semibold text-stone-900">📝 文字貼文（Infuz）</h1>
         <p className="mt-1 text-sm text-stone-600">
-          已自動載入 Infuz 品牌資料 + <strong>{input.products?.length || 0}</strong> 個 SKU。直接走「下一步」AI 推薦主題。
+          {brandOnly
+            ? <>已切到「純品牌模式」— 不用產品,從<strong>品牌賣點 / 人格 / 受眾</strong>生成主題。</>
+            : <>已自動載入 Infuz 品牌資料 + <strong>{input.products?.length || 0}</strong> 個 SKU。直接走「下一步」AI 推薦主題。</>
+          }
         </p>
         {loadError && <p className="mt-2 text-xs text-red-600">⚠ {loadError}</p>}
+        <label className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs cursor-pointer hover:bg-emerald-50">
+          <input
+            type="checkbox"
+            checked={brandOnly}
+            onChange={(e) => setBrandOnly(e.target.checked)}
+            className="size-4 rounded border-stone-300 text-emerald-600"
+          />
+          🌐 純品牌文案模式（不用產品,只用品牌賣點 + 人格 + 受眾生成）
+        </label>
       </div>
 
       <Stepper current={step} />
@@ -73,7 +86,8 @@ export default function TextPage() {
           setInput={setInput}
           hideProfileLoader={true}
           loadOnly={true}
-          showThemeStrategy={true}
+          showThemeStrategy={!brandOnly}
+          hideProducts={brandOnly}
           onSubmit={async (themesFromAPI) => {
             setThemes(themesFromAPI);
             setStep(2);
