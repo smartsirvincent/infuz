@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
+import { UploadField } from '@/components/UploadField';
 
 const GENDERS = ['女性', '男性'];
 const EMPTY = {
@@ -92,7 +93,37 @@ export default function ModelsPage() {
 }
 
 function ModelEditModal({ item, setItem, saving, onSave, onCancel }) {
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState('');
   function patch(k, v) { setItem({ ...item, [k]: v }); }
+
+  async function handleAiGenerate() {
+    if (!item.style?.trim() && !item.gender) {
+      setAiError('請先填風格描述或性別');
+      return;
+    }
+    setAiError('');
+    setAiGenerating(true);
+    try {
+      const r = await fetch('/api/infuz/generate-model', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          style: item.style || '',
+          name: item.name || '',
+          gender: item.gender || '',
+          skin_tone: item.skin_tone || '',
+          hairstyle: item.hairstyle || '',
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      patch('reference_image', d.url);
+    } catch (e) {
+      setAiError(e.message);
+    } finally { setAiGenerating(false); }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-4 overflow-auto">
       <div className="card w-full max-w-2xl my-8">
@@ -119,8 +150,19 @@ function ModelEditModal({ item, setItem, saving, onSave, onCancel }) {
           <Field label="風格描述" full hint="盡量描述: 性別 / 年齡感 / 身材 / 五官特徵 / 妝感 / 性格 — AI 會用這段保持人物一致">
             <TextArea value={item.style} onChange={(v) => patch('style', v)} rows={5} placeholder="例: 韓系空氣感短髮 20 歲中期亞洲女性..." />
           </Field>
-          <Field label="參考圖片 URL" full>
-            <TextInput value={item.reference_image} onChange={(v) => patch('reference_image', v)} placeholder="https://..." />
+          <Field label="參考圖片" full hint="可上傳已有照片,或按下方「✨ AI 生成」用上面的描述自動生成一張參考圖 (約 60s)">
+            <UploadField value={item.reference_image} onChange={(v) => patch('reference_image', v)} folder="models" />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAiGenerate}
+                disabled={aiGenerating}
+                className="rounded-md border border-purple-300 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+              >
+                {aiGenerating ? '⏳ AI 生成中… (~60s)' : '✨ AI 生成模特照'}
+              </button>
+              {aiError && <span className="text-[11px] text-red-600">⚠ {aiError}</span>}
+            </div>
           </Field>
           <Field label="膚色">
             <TextInput value={item.skin_tone} onChange={(v) => patch('skin_tone', v)} placeholder="例: 白 / 自然小麥色" />

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
+import { UploadField } from '@/components/UploadField';
 
 const CATEGORIES = ['上衣', '下身', '外套', '洋裝', '配件', '其他'];
 const GENDERS = ['女性', '男性', '中性'];
@@ -175,14 +176,14 @@ function ProductEditModal({ item, setItem, saving, onSave, onCancel }) {
           <Field label="價格">
             <TextInput value={item.price} onChange={(v) => patch('price', v)} placeholder="例: 880" />
           </Field>
-          <Field label="圖片 1 (正面) URL" full>
-            <TextInput value={item.image_front} onChange={(v) => patch('image_front', v)} />
+          <Field label="圖片 1 (正面)" full>
+            <UploadField value={item.image_front} onChange={(v) => patch('image_front', v)} folder="products" />
           </Field>
-          <Field label="圖片 2 (背面) URL" full>
-            <TextInput value={item.image_back} onChange={(v) => patch('image_back', v)} />
+          <Field label="圖片 2 (背面)" full>
+            <UploadField value={item.image_back} onChange={(v) => patch('image_back', v)} folder="products" />
           </Field>
-          <Field label="圖片 3 (細節) URL" full>
-            <TextInput value={item.image_detail} onChange={(v) => patch('image_detail', v)} />
+          <Field label="圖片 3 (細節)" full>
+            <UploadField value={item.image_detail} onChange={(v) => patch('image_detail', v)} folder="products" />
           </Field>
           <Field label="購買網址" full>
             <TextInput value={item.purchase_url} onChange={(v) => patch('purchase_url', v)} placeholder="https://..." />

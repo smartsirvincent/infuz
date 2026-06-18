@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInfuzDb, Field, TextInput, TextArea, DbHeader } from '@/components/DbAdminCommon';
+import { UploadField } from '@/components/UploadField';
 
 const TYPES = ['情境', '棚拍', '創意', '時尚', '街頭潮流', '組合'];
 const EMPTY = { id: '', type: '情境', name: '', prompt: '' };
@@ -11,12 +12,51 @@ export default function ScenariosPage() {
   const [editing, setEditing] = useState(null);
   const [typeFilter, setTypeFilter] = useState('');
   const [filter, setFilter] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeErr, setAnalyzeErr] = useState('');
 
-  function startNew() {
-    // 自動產生編號 SC + 下一個 3 位數
+  function nextId() {
     const used = items.map((x) => x.id?.match(/^SC(\d+)/)?.[1]).filter(Boolean).map(Number);
     const nextNum = used.length > 0 ? Math.max(...used) + 1 : 1;
-    setEditing({ ...EMPTY, id: `SC${String(nextNum).padStart(3, '0')}` });
+    return `SC${String(nextNum).padStart(3, '0')}`;
+  }
+  function startNew() {
+    setEditing({ ...EMPTY, id: nextId() });
+  }
+  async function handleUploadAndAnalyze(file) {
+    if (!file) return;
+    setAnalyzeErr('');
+    setAnalyzing(true);
+    try {
+      // 1. 上傳
+      const form = new FormData();
+      form.append('file', file);
+      const upRes = await fetch('/api/infuz/upload?folder=scenarios', { method: 'POST', body: form });
+      const upData = await upRes.json();
+      if (!upRes.ok) throw new Error(upData.error || `上傳 HTTP ${upRes.status}`);
+
+      // 2. 視覺分析
+      const anRes = await fetch('/api/infuz/analyze-composition', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imageUrl: upData.url }),
+      });
+      const anData = await anRes.json();
+      if (!anRes.ok) throw new Error(anData.error || `分析 HTTP ${anRes.status}`);
+
+      // 3. 自動開啟編輯 modal,prompt 預填
+      setEditing({
+        ...EMPTY,
+        id: nextId(),
+        type: '情境',
+        name: '',
+        prompt: anData.composition_prompt || '',
+        // 額外保留參考圖 URL (可選欄位)
+        reference_image: upData.url,
+      });
+    } catch (e) {
+      setAnalyzeErr(e.message);
+    } finally { setAnalyzing(false); }
   }
   function startEdit(item) { setEditing({ ...EMPTY, ...item }); }
   async function handleSave() {
@@ -49,6 +89,27 @@ export default function ScenariosPage() {
         onAdd={startNew}
         loading={loading}
       />
+
+      {/* 上傳分析建立 */}
+      <div className="card border-purple-200 bg-purple-50/40">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-purple-900">📷 從照片建立情境</h3>
+            <p className="mt-0.5 text-[11px] text-purple-700">上傳一張靈感圖 → AI 視覺分析 → 自動產出中文構圖提示詞</p>
+          </div>
+          <label className={`cursor-pointer rounded-lg bg-purple-600 px-4 py-2 text-xs font-medium text-white hover:bg-purple-700 ${analyzing ? 'opacity-50 cursor-wait' : ''}`}>
+            {analyzing ? '⏳ 分析中…' : '📷 上傳照片建立'}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              disabled={analyzing}
+              onChange={(e) => { handleUploadAndAnalyze(e.target.files?.[0]); e.target.value = ''; }}
+            />
+          </label>
+        </div>
+        {analyzeErr && <div className="mt-2 text-xs text-red-600">⚠ {analyzeErr}</div>}
+      </div>
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">⚠ {error}</div>}
 
@@ -137,6 +198,9 @@ function ScenarioEditModal({ item, setItem, saving, onSave, onCancel }) {
           </Field>
           <Field label="情境指令" full hint="中文或英文都可。用 {{product}} 標示產品的位置 — 生圖時會自動替換成 SKU 名稱。">
             <TextArea value={item.prompt} onChange={(v) => patch('prompt', v)} rows={8} placeholder="A stylish woman wearing {{product}} in a cozy modern café. Warm natural lighting..." />
+          </Field>
+          <Field label="參考圖 (選填,記錄靈感來源)" full>
+            <UploadField value={item.reference_image} onChange={(v) => patch('reference_image', v)} folder="scenarios" />
           </Field>
         </div>
         <div className="mt-4 flex justify-end gap-2">
