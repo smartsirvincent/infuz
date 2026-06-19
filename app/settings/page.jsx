@@ -17,6 +17,26 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [exists, setExists] = useState(false);
+  const [usage, setUsage] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+
+  async function refreshUsage() {
+    setUsageLoading(true);
+    try {
+      const r = await fetch('/api/infuz/usage', { cache: 'no-store' });
+      const d = await r.json();
+      const main = (d.items || []).find((x) => x.id === 'main') || { anthropic: {}, kie: {}, by_endpoint: {} };
+      setUsage(main);
+    } catch (_) {} finally { setUsageLoading(false); }
+  }
+
+  async function resetUsage() {
+    if (!confirm('確定把所有累計用量歸零?(費率不會變)')) return;
+    try {
+      const r = await fetch('/api/infuz/usage?id=main', { method: 'DELETE' });
+      if (r.ok) await refreshUsage();
+    } catch (_) {}
+  }
 
   async function refresh() {
     setLoading(true);
@@ -33,7 +53,7 @@ export default function SettingsPage() {
     } catch (_) {} finally { setLoading(false); }
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); refreshUsage(); }, []);
 
   async function handleSave() {
     setSaving(true);
@@ -91,6 +111,8 @@ export default function SettingsPage() {
           設定 webhook + Google Sheet 連結。在 /material 生圖後或 <Link href="/assets" className="text-emerald-700 underline">/assets</Link> 可一鍵發送。
         </p>
       </div>
+
+      <UsageCard usage={usage} loading={usageLoading} onReset={resetUsage} onRefresh={refreshUsage} />
 
       <div className="card space-y-4">
         <h2 className="text-lg font-semibold text-stone-800">🔗 Webhook</h2>
@@ -232,5 +254,176 @@ export default function SettingsPage() {
         </button>
       </div>
     </main>
+  );
+}
+
+// ============== 用量 / 費用卡片 ==============
+const PRICING = {
+  anthropic: {
+    'claude-sonnet-4-5': { in: 3.0, out: 15.0 },
+    'claude-sonnet-4-6': { in: 3.0, out: 15.0 },
+    'claude-sonnet': { in: 3.0, out: 15.0 },
+    'claude-haiku-4-5': { in: 0.80, out: 4.0 },
+    'claude-haiku': { in: 0.80, out: 4.0 },
+    'claude-opus-4-7': { in: 15.0, out: 75.0 },
+    'claude-opus': { in: 15.0, out: 75.0 },
+    default: { in: 3.0, out: 15.0 },
+  },
+  kie: {
+    'gpt-image-2': 0.045,
+    'gpt-image-2-image-to-image': 0.045,
+    default: 0.045,
+  },
+};
+
+function priceAnthropic(model) {
+  return PRICING.anthropic[model] || PRICING.anthropic.default;
+}
+function priceKie(model) {
+  return PRICING.kie[model] || PRICING.kie.default;
+}
+function $(n) {
+  return '$' + (Number(n) || 0).toFixed(4);
+}
+function num(n) {
+  return (Number(n) || 0).toLocaleString();
+}
+
+function UsageCard({ usage, loading, onReset, onRefresh }) {
+  if (loading) {
+    return <div className="card text-center text-stone-500">載入用量中…</div>;
+  }
+  if (!usage) return null;
+
+  let total = 0;
+  const anthropicRows = Object.entries(usage.anthropic || {}).map(([model, m]) => {
+    const p = priceAnthropic(model);
+    const inCost = ((m.input_tokens || 0) / 1_000_000) * p.in;
+    const outCost = ((m.output_tokens || 0) / 1_000_000) * p.out;
+    const cost = inCost + outCost;
+    total += cost;
+    return { model, p, m, inCost, outCost, cost };
+  });
+  const kieRows = Object.entries(usage.kie || {}).map(([model, m]) => {
+    const perImage = priceKie(model);
+    const cost = (m.count || 0) * perImage;
+    total += cost;
+    return { model, m, perImage, cost };
+  });
+
+  const byEndpoint = Object.entries(usage.by_endpoint || {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10);
+
+  return (
+    <div className="card space-y-4 border-emerald-200 bg-emerald-50/40">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900">💰 已花費 / 用量</h2>
+          <p className="mt-1 text-[11px] text-stone-600">
+            {usage.lastUpdated
+              ? <>最後更新: {new Date(usage.lastUpdated).toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' })}</>
+              : '尚無使用紀錄'}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-3xl font-bold text-emerald-700">${total.toFixed(2)}</div>
+          <div className="text-[10px] text-stone-500">USD 估算 (累計)</div>
+        </div>
+      </div>
+
+      {/* Anthropic */}
+      <div>
+        <h3 className="mb-1.5 text-sm font-semibold text-stone-800">🤖 Anthropic (Claude)</h3>
+        {anthropicRows.length === 0 ? (
+          <p className="text-[11px] text-stone-500">尚無 Claude 呼叫</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead className="text-stone-500">
+                <tr>
+                  <th className="text-left">模型</th>
+                  <th className="text-right">呼叫</th>
+                  <th className="text-right">Input tok</th>
+                  <th className="text-right">Output tok</th>
+                  <th className="text-right">費率 in/out</th>
+                  <th className="text-right">小計</th>
+                </tr>
+              </thead>
+              <tbody>
+                {anthropicRows.map((r) => (
+                  <tr key={r.model} className="border-t border-stone-200">
+                    <td className="py-1 font-mono">{r.model}</td>
+                    <td className="text-right">{r.m.calls || 0}</td>
+                    <td className="text-right">{num(r.m.input_tokens)}</td>
+                    <td className="text-right">{num(r.m.output_tokens)}</td>
+                    <td className="text-right text-stone-500">${r.p.in}/${r.p.out} per M</td>
+                    <td className="text-right font-semibold">{$(r.cost)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* KIE */}
+      <div>
+        <h3 className="mb-1.5 text-sm font-semibold text-stone-800">🎨 KIE.ai (圖片生成)</h3>
+        {kieRows.length === 0 ? (
+          <p className="text-[11px] text-stone-500">尚無 KIE 生圖</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead className="text-stone-500">
+                <tr>
+                  <th className="text-left">模型</th>
+                  <th className="text-right">張數</th>
+                  <th className="text-right">總耗時</th>
+                  <th className="text-right">費率 / 張</th>
+                  <th className="text-right">小計</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kieRows.map((r) => (
+                  <tr key={r.model} className="border-t border-stone-200">
+                    <td className="py-1 font-mono">{r.model}</td>
+                    <td className="text-right">{num(r.m.count)}</td>
+                    <td className="text-right text-stone-500">{Math.round((r.m.ms_total || 0) / 1000)}s</td>
+                    <td className="text-right text-stone-500">${r.perImage}</td>
+                    <td className="text-right font-semibold">{$(r.cost)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* By endpoint */}
+      {byEndpoint.length > 0 && (
+        <details className="text-[11px]">
+          <summary className="cursor-pointer text-stone-500 hover:text-stone-800">📊 各 endpoint 呼叫次數 ({byEndpoint.length})</summary>
+          <ul className="mt-2 space-y-1">
+            {byEndpoint.map(([ep, n]) => (
+              <li key={ep} className="flex justify-between border-t border-stone-100 py-1">
+                <span className="font-mono text-stone-700">{ep}</span>
+                <span className="text-stone-500">{n} 次</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <div className="border-t border-emerald-200 pt-3 text-[10px] text-stone-500">
+        <p>⚠ 費率為估算 (Anthropic 公開定價 + KIE 估 $0.045/張)。實際以兩個服務 dashboard 為準。</p>
+        <p className="mt-1">📝 含本系統所有 AI 呼叫:文字推薦、生圖、視覺分析、文案建議、模特生成等。</p>
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button type="button" onClick={onRefresh} className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-xs hover:bg-stone-50">↻ 重新整理</button>
+        <button type="button" onClick={onReset} className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs text-red-600 hover:bg-red-50">🔄 歸零</button>
+      </div>
+    </div>
   );
 }

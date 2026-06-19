@@ -1,6 +1,7 @@
 // 上傳一張靈感圖 → Claude vision 分析 → 產出完整情境指令 (含產品呈現方式 + 背景 + 道具 + 構圖)
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { trackAnthropicResp } from '@/lib/infuz-usage.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -77,6 +78,7 @@ export async function POST(req) {
         ],
       }],
     });
+    trackAnthropicResp(resp, MODEL, 'analyze-scenario');
     const text = resp.content.map((b) => b.text || '').join('');
     const parsed = tolerantParse(text);
     const suggested_type = ALLOWED_TYPES.has(parsed.suggested_type) ? parsed.suggested_type : '情境';
