@@ -61,6 +61,8 @@ export default function Step1Form({
   loadOnly = false, // 只能載入,不能存/刪/匯出/匯入 (給 /text /image-plan /material 用)
   hideProfileLoader = false, // 整個品牌切換 / 雲端載入 / 範例 區塊都隱藏 (給 Infuz 單品牌頁用)
   hideProducts = false, // 隱藏產品清單,純品牌文案模式
+  extraPayload = null, // 額外送進 recommend API 的欄位 (給 /text 維度變數用)
+  beforeSubmit = null, // 提交前的 hook,可放置進階變數區塊 (函式回 ReactNode)
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -294,7 +296,11 @@ export default function Step1Form({
       const res = await fetch(recommendEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...buildPayload(input), brand_only: hideProducts }),
+        body: JSON.stringify({
+          ...buildPayload(input),
+          brand_only: hideProducts,
+          ...(extraPayload || {}),
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -647,6 +653,9 @@ export default function Step1Form({
           </p>
         )}
       </div>
+
+      {/* 進階變數 slot (給 /text 維度區塊用) */}
+      {beforeSubmit && beforeSubmit()}
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">

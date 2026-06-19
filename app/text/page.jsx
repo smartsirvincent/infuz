@@ -7,6 +7,7 @@ import Step3Progress from '@/components/Step3Progress';
 import Step4Done from '@/components/Step4Done';
 import Stepper from '@/components/Stepper';
 import { loadInfuzInput, INFUZ_BRAND } from '@/lib/infuz-brand';
+import { PostDimensions, DEFAULT_DIMENSIONS } from '@/components/PostDimensions';
 
 const EMPTY_INPUT = {
   ...INFUZ_BRAND,
@@ -25,6 +26,7 @@ export default function TextPage() {
   const [themes, setThemes] = useState([]);
   const [result, setResult] = useState(null);
   const [brandOnly, setBrandOnly] = useState(false);
+  const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS);
 
   // 自動載入 Infuz DB 資料
   useEffect(() => {
@@ -88,6 +90,10 @@ export default function TextPage() {
           loadOnly={true}
           showThemeStrategy={!brandOnly}
           hideProducts={brandOnly}
+          extraPayload={{ dimensions }}
+          beforeSubmit={() => (
+            <PostDimensions value={dimensions} onChange={setDimensions} />
+          )}
           onSubmit={async (themesFromAPI) => {
             setThemes(themesFromAPI);
             setStep(2);
