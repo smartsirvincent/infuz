@@ -70,6 +70,7 @@ export async function POST(req) {
         ],
       }],
     });
+    await trackAnthropicResp(resp, MODEL, 'analyze-composition');
     const text = resp.content.map((b) => b.text || '').join('');
     const parsed = tolerantParse(text);
     return NextResponse.json({

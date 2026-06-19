@@ -78,7 +78,7 @@ export async function POST(req) {
         ],
       }],
     });
-    trackAnthropicResp(resp, MODEL, 'analyze-scenario');
+    await trackAnthropicResp(resp, MODEL, 'analyze-scenario');
     const text = resp.content.map((b) => b.text || '').join('');
     const parsed = tolerantParse(text);
     const suggested_type = ALLOWED_TYPES.has(parsed.suggested_type) ? parsed.suggested_type : '情境';
