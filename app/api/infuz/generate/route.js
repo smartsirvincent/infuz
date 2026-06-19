@@ -129,7 +129,10 @@ export async function POST(req) {
       extraPrompt = '',
     } = await req.json();
 
-    if (!scenarioId) return NextResponse.json({ error: 'scenarioId required' }, { status: 400 });
+    // 情境只有「沒上傳模仿構圖照」時才必填
+    if (!scenarioId && !compositionRefUrl) {
+      return NextResponse.json({ error: '請選情境或上傳模仿構圖照' }, { status: 400 });
+    }
     if (mode === 'single' && !productId) {
       return NextResponse.json({ error: 'productId required for mode=single' }, { status: 400 });
     }
@@ -145,7 +148,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'modelId required' }, { status: 400 });
     }
 
-    const scenario = await findById('scenarios', scenarioId);
+    const scenario = scenarioId ? await findById('scenarios', scenarioId) : null;
     const model = needsModel ? await findById('models', modelId) : null;
 
     let products = [];
@@ -170,8 +173,14 @@ export async function POST(req) {
     // === Build prompt ===
     const parts = [];
 
-    // 1. 情境 (替換 {{product}})
-    parts.push(fillTemplate(scenario.prompt || '', productLabel));
+    // 1. 情境 (替換 {{product}}) — 沒選情境時用模仿構圖的描述
+    if (scenario) {
+      parts.push(fillTemplate(scenario.prompt || '', productLabel));
+    } else if (compositionPrompt?.trim()) {
+      parts.push(`Scene composition: ${compositionPrompt.trim()}`);
+    } else {
+      parts.push(`Clean professional fashion photography setting, neutral background.`);
+    }
 
     // 2. 產品
     if (mode === 'single') {

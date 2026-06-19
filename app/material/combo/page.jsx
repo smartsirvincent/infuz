@@ -69,8 +69,12 @@ export default function MaterialComboPage() {
   }
 
   function handleGenerate() {
-    if (!topId || !bottomId || !modelId || !scenarioId) {
-      setError('上衣 / 下身 / 模特 / 情境 都必選');
+    if (!topId || !bottomId || !modelId) {
+      setError('上衣 / 下身 / 模特 必選');
+      return;
+    }
+    if (!scenarioId && !compositionRefUrl) {
+      setError('請選情境,或上傳模仿構圖照(2 選 1)');
       return;
     }
     if (topId === bottomId) {
@@ -179,7 +183,7 @@ export default function MaterialComboPage() {
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={generating || !topId || !bottomId || !modelId || !scenarioId}
+              disabled={generating || !topId || !bottomId || !modelId || (!scenarioId && !compositionRefUrl)}
               className="btn-primary disabled:opacity-50"
             >
               {generating ? '生成中…' : '🎨 開始生圖 (1:1)'}

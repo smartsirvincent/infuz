@@ -69,8 +69,12 @@ export default function MaterialSinglePage() {
   }
 
   function handleGenerate() {
-    if (!productId || !modelId || !scenarioId) {
-      setError('產品 / 模特 / 情境 都必選');
+    if (!productId || !modelId) {
+      setError('產品 / 模特 必選');
+      return;
+    }
+    if (!scenarioId && !compositionRefUrl) {
+      setError('請選情境,或上傳模仿構圖照(2 選 1)');
       return;
     }
     runGenerate();
@@ -157,7 +161,7 @@ export default function MaterialSinglePage() {
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={generating || !productId || !modelId || !scenarioId}
+              disabled={generating || !productId || !modelId || (!scenarioId && !compositionRefUrl)}
               className="btn-primary disabled:opacity-50"
             >
               {generating ? '生成中…' : '🎨 開始生圖 (1:1)'}

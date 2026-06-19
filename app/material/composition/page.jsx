@@ -57,8 +57,8 @@ export default function MaterialCompositionPage() {
       setError('搭配模特模式需要選模特');
       return;
     }
-    if (!scenarioId) {
-      setError('請選情境');
+    if (!scenarioId && !compositionRefUrl) {
+      setError('請選情境,或上傳模仿構圖照(2 選 1)');
       return;
     }
     setError('');
@@ -206,7 +206,7 @@ export default function MaterialCompositionPage() {
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={generating || productIds.length < 2 || (displayMode === 'model' && !modelId) || !scenarioId}
+              disabled={generating || productIds.length < 2 || (displayMode === 'model' && !modelId) || (!scenarioId && !compositionRefUrl)}
               className="btn-primary disabled:opacity-50"
             >
               {generating ? '生成中…' : `🎨 開始生圖 (${productIds.length} 件, 1:1)`}
