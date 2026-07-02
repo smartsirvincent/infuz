@@ -117,9 +117,17 @@ export async function POST(req) {
     const {
       mode = 'single',
       productId, topId, bottomId,
-      productIds = [],        // 組合模式: 多個 product id
-      displayMode = 'display', // 組合模式: 'display' (純陳列) | 'model' (搭配模特兒)
-      modelId, scenarioId,
+      productIds = [],
+      // 組合模式模特兒配置:
+      //   'none'   (純陳列, 無模特)
+      //   'single' (固定 1 位模特) — 舊 'model'
+      //   'dual'   (2 位模特兒各穿 1 件, 需正好 2 件)
+      //   'random' (AI 隨機生成模特, 不用參考圖)
+      // 舊值向後相容: 'display' → 'none', 'model' → 'single'
+      displayMode: displayModeRaw = 'none',
+      modelId,                 // single 模式 or 舊接法
+      modelIds = [],           // dual 模式: [id_a, id_b]
+      scenarioId,
       textMode = 'none',
       promoInfo = '',
       slogan = '',
@@ -128,6 +136,11 @@ export async function POST(req) {
       compositionPrompt = '',
       extraPrompt = '',
     } = await req.json();
+
+    // 舊值向後相容
+    let displayMode = displayModeRaw;
+    if (displayMode === 'display') displayMode = 'none';
+    else if (displayMode === 'model') displayMode = 'single';
 
     // 情境只有「沒上傳模仿構圖照」時才必填
     if (!scenarioId && !compositionRefUrl) {
@@ -142,14 +155,35 @@ export async function POST(req) {
     if (mode === 'composition' && (!Array.isArray(productIds) || productIds.length < 2)) {
       return NextResponse.json({ error: 'composition 模式至少要 2 件產品' }, { status: 400 });
     }
-    // single + combo 一定要 model; composition 在 model 模式才要
-    const needsModel = mode !== 'composition' || displayMode === 'model';
-    if (needsModel && !modelId) {
+    if (mode === 'composition' && displayMode === 'dual' && productIds.length !== 2) {
+      return NextResponse.json({ error: '「2 位模特兒各穿 1 件」模式必須正好選 2 件產品' }, { status: 400 });
+    }
+
+    // 模特需求:
+    // single 素材/combo 素材 → 一定要 1 位真實模特 (modelId)
+    // composition + none/random → 不用模特
+    // composition + single → 1 位模特
+    // composition + dual → 2 位模特
+    let needsSingleModel = false;
+    let needsDualModel = false;
+    if (mode === 'single' || mode === 'combo') {
+      needsSingleModel = true;
+    } else if (mode === 'composition') {
+      if (displayMode === 'single') needsSingleModel = true;
+      else if (displayMode === 'dual') needsDualModel = true;
+    }
+    if (needsSingleModel && !modelId) {
       return NextResponse.json({ error: 'modelId required' }, { status: 400 });
+    }
+    if (needsDualModel && (!Array.isArray(modelIds) || modelIds.length !== 2 || modelIds[0] === modelIds[1])) {
+      return NextResponse.json({ error: '「2 位模特兒」模式需要 2 個不同的 modelIds' }, { status: 400 });
     }
 
     const scenario = scenarioId ? await findById('scenarios', scenarioId) : null;
-    const model = needsModel ? await findById('models', modelId) : null;
+    const model = needsSingleModel ? await findById('models', modelId) : null;
+    const modelsPair = needsDualModel
+      ? await Promise.all(modelIds.map((id) => findById('models', id)))
+      : [];
 
     let products = [];
     let productLabel = '';
@@ -191,15 +225,28 @@ export async function POST(req) {
       parts.push('Both pieces are worn together by the same model as a complete outfit. Show top and bottom clearly visible in the composition.');
     } else if (mode === 'composition') {
       products.forEach((p, i) => parts.push(buildProductBlock(p, `ITEM ${i + 1}`)));
-      if (displayMode === 'display') {
+      if (displayMode === 'none') {
         parts.push(`Composition style: FLAT-LAY / MERCHANDISE DISPLAY photography. Arrange all ${products.length} pieces neatly together on a clean background — show every piece clearly with consistent lighting. Top-down or eye-level overhead view. NO MODEL, NO PEOPLE, NO HANDS, NO HUMAN PRESENCE. Items can overlap slightly to suggest styling pairings but each must be identifiable.`);
+      } else if (displayMode === 'dual') {
+        parts.push(`Composition style: TWO different models in the same frame. Model A wears ITEM 1, Model B wears ITEM 2. Both models styled together (side-by-side, or interacting naturally). Show each garment clearly on its assigned model. Do NOT swap who wears what.`);
+      } else if (displayMode === 'random') {
+        parts.push(`Composition style: Model wearing or styling all ${products.length} pieces together in a coherent outfit / look. The model should be a freshly generated Asian fashion model — natural styling, realistic appearance. NO specific model reference given, let the AI create one.`);
       } else {
+        // single
         parts.push(`Composition style: Model wearing or styling all ${products.length} pieces together in a coherent outfit / look. Show each item clearly. If pieces can't be worn simultaneously (e.g., 2 pairs of pants), show one being worn and the others styled in-hand or arranged in the scene.`);
       }
     }
 
-    // 3. 模特 (composition + display 模式不需要)
-    if (model) parts.push(buildModelBlock(model));
+    // 3. 模特
+    if (model) {
+      parts.push(buildModelBlock(model));
+    } else if (modelsPair.length === 2) {
+      parts.push('MODEL A: ' + buildModelBlock(modelsPair[0]));
+      parts.push('MODEL B: ' + buildModelBlock(modelsPair[1]));
+      parts.push(`Assignment: Model A wears ITEM 1 ("${products[0]?.name || products[0]?.id}"). Model B wears ITEM 2 ("${products[1]?.name || products[1]?.id}"). Both models stand or sit next to each other in the same frame.`);
+    } else if (mode === 'composition' && displayMode === 'random') {
+      parts.push('Model: One Asian female fashion model, natural styling, realistic appearance. Freshly generated (no reference image provided for the model). Neutral expression, poses naturally suited to the outfit.');
+    }
 
     // 4. 不要人臉
     if (noFace) {
@@ -232,6 +279,15 @@ export async function POST(req) {
       }
     }
     if (model?.reference_image) { refImages.push(model.reference_image); refLabels.push(`[${idx}] Model character reference`); idx += 1; }
+    if (modelsPair.length === 2) {
+      for (let i = 0; i < 2; i += 1) {
+        if (modelsPair[i]?.reference_image) {
+          refImages.push(modelsPair[i].reference_image);
+          refLabels.push(`[${idx}] Model ${String.fromCharCode(65 + i)} character reference`);
+          idx += 1;
+        }
+      }
+    }
     if (compositionRefUrl) { refImages.push(compositionRefUrl); refLabels.push(`[${idx}] Composition inspiration ONLY (do NOT copy its content / colors / specific garments)`); idx += 1; }
     if (refLabels.length > 0) {
       parts.push(`Reference images (in order): ${refLabels.join(', ')}. Combine references appropriately for ONE final composition.`);
@@ -264,8 +320,13 @@ export async function POST(req) {
     const kieMs = Date.now() - t0;
 
     // 存進素材資料庫 (失敗不致命)
+    // 若 dual 模式,把 modelsPair 傳進去合成 modelName 顯示
+    const modelForAsset = model
+      || (modelsPair.length === 2
+        ? { id: modelsPair.map((m) => m.id).join('+'), name: modelsPair.map((m) => m.name).join(' + ') }
+        : null);
     const asset = await saveAsset({
-      mode, displayMode, products, model, scenario,
+      mode, displayMode, products, model: modelForAsset, scenario,
       imageUrl: up.url,
       cloudinaryPublicId: up.publicId,
       kieTaskId: taskId,
