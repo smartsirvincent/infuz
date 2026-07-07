@@ -1,6 +1,6 @@
 // /api/infuz/generate — 從 3 個 DB + 選項組 prompt → KIE 1:1 → Cloudinary
 import { NextResponse } from 'next/server';
-import { submitImageV2, pollImageV2, downloadImage } from '@/lib/kie-image.js';
+import { submitAndPollV2WithRetry, downloadImage } from '@/lib/kie-image.js';
 import { uploadToCloudinary, hasCloudinary } from '@/lib/cloudinary.js';
 import { loadDb, appendItems } from '@/lib/infuz-db.js';
 
@@ -308,16 +308,21 @@ export async function POST(req) {
     const fullPrompt = parts.filter(Boolean).join(' ');
 
     // === KIE === (V2 接受最多 16 張,我們最多 10 張安全)
+    // 加自動重試 (Internal Error 等 KIE 伺服器暫時性錯誤)
     const t0 = Date.now();
-    const taskId = await submitImageV2({
+    let attempts = 0;
+    const { taskId, kieUrl } = await submitAndPollV2WithRetry({
       prompt: fullPrompt,
       referenceImages: refImages.slice(0, 10),
       aspect_ratio: '1:1',
+    }, {
+      maxRetries: 2,
+      onRetry: () => { attempts += 1; },
     });
-    const kieUrl = await pollImageV2(taskId);
     const buf = await downloadImage(kieUrl);
     const up = await uploadToCloudinary(buf, { folder: 'infuz/results' });
     const kieMs = Date.now() - t0;
+    if (attempts > 0) console.log(`[generate] KIE retried ${attempts} time(s), final taskId=${taskId}`);
 
     // 存進素材資料庫 (失敗不致命)
     // 若 dual 模式,把 modelsPair 傳進去合成 modelName 顯示
