@@ -10,7 +10,7 @@ export default function SocialHub() {
         </p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           href="/text"
           className="group card hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg transition"
@@ -21,7 +21,7 @@ export default function SocialHub() {
               <h2 className="text-base font-semibold text-stone-900 group-hover:text-brand-700">文字貼文</h2>
               <p className="mt-1 text-[11px] text-stone-600">整月文字文案批次生成</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                Infuz 22 SKU 全自動載入 · 也可切「純品牌」模式
+                Infuz 22 SKU 全自動載入
               </p>
             </div>
           </div>
@@ -37,7 +37,23 @@ export default function SocialHub() {
               <h2 className="text-base font-semibold text-stone-900 group-hover:text-purple-700">圖片貼文</h2>
               <p className="mt-1 text-[11px] text-stone-600">整月含 AI 圖批次規劃</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                AI 主題推薦 + 並行生圖 + xlsx 輸出
+                主題推薦 + 並行生圖 + xlsx
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/social/publish"
+          className="group card border-blue-200 bg-blue-50/30 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-lg transition"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">🚀</div>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-stone-900 group-hover:text-blue-700">多平台直發</h2>
+              <p className="mt-1 text-[11px] text-stone-600">Threads/IG/FB 一鍵發文</p>
+              <p className="mt-2 text-[11px] text-stone-500">
+                直串 Meta API · 帳號在 /social/accounts 連
               </p>
             </div>
           </div>
@@ -53,7 +69,7 @@ export default function SocialHub() {
               <h2 className="text-base font-semibold text-stone-900 group-hover:text-stone-700">系統設定</h2>
               <p className="mt-1 text-[11px] text-stone-600">Webhook + Google Sheet</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                排程 webhook / 發文 webhook / 預設平台
+                排程 / 發文 webhook 設定
               </p>
             </div>
           </div>
