@@ -9,6 +9,11 @@ const EMPTY = {
   postWebhook: '',
   googleSheetUrl: '',
   defaultPlatforms: { fb: false, ig: true, threads: true },
+  utm: {
+    source: { threads: 'threads', instagram: 'ig', facebook: 'fb' },
+    medium: 'social',
+    campaign: 'infuz_social',
+  },
 };
 
 export default function SettingsPage() {
@@ -114,6 +119,22 @@ export default function SettingsPage() {
 
       <UsageCard usage={usage} loading={usageLoading} onReset={resetUsage} onRefresh={refreshUsage} />
 
+      {/* ===== 多平台直發帳號 ===== */}
+      <div className="card border-blue-200 bg-blue-50/40 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-stone-900">🚀 多平台直發帳號</h2>
+          <Link href="/social/accounts" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+            🔑 帳號連接 →
+          </Link>
+        </div>
+        <p className="text-xs text-stone-600">
+          Threads / IG / FB 粉專 Token 貼入 + 選粉專。連完後 <Link href="/social" className="text-blue-700 underline">/social</Link> 就能一鍵發文。
+        </p>
+        <p className="text-[11px] text-stone-500">
+          需要先在 Vercel env 設定 <code className="rounded bg-stone-100 px-1">FB_APP_ID</code> / <code className="rounded bg-stone-100 px-1">FB_APP_SECRET</code>。詳細步驟在帳號連接頁底部展開。
+        </p>
+      </div>
+
       <div className="card space-y-4">
         <h2 className="text-lg font-semibold text-stone-800">🔗 Webhook</h2>
 
@@ -185,6 +206,82 @@ export default function SettingsPage() {
             </a>
           </div>
           <p className="mt-1 text-[10px] text-stone-500">填入後右邊按鈕直接開啟,系統只記錄,不會直接寫 (寫入靠 Make webhook → Sheet)。</p>
+        </div>
+      </div>
+
+      {/* ===== UTM 參數 (連結貼文用) ===== */}
+      <div className="card space-y-3">
+        <h2 className="text-lg font-semibold text-stone-800">🔗 UTM 參數 (連結貼文自動加)</h2>
+        <p className="text-[11px] text-stone-500">
+          「連結貼文」發文時,產品購買 URL 會自動附加這些 UTM 參數。source 依平台分別設定。
+        </p>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label className="label text-xs">utm_source (Threads)</label>
+            <input
+              type="text"
+              className="input text-sm font-mono"
+              value={settings.utm?.source?.threads || ''}
+              onChange={(e) => patch('utm', { ...settings.utm, source: { ...(settings.utm?.source || {}), threads: e.target.value } })}
+              placeholder="threads"
+            />
+          </div>
+          <div>
+            <label className="label text-xs">utm_source (Instagram)</label>
+            <input
+              type="text"
+              className="input text-sm font-mono"
+              value={settings.utm?.source?.instagram || ''}
+              onChange={(e) => patch('utm', { ...settings.utm, source: { ...(settings.utm?.source || {}), instagram: e.target.value } })}
+              placeholder="ig"
+            />
+          </div>
+          <div>
+            <label className="label text-xs">utm_source (Facebook)</label>
+            <input
+              type="text"
+              className="input text-sm font-mono"
+              value={settings.utm?.source?.facebook || ''}
+              onChange={(e) => patch('utm', { ...settings.utm, source: { ...(settings.utm?.source || {}), facebook: e.target.value } })}
+              placeholder="fb"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label text-xs">utm_medium</label>
+            <input
+              type="text"
+              className="input text-sm font-mono"
+              value={settings.utm?.medium || ''}
+              onChange={(e) => patch('utm', { ...settings.utm, medium: e.target.value })}
+              placeholder="social"
+            />
+          </div>
+          <div>
+            <label className="label text-xs">utm_campaign</label>
+            <input
+              type="text"
+              className="input text-sm font-mono"
+              value={settings.utm?.campaign || ''}
+              onChange={(e) => patch('utm', { ...settings.utm, campaign: e.target.value })}
+              placeholder="infuz_social"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-stone-50 p-3 text-[11px] text-stone-600">
+          <div className="font-medium">預覽</div>
+          <div className="mt-1 font-mono break-all">
+            {'https://www.infuz.com.tw/product/xxx?'}
+            <span className="text-blue-700">utm_source={settings.utm?.source?.threads || 'threads'}</span>
+            <span>&</span>
+            <span className="text-blue-700">utm_medium={settings.utm?.medium || 'social'}</span>
+            <span>&</span>
+            <span className="text-blue-700">utm_campaign={settings.utm?.campaign || 'infuz_social'}</span>
+          </div>
         </div>
       </div>
 

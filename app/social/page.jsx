@@ -6,78 +6,64 @@ export default function SocialHub() {
       <div className="card">
         <h1 className="text-2xl font-semibold text-stone-900">📤 社群發文</h1>
         <p className="mt-2 text-sm text-stone-600">
-          文字貼文規劃 / 圖片貼文規劃 / Webhook 發文設定 — 三項合在一起管。
+          單篇即時發文到 Threads / IG / FB 粉專。品牌設定與月度規劃在<Link href="/material" className="text-emerald-700 underline">素材</Link>那邊處理。
         </p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Link
-          href="/text"
+          href="/social/text-post"
           className="group card hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg transition"
         >
           <div className="flex items-start gap-3">
             <div className="flex size-12 items-center justify-center rounded-xl bg-brand-100 text-2xl">📝</div>
             <div className="flex-1">
               <h2 className="text-base font-semibold text-stone-900 group-hover:text-brand-700">文字貼文</h2>
-              <p className="mt-1 text-[11px] text-stone-600">整月文字文案批次生成</p>
+              <p className="mt-1 text-[11px] text-stone-600">純文字 → 直發</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                Infuz 22 SKU 全自動載入
+                可 AI 建議穿搭 / 觀點文,不需帶產品
               </p>
             </div>
           </div>
         </Link>
 
         <Link
-          href="/image-plan"
+          href="/social/image-post"
           className="group card hover:-translate-y-0.5 hover:border-purple-300 hover:shadow-lg transition"
         >
           <div className="flex items-start gap-3">
             <div className="flex size-12 items-center justify-center rounded-xl bg-purple-100 text-2xl">🖼️</div>
             <div className="flex-1">
               <h2 className="text-base font-semibold text-stone-900 group-hover:text-purple-700">圖片貼文</h2>
-              <p className="mt-1 text-[11px] text-stone-600">整月含 AI 圖批次規劃</p>
+              <p className="mt-1 text-[11px] text-stone-600">從素材庫挑 / 上傳 → 直發</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                主題推薦 + 並行生圖 + xlsx
+                圖 + AI 產文 → Threads / IG / FB
               </p>
             </div>
           </div>
         </Link>
 
         <Link
-          href="/social/publish"
-          className="group card border-blue-200 bg-blue-50/30 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-lg transition"
+          href="/social/link-post"
+          className="group card hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg transition"
         >
           <div className="flex items-start gap-3">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">🚀</div>
+            <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-2xl">🔗</div>
             <div className="flex-1">
-              <h2 className="text-base font-semibold text-stone-900 group-hover:text-blue-700">多平台直發</h2>
-              <p className="mt-1 text-[11px] text-stone-600">Threads/IG/FB 一鍵發文</p>
+              <h2 className="text-base font-semibold text-stone-900 group-hover:text-emerald-700">連結貼文</h2>
+              <p className="mt-1 text-[11px] text-stone-600">選產品 + 自動加 UTM</p>
               <p className="mt-2 text-[11px] text-stone-500">
-                直串 Meta API · 帳號在 /social/accounts 連
-              </p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/settings"
-          className="group card hover:-translate-y-0.5 hover:border-stone-400 hover:shadow-lg transition"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-stone-200 text-2xl">⚙️</div>
-            <div className="flex-1">
-              <h2 className="text-base font-semibold text-stone-900 group-hover:text-stone-700">系統設定</h2>
-              <p className="mt-1 text-[11px] text-stone-600">Webhook + Google Sheet</p>
-              <p className="mt-2 text-[11px] text-stone-500">
-                排程 / 發文 webhook 設定
+                導購型 · UTM 參數在系統設定設
               </p>
             </div>
           </div>
         </Link>
       </section>
 
-      <div className="card border-stone-100 bg-stone-50 text-xs text-stone-600">
-        💡 生圖在這之前 — 去 <Link className="text-emerald-700 underline" href="/material">✨ 素材產生</Link> 做 1:1 視覺,完成的圖會自動進 <Link className="text-emerald-700 underline" href="/assets">🗂 素材庫</Link>,在那裡可一鍵發到排程或直接發文。
+      <div className="card border-stone-100 bg-stone-50 text-xs text-stone-600 space-y-1">
+        <div>💡 <strong>發完的貼文</strong>: 自動記錄到 <Link className="text-emerald-700 underline" href="/assets">🗂 素材庫</Link> 對應素材的 dispatched 欄</div>
+        <div>💡 <strong>還沒連接 Threads / FB 帳號?</strong> 去 <Link className="text-emerald-700 underline" href="/settings">⚙️ 系統設定</Link> 底下「多平台直發帳號」連接</div>
+        <div>💡 <strong>要做整月批次規劃?</strong> 去 <Link className="text-emerald-700 underline" href="/text">📝 文字月度規劃</Link> 或 <Link className="text-emerald-700 underline" href="/image-plan">🖼️ 圖片月度規劃</Link></div>
       </div>
     </main>
   );

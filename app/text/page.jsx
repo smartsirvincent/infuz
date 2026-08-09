@@ -88,6 +88,7 @@ export default function TextPage() {
           setInput={setInput}
           hideProfileLoader={true}
           loadOnly={true}
+          hideBrandFields={true}
           showThemeStrategy={!brandOnly}
           hideProducts={brandOnly}
           extraPayload={{ dimensions }}

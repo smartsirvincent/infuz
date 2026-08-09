@@ -72,6 +72,7 @@ export default function ImagePlanPage() {
           setInput={setInput}
           hideProfileLoader={true}
           loadOnly={true}
+          hideBrandFields={true}
           showImageHint={false}
           showImageStyles={true}
           showThemeStrategy={true}

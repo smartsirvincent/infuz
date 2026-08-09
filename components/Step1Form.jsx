@@ -61,6 +61,7 @@ export default function Step1Form({
   loadOnly = false, // 只能載入,不能存/刪/匯出/匯入 (給 /text /image-plan /material 用)
   hideProfileLoader = false, // 整個品牌切換 / 雲端載入 / 範例 區塊都隱藏 (給 Infuz 單品牌頁用)
   hideProducts = false, // 隱藏產品清單,純品牌文案模式
+  hideBrandFields = false, // 隱藏品牌欄位 (品牌名/賣點/受眾/人格/LOGO/避免字/月量),用於品牌已固定的頁面
   extraPayload = null, // 額外送進 recommend API 的欄位 (給 /text 維度變數用)
   beforeSubmit = null, // 提交前的 hook,可放置進階變數區塊 (函式回 ReactNode)
 }) {
@@ -466,27 +467,38 @@ export default function Step1Form({
         </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="label">品牌名 *</label>
-            <input
-              className="input"
-              value={input.brand}
-              onChange={(e) => update('brand', e.target.value)}
-              placeholder="例：87 霸氣烤魚火鍋"
-            />
+        {hideBrandFields && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-800">
+            💡 <strong>品牌設定</strong>: {input.brand || 'Infuz'} · {(input.brand_persona || '').slice(0, 30)}{input.brand_persona?.length > 30 ? '…' : ''}
+            <br />
+            <span className="text-[11px] text-stone-500">品牌設定已固定,如需修改請去 <a href="/brand" className="underline">🏷 品牌資訊</a></span>
           </div>
-          <div>
-            <label className="label">預設購買連結 / LINE</label>
-            <input
-              className="input"
-              value={input.purchase_url}
-              onChange={(e) => update('purchase_url', e.target.value)}
-              placeholder="https://... (產品沒填時用)"
-            />
-          </div>
-        </div>
+        )}
 
+        {!hideBrandFields && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="label">品牌名 *</label>
+              <input
+                className="input"
+                value={input.brand}
+                onChange={(e) => update('brand', e.target.value)}
+                placeholder="例：87 霸氣烤魚火鍋"
+              />
+            </div>
+            <div>
+              <label className="label">預設購買連結 / LINE</label>
+              <input
+                className="input"
+                value={input.purchase_url}
+                onChange={(e) => update('purchase_url', e.target.value)}
+                placeholder="https://... (產品沒填時用)"
+              />
+            </div>
+          </div>
+        )}
+
+        {!hideBrandFields && (
         <div>
           <label className="label">品牌總體賣點 * <span className="text-xs font-normal text-stone-500">（用於語錄/觀點/教學等不指向特定 SKU 的主題）</span></label>
           <textarea
@@ -496,7 +508,9 @@ export default function Step1Form({
             placeholder="一句話總體賣點，或重要的品牌技術/理念"
           />
         </div>
+        )}
 
+        {!hideBrandFields && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="label">
@@ -526,7 +540,9 @@ export default function Step1Form({
             />
           </div>
         </div>
+        )}
 
+        {!hideBrandFields && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="label">受眾畫像 *</label>
@@ -547,6 +563,7 @@ export default function Step1Form({
             />
           </div>
         </div>
+        )}
 
         {showThemeStrategy && (
           <div className="rounded-lg border border-purple-100 bg-purple-50/40 p-3">
@@ -581,6 +598,7 @@ export default function Step1Form({
           </div>
         )}
 
+        {!hideBrandFields && (
         <div>
           <label className="label">每月發文總量</label>
           <input
@@ -592,6 +610,7 @@ export default function Step1Form({
             max={500}
           />
         </div>
+        )}
       </div>
 
       {/* ===== 產品清單 ===== */}
