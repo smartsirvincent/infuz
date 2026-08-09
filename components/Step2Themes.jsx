@@ -187,6 +187,27 @@ function ThemeRow({ theme, onChange, onRemove, allPlatforms }) {
           {theme.rationale}
         </span>
       </div>
+
+      {/* ===== 主題提示 (可展開,自訂寫作方向) ===== */}
+      <details className="mt-2 border-t border-stone-200 pt-2" open={!!theme.custom_hint}>
+        <summary className="cursor-pointer text-[11px] text-stone-600 hover:text-emerald-700">
+          ✏️ 自訂主題提示 {theme.custom_hint ? `(已填 ${theme.custom_hint.length} 字)` : '(選填,加強 AI 寫作方向)'}
+        </summary>
+        <div className="mt-2 space-y-2">
+          <textarea
+            className="input min-h-[70px] text-xs leading-relaxed"
+            placeholder="例:『每篇要有 1 個生活場景 + 1 個身形痛點,避免直接說產品名』、『開頭一律用對白』、『鎖定 30-35 歲已婚職業媽媽』..."
+            value={theme.custom_hint || ''}
+            onChange={(e) => onChange({ custom_hint: e.target.value })}
+          />
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 text-[10px] text-stone-600">
+            <div><span className="text-stone-400">文體:</span> {theme.style || '(未指定,AI 自選)'}</div>
+            <div><span className="text-stone-400">痛點:</span> {theme.pain_point || '(未指定)'}</div>
+            <div><span className="text-stone-400">互動:</span> {theme.interaction_type || '(未指定)'}</div>
+          </div>
+          <p className="text-[10px] text-stone-500">💡 此提示會被優先套用到本主題所有貼文生成,可覆蓋文體 / 痛點 / 互動類型的預設寫作模式</p>
+        </div>
+      </details>
     </div>
   );
 }
