@@ -20,6 +20,8 @@ export async function POST(req) {
       imagePrompt: p.imagePrompt || '',
       imageUrl: p.imageUrl || null,
       pickedProductId: p.pickedProductId || null,
+      // 預設: 若前端傳了 includePurchaseUrl 用它, 否則有 pickedProductId 就 true (到 detail 頁可改)
+      includePurchaseUrl: typeof p.includePurchaseUrl === 'boolean' ? p.includePurchaseUrl : Boolean(p.pickedProductId),
       status: 'queued',
       createdAt: now,
       scheduledAt: null,

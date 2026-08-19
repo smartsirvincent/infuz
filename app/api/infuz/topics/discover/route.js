@@ -8,7 +8,7 @@ import { INFUZ_BRAND } from '@/lib/infuz-brand.js';
 import { loadDb } from '@/lib/infuz-db.js';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const TYPE_HINT = {
   text: '短文 100-200 字, 適合 Threads 快讀',
@@ -32,7 +32,10 @@ export async function POST(req) {
       const db = await loadDb('products');
       const items = (db.items || []).filter((p) => productIds.includes(p.id));
       productHint = items.length
-        ? `\n\n【綁定產品(產文時輪流帶入)】\n` + items.map((p, i) => `${i + 1}. ${p.name} (${p.category}/${p.gender || '?'})${p.features ? ' · ' + p.features.slice(0, 60) : ''}`).join('\n')
+        ? `\n\n【綁定產品(產文時輪流帶入)】\n` + items.map((p, i) => {
+            const feat = typeof p.features === 'string' ? p.features : Array.isArray(p.features) ? p.features.join(', ') : '';
+            return `${i + 1}. ${p.name} (${p.category}/${p.gender || '?'})${feat ? ' · ' + feat.slice(0, 60) : ''}`;
+          }).join('\n')
         : '';
     } else {
       productHint = '\n\n(未綁定產品 · 主題會偏向品牌/生活/場景/觀點方向)';

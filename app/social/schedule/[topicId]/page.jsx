@@ -16,9 +16,11 @@ export default function TopicDetailPage() {
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
   const [products, setProducts] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('queued');
   const [lightbox, setLightbox] = useState(null);
+  const [publishingId, setPublishingId] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => { load(); }, [topicId]);
@@ -26,14 +28,16 @@ export default function TopicDetailPage() {
   async function load() {
     setLoading(true);
     try {
-      const [tRes, pRes, prodRes] = await Promise.all([
+      const [tRes, pRes, prodRes, sRes] = await Promise.all([
         fetch('/api/infuz/topics', { cache: 'no-store' }).then((r) => r.json()),
         fetch('/api/infuz/topic_posts', { cache: 'no-store' }).then((r) => r.json()),
         fetch('/api/infuz/products', { cache: 'no-store' }).then((r) => r.json()),
+        fetch('/api/infuz/settings', { cache: 'no-store' }).then((r) => r.json()),
       ]);
       setTopic((tRes.items || []).find((t) => t.id === topicId) || null);
       setPosts((pRes.items || []).filter((p) => p.topicId === topicId));
       setProducts(prodRes.items || []);
+      setSettings((sRes.items || []).find((s) => s.id === 'main') || {});
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }
@@ -51,6 +55,44 @@ export default function TopicDetailPage() {
       body: JSON.stringify({ status: 'queued', error: null }),
     });
     load();
+  }
+
+  async function toggleIncludeLink(post, checked) {
+    await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(post.id)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ includePurchaseUrl: checked }),
+    });
+    // 樂觀 UI 更新
+    setPosts(posts.map((p) => p.id === post.id ? { ...p, includePurchaseUrl: checked } : p));
+  }
+
+  async function publishNow(post) {
+    if (!confirm(`立即發這篇到 ${describePlatforms(topic?.schedule?.platforms)}?`)) return;
+    setPublishingId(post.id); setError('');
+    try {
+      const r = await fetch('/api/infuz/topic_posts/publish-now', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ postId: post.id }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      alert('✓ 已發文!到「已發」tab 看結果');
+      await load();
+      setTab('published');
+    } catch (e) {
+      setError('發文失敗:' + e.message);
+    } finally { setPublishingId(null); }
+  }
+
+  function describePlatforms(platforms) {
+    if (!platforms) return 'Threads';
+    const parts = [];
+    if (platforms.threads) parts.push('Threads');
+    if (platforms.instagram) parts.push('IG');
+    if (platforms.facebook) parts.push('FB');
+    return parts.join('/') || '(未選平台)';
   }
 
   async function toggleSchedule() {
@@ -196,9 +238,13 @@ export default function TopicDetailPage() {
 
         {byStatus[tab].map((post) => (
           <FullPostCard key={post.id} post={post} products={products}
+            settings={settings}
             onZoom={(url) => setLightbox(url)}
             onDelete={() => deletePost(post.id)}
             onRetry={tab === 'failed' ? () => retryPost(post) : null}
+            onPublishNow={tab === 'queued' ? () => publishNow(post) : null}
+            onToggleLink={(checked) => toggleIncludeLink(post, checked)}
+            publishing={publishingId === post.id}
           />
         ))}
       </div>
@@ -214,8 +260,14 @@ export default function TopicDetailPage() {
   );
 }
 
-function FullPostCard({ post, products, onZoom, onDelete, onRetry }) {
+function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onPublishNow, onToggleLink, publishing }) {
   const picked = post.pickedProductId ? products.find((p) => p.id === post.pickedProductId) : null;
+  const hasLink = picked?.purchase_url;
+  const utm = settings?.utm;
+  const linkPreview = hasLink && post.includePurchaseUrl
+    ? withUtmPreview(picked.purchase_url, utm)
+    : null;
+
   return (
     <div className="rounded-lg border border-stone-200 bg-white p-4">
       <div className="flex items-start gap-3">
@@ -242,6 +294,28 @@ function FullPostCard({ post, products, onZoom, onDelete, onRetry }) {
           <pre className="mt-2 whitespace-pre-wrap text-sm text-stone-900 font-sans leading-relaxed">{post.text}</pre>
 
           {post.hashtags && <div className="mt-2 text-xs text-emerald-700">{post.hashtags}</div>}
+
+          {/* 帶購買連結 toggle - 只有 queued + 有 pickedProduct + product 有 purchase_url 才顯示 */}
+          {post.status === 'queued' && hasLink && (
+            <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-2 space-y-1">
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <input type="checkbox" checked={!!post.includePurchaseUrl}
+                  onChange={(e) => onToggleLink(e.target.checked)}
+                  className="size-4 rounded border-stone-300" />
+                <span className="font-medium text-emerald-800">🔗 發文時附上購買連結 (含 UTM)</span>
+              </label>
+              {linkPreview && (
+                <div className="rounded bg-white/70 p-1.5 text-[10px] text-stone-600 font-mono break-all">
+                  👉 {linkPreview}
+                </div>
+              )}
+              {!utm && (
+                <div className="text-[10px] text-amber-700">
+                  💡 <Link href="/settings" className="underline">設定 UTM 參數</Link> 追蹤來源
+                </div>
+              )}
+            </div>
+          )}
 
           {post.status === 'published' && post.results && (
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -276,7 +350,13 @@ function FullPostCard({ post, products, onZoom, onDelete, onRetry }) {
             </details>
           )}
         </div>
-        <div className="flex flex-col gap-1 shrink-0">
+        <div className="flex flex-col gap-1.5 shrink-0">
+          {onPublishNow && (
+            <button onClick={onPublishNow} disabled={publishing}
+              className="rounded-md bg-fuchsia-600 px-2.5 py-1.5 text-[11px] text-white hover:bg-fuchsia-700 disabled:opacity-50 whitespace-nowrap font-medium">
+              {publishing ? '⏳ 發送…' : '🚀 立即發文'}
+            </button>
+          )}
           {onRetry && (
             <button onClick={onRetry} className="text-[11px] text-blue-700 hover:underline">🔄 重試</button>
           )}
@@ -285,4 +365,17 @@ function FullPostCard({ post, products, onZoom, onDelete, onRetry }) {
       </div>
     </div>
   );
+}
+
+// UI 預覽 UTM URL (跟後端 withUtm 邏輯一致, threads 平台為預覽)
+function withUtmPreview(url, utmCfg, platformId = 'threads') {
+  if (!utmCfg || !url) return url;
+  try {
+    const u = new URL(url);
+    const source = (utmCfg.source || {})[platformId] || platformId || 'social';
+    if (source) u.searchParams.set('utm_source', source);
+    if (utmCfg.medium) u.searchParams.set('utm_medium', utmCfg.medium);
+    if (utmCfg.campaign) u.searchParams.set('utm_campaign', utmCfg.campaign);
+    return u.toString();
+  } catch { return url; }
 }

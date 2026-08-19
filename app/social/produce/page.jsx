@@ -228,9 +228,16 @@ function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onZo
         <input type="checkbox" checked={on} onChange={onToggle} className="size-4 rounded border-stone-300 mt-1" />
         <div className="flex-1 min-w-0 space-y-2">
           {draft.pickedProductName && (
-            <div className="flex items-center gap-2 text-[11px] text-stone-600">
+            <div className="flex items-center gap-2 text-[11px] text-stone-600 flex-wrap">
               {draft.pickedProductImage && <img src={draft.pickedProductImage} alt="" className="size-8 rounded object-cover border" />}
               <span>🛒 帶產品:<strong>{draft.pickedProductName}</strong></span>
+              <label className="ml-auto flex items-center gap-1 text-[10px] text-emerald-700 cursor-pointer">
+                <input type="checkbox"
+                  checked={draft.includePurchaseUrl !== false}
+                  onChange={(e) => onChange({ includePurchaseUrl: e.target.checked })}
+                  className="size-3.5 rounded border-stone-300" />
+                🔗 發文時帶購買連結
+              </label>
             </div>
           )}
           <div>
