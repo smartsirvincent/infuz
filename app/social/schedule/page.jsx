@@ -1,23 +1,36 @@
 'use client';
 
-// 排程管理 = 主題清單 + 每個主題的排程 (time/days/platforms) + 展開看待發佇列
-import { useEffect, useState } from 'react';
+// 排程管理 (主題清單) — card grid, 每張 card 是一個主題摘要, 點進入 detail 看完整貼文
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
-export default function SchedulePage() {
+function SchedulePageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editParamId = searchParams.get('edit');
+
   const [topics, setTopics] = useState([]);
   const [posts, setPosts] = useState([]);
   const [products, setProducts] = useState([]);
   const [conn, setConn] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(new Set());
+  const [filter, setFilter] = useState('');
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    // ?edit=xxx 從 detail 頁跳回時自動開編輯
+    if (editParamId && topics.length && !editing) {
+      const t = topics.find((x) => x.id === editParamId);
+      if (t) setEditing(t);
+    }
+  }, [editParamId, topics, editing]);
 
   async function load() {
     setLoading(true);
@@ -83,23 +96,14 @@ export default function SchedulePage() {
         if (!r.ok) throw new Error((await r.json()).error);
       }
       setEditing(null);
+      if (editParamId) router.replace('/social/schedule');
       await load();
     } catch (e) { setError('儲存失敗:' + e.message); }
     finally { setSaving(false); }
   }
 
-  async function deleteTopic(id) {
-    if (!confirm('刪除這個主題?待發的文章會一起被刪。')) return;
-    await fetch(`/api/infuz/topics?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-    // 順帶刪除該主題的 posts
-    const relatedPosts = posts.filter((p) => p.topicId === id);
-    for (const p of relatedPosts) {
-      await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(p.id)}`, { method: 'DELETE' });
-    }
-    load();
-  }
-
-  async function toggleSchedule(topic) {
+  async function toggleSchedule(topic, e) {
+    e.preventDefault(); e.stopPropagation();
     await fetch(`/api/infuz/topics?id=${encodeURIComponent(topic.id)}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -110,6 +114,11 @@ export default function SchedulePage() {
 
   if (loading) return <main className="card">載入中…</main>;
 
+  const filtered = topics.filter((t) => !filter || t.name.toLowerCase().includes(filter.toLowerCase()));
+  const totalQueued = posts.filter((p) => p.status === 'queued').length;
+  const totalPublished = posts.filter((p) => p.status === 'published').length;
+  const totalFailed = posts.filter((p) => p.status === 'failed').length;
+
   return (
     <main className="space-y-5">
       <div className="card border-blue-200 bg-blue-50/40">
@@ -118,44 +127,58 @@ export default function SchedulePage() {
           <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
         </div>
         <p className="mt-1 text-sm text-stone-600">
-          所有「主題」清單 + 每個主題的排程時間/星期/平台 + 待發佇列。到點 tick 會從待發佇列取一篇發。
+          所有主題清單 · 點卡片進入看完整貼文 · 到點 tick 從佇列取一篇發
         </p>
       </div>
 
-      {/* 主題清單 */}
-      <div className="card space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-800">📋 主題清單 ({topics.length})</h2>
-          <div className="flex gap-2">
-            <Link href="/social/topics/discover" className="text-xs text-purple-700 hover:underline">💡 AI 發想主題</Link>
-            <button onClick={newTopic} className="rounded-md bg-emerald-600 px-3 py-1 text-xs text-white hover:bg-emerald-700">+ 手動新增</button>
-          </div>
+      {/* 全站統計 */}
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatBox label="主題總數" value={topics.length} sub={`${topics.filter((t) => t.schedule?.enabled).length} 個排程中`} />
+        <StatBox label="待發" value={totalQueued} color="blue" sub="佇列中,到點自動發" />
+        <StatBox label="已發" value={totalPublished} color="emerald" sub="累計成功" />
+        <StatBox label="失敗" value={totalFailed} color="red" sub={totalFailed > 0 ? '需檢查' : '沒有失敗 ✨'} />
+      </section>
+
+      {/* 工具列 */}
+      <div className="card">
+        <div className="flex items-center gap-3 flex-wrap">
+          <input className="input text-sm flex-1 min-w-[200px]" placeholder="🔍 搜尋主題名..."
+            value={filter} onChange={(e) => setFilter(e.target.value)} />
+          <Link href="/social/topics/discover"
+            className="rounded-md bg-purple-600 px-3 py-2 text-xs text-white hover:bg-purple-700 whitespace-nowrap">
+            💡 AI 發想主題
+          </Link>
+          <button onClick={newTopic}
+            className="rounded-md bg-emerald-600 px-3 py-2 text-xs text-white hover:bg-emerald-700 whitespace-nowrap">
+            + 手動新增
+          </button>
         </div>
+      </div>
 
-        {topics.length === 0 && (
-          <div className="rounded-lg border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500">
-            還沒有主題,先<Link href="/social/topics/discover" className="text-purple-700 underline">💡 用 AI 發想</Link>或手動新增
+      {/* 主題 grid */}
+      {filtered.length === 0 && (
+        <div className="card text-center py-12 space-y-3">
+          <div className="text-4xl">📝</div>
+          <div className="text-stone-600 text-sm">
+            {topics.length === 0 ? '還沒有任何主題' : `沒有符合「${filter}」的主題`}
           </div>
-        )}
-
-        {topics.map((topic) => (
-          <TopicRow
-            key={topic.id}
+          {topics.length === 0 && (
+            <Link href="/social/topics/discover" className="inline-block rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700">
+              💡 用 AI 幫你發想 3 個試試
+            </Link>
+          )}
+        </div>
+      )}
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((topic) => (
+          <TopicCard key={topic.id}
             topic={topic}
             posts={posts.filter((p) => p.topicId === topic.id)}
             products={products}
-            expanded={expanded.has(topic.id)}
-            onToggleExpand={() => {
-              const next = new Set(expanded);
-              if (next.has(topic.id)) next.delete(topic.id); else next.add(topic.id);
-              setExpanded(next);
-            }}
-            onEdit={() => setEditing(topic)}
-            onDelete={() => deleteTopic(topic.id)}
-            onToggleSchedule={() => toggleSchedule(topic)}
+            onToggleSchedule={(e) => toggleSchedule(topic, e)}
           />
         ))}
-      </div>
+      </section>
 
       {/* 編輯 modal */}
       {editing && (
@@ -165,16 +188,15 @@ export default function SchedulePage() {
               <h3 className="text-lg font-semibold text-stone-900">
                 {editing._isNew ? '➕ 新增主題' : '✏️ 編輯主題'}
               </h3>
-              <button onClick={() => setEditing(null)} className="text-stone-400 hover:text-stone-700">✕</button>
+              <button onClick={() => { setEditing(null); if (editParamId) router.replace('/social/schedule'); }}
+                className="text-stone-400 hover:text-stone-700">✕</button>
             </div>
-
             <TopicEditor editing={editing} setEditing={setEditing} products={products}
               canThreads={canThreads} canIg={canIg} canFb={canFb} />
-
             {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">⚠ {error}</div>}
-
             <div className="flex justify-end gap-2 border-t border-stone-200 pt-3">
-              <button onClick={() => setEditing(null)} className="rounded-md border border-stone-300 px-4 py-1.5 text-sm">取消</button>
+              <button onClick={() => { setEditing(null); if (editParamId) router.replace('/social/schedule'); }}
+                className="rounded-md border border-stone-300 px-4 py-1.5 text-sm">取消</button>
               <button onClick={saveTopic} disabled={saving}
                 className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-50">
                 {saving ? '存中…' : '💾 儲存'}
@@ -187,72 +209,74 @@ export default function SchedulePage() {
   );
 }
 
-function TopicRow({ topic, posts, products, expanded, onToggleExpand, onEdit, onDelete, onToggleSchedule }) {
-  const queued = posts.filter((p) => p.status === 'queued');
-  const published = posts.filter((p) => p.status === 'published').sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || ''));
-  const failed = posts.filter((p) => p.status === 'failed');
+function StatBox({ label, value, sub, color }) {
+  const colorCls = color === 'blue' ? 'text-blue-700' : color === 'emerald' ? 'text-emerald-700' : color === 'red' ? 'text-red-700' : 'text-stone-900';
+  return (
+    <div className="rounded-xl border border-stone-200 bg-white p-3">
+      <div className="text-[11px] text-stone-500">{label}</div>
+      <div className={`mt-1 text-2xl font-bold ${colorCls}`}>{value}</div>
+      {sub && <div className="text-[10px] text-stone-500 mt-0.5">{sub}</div>}
+    </div>
+  );
+}
 
-  const days = topic.schedule?.days?.length === 7 ? '每天' : (topic.schedule?.days || []).map((d) => DAY_NAMES[d]).join('、');
-  const platforms = Object.entries(topic.schedule?.platforms || {}).filter(([_, v]) => v).map(([k]) => k[0].toUpperCase() + k.slice(1)).join('/');
+function TopicCard({ topic, posts, products, onToggleSchedule }) {
+  const queued = posts.filter((p) => p.status === 'queued').length;
+  const published = posts.filter((p) => p.status === 'published').length;
+  const failed = posts.filter((p) => p.status === 'failed').length;
+
   const scheduledEnabled = topic.schedule?.enabled;
+  const days = topic.schedule?.days?.length === 7 ? '每天' : (topic.schedule?.days || []).map((d) => DAY_NAMES[d]).join('');
+  const platformIcons = Object.entries(topic.schedule?.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: '🧵', instagram: '📷', facebook: '👍' })[k]).join(' ');
+  const boundProducts = (topic.productIds || []).map((id) => products.find((p) => p.id === id)).filter(Boolean);
 
-  const productNames = (topic.productIds || []).map((id) => products.find((p) => p.id === id)?.name).filter(Boolean);
+  const typeInfo = {
+    text: { label: '📝 文字', bg: 'bg-blue-100 text-blue-700' },
+    long: { label: '📄 長文', bg: 'bg-emerald-100 text-emerald-700' },
+    image: { label: '🖼️ 圖片', bg: 'bg-purple-100 text-purple-700' },
+  }[topic.type] || { label: topic.type, bg: 'bg-stone-100 text-stone-700' };
 
   return (
-    <div className={`rounded-lg border ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-70'}`}>
-      <div className="flex items-start justify-between gap-3 p-3">
+    <Link href={`/social/schedule/${topic.id}`}
+      className={`group rounded-xl border p-4 space-y-3 transition hover:-translate-y-0.5 hover:shadow-md ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-80'}`}>
+      {/* Top row: title + type + status */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={onToggleSchedule} className={`text-[10px] rounded-full px-2 py-0.5 ${scheduledEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-500'}`}>
-              {scheduledEnabled ? '● 排程中' : '○ 停用'}
-            </button>
-            <div className="font-semibold text-sm text-stone-900 truncate">{topic.name}</div>
-            <span className="text-[10px] rounded bg-stone-100 px-1.5 py-0.5 text-stone-600">
-              {topic.type === 'long' ? '📄 長文' : topic.type === 'image' ? '🖼️ 圖片' : '📝 文字'}
-            </span>
-          </div>
-          {topic.description && <p className="mt-1 text-[11px] text-stone-500 line-clamp-2">{topic.description}</p>}
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-stone-600">
-            <span>⏰ {topic.schedule?.time || '未設'} · {days} · {platforms || '無平台'}</span>
-            <span>🛒 {productNames.length ? `${productNames.length} 件產品` : '不帶產品'}</span>
-            <span className="text-blue-700">📥 待發 {queued.length}</span>
-            <span className="text-emerald-700">✓ 已發 {published.length}</span>
-            {failed.length > 0 && <span className="text-red-700">✗ 失敗 {failed.length}</span>}
-          </div>
+          <div className="font-semibold text-sm text-stone-900 truncate group-hover:text-blue-700">{topic.name}</div>
+          {topic.description && (
+            <p className="mt-0.5 text-[11px] text-stone-500 line-clamp-2 leading-relaxed">{topic.description}</p>
+          )}
         </div>
-        <div className="flex flex-col gap-1 shrink-0">
-          <Link href={`/social/produce?topic=${topic.id}`} className="text-xs text-purple-700 hover:underline whitespace-nowrap">✨ 產文 →</Link>
-          <button onClick={onToggleExpand} className="text-xs text-blue-700 hover:underline">{expanded ? '收起 ▲' : '看佇列 ▼'}</button>
-          <button onClick={onEdit} className="text-xs text-stone-600 hover:underline">編輯</button>
-          <button onClick={onDelete} className="text-xs text-red-600 hover:underline">刪除</button>
+        <span className={`shrink-0 text-[10px] rounded px-1.5 py-0.5 ${typeInfo.bg}`}>{typeInfo.label}</span>
+      </div>
+
+      {/* 排程摘要 */}
+      <div className="rounded-lg bg-stone-50 border border-stone-200 p-2 text-[11px]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-stone-700">
+            <span>⏰ {topic.schedule?.time || '未設'}</span>
+            <span className="text-stone-400">·</span>
+            <span>{days || '無'}</span>
+            <span className="text-stone-400">·</span>
+            <span>{platformIcons || '(無平台)'}</span>
+          </div>
+          <button onClick={onToggleSchedule}
+            className={`text-[9px] rounded-full px-1.5 py-0.5 shrink-0 ${scheduledEnabled ? 'bg-emerald-500 text-white' : 'bg-stone-300 text-stone-600'}`}>
+            {scheduledEnabled ? '● ON' : '○ OFF'}
+          </button>
         </div>
       </div>
 
-      {expanded && (
-        <div className="border-t border-stone-200 p-3 space-y-2 bg-stone-50/40">
-          <div className="text-[11px] font-semibold text-blue-700">📥 待發佇列 ({queued.length})</div>
-          {queued.length === 0 && <div className="text-[11px] text-stone-500 italic">佇列空的 - <Link href={`/social/produce?topic=${topic.id}`} className="text-purple-700 underline">去產文</Link></div>}
-          {queued.map((p) => (
-            <div key={p.id} className="rounded border border-stone-200 bg-white p-2 text-[11px]">
-              {p.imageUrl && <img src={p.imageUrl} className="float-right ml-2 size-14 rounded object-cover" alt="" />}
-              <pre className="whitespace-pre-wrap text-stone-800 font-sans line-clamp-3">{p.text}</pre>
-              {p.hashtags && <div className="mt-0.5 text-emerald-700 text-[10px]">{p.hashtags}</div>}
-            </div>
-          ))}
-          {published.length > 0 && (
-            <>
-              <div className="text-[11px] font-semibold text-emerald-700 pt-2">✓ 最近已發 (最新 3)</div>
-              {published.slice(0, 3).map((p) => (
-                <div key={p.id} className="rounded border border-stone-200 bg-white p-2 text-[11px]">
-                  <div className="text-[10px] text-stone-500 mb-0.5">{new Date(p.publishedAt).toLocaleString('zh-TW')}</div>
-                  <pre className="whitespace-pre-wrap text-stone-700 font-sans line-clamp-2">{p.text}</pre>
-                </div>
-              ))}
-            </>
-          )}
+      {/* 產品 + 貼文計數 */}
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-stone-500">🛒 {boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}</span>
+        <div className="flex gap-2">
+          <span className="text-blue-700">📥 {queued}</span>
+          <span className="text-emerald-700">✓ {published}</span>
+          {failed > 0 && <span className="text-red-700">✗ {failed}</span>}
         </div>
-      )}
-    </div>
+      </div>
+    </Link>
   );
 }
 
@@ -285,7 +309,7 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
           </select>
         </div>
         <div>
-          <label className="label text-xs">圖片比例 (type=image 時用)</label>
+          <label className="label text-xs">圖片比例 (type=image 用)</label>
           <select className="input" value={editing.aspectRatio || '4:5'} onChange={(e) => setEditing({ ...editing, aspectRatio: e.target.value })}>
             <option value="4:5">4:5</option>
             <option value="1:1">1:1</option>
@@ -295,15 +319,17 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
       </div>
 
       <div>
-        <label className="label text-xs">寫作方向提示 (systemPrompt)</label>
-        <textarea className="input min-h-[70px] text-xs" placeholder="例:每篇要有 1 個具體生活場景 + 1 個身形痛點,語氣像姊姊,避免說教感"
+        <label className="label text-xs">寫作方向 (systemPrompt · 產文時的主要指示)</label>
+        <textarea className="input min-h-[90px] text-xs leading-relaxed"
+          placeholder="例:每篇要有 1 個具體生活場景 + 1 個身形痛點,語氣像姊姊,避免說教感"
           value={editing.systemPrompt} onChange={(e) => setEditing({ ...editing, systemPrompt: e.target.value })} />
       </div>
 
       {editing.type === 'image' && (
         <div>
-          <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空產文時 AI 依當篇自動寫)</label>
-          <textarea className="input min-h-[60px] text-xs font-mono" placeholder="Editorial fashion photography, Asian female..."
+          <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空 AI 依當篇自動寫)</label>
+          <textarea className="input min-h-[60px] text-xs font-mono"
+            placeholder="Editorial fashion photography, Asian female..."
             value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
         </div>
       )}
@@ -410,5 +436,13 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SchedulePage() {
+  return (
+    <Suspense fallback={<main className="card">載入中…</main>}>
+      <SchedulePageInner />
+    </Suspense>
   );
 }

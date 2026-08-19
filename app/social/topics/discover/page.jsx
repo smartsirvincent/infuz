@@ -8,11 +8,13 @@ import { useRouter } from 'next/navigation';
 export default function DiscoverPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
+  const [existingTopics, setExistingTopics] = useState([]);
   const [direction, setDirection] = useState('');
   const [defaultType, setDefaultType] = useState('text');
   const [productIds, setProductIds] = useState([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productFilter, setProductFilter] = useState('');
+  const [count, setCount] = useState(5);
   const [suggesting, setSuggesting] = useState(false);
   const [suggested, setSuggested] = useState([]);
   const [selected, setSelected] = useState(new Set());
@@ -24,6 +26,10 @@ export default function DiscoverPage() {
       .then((r) => r.json())
       .then((d) => setProducts(d.items || []))
       .catch(() => {});
+    fetch('/api/infuz/topics', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => setExistingTopics(d.items || []))
+      .catch(() => {});
   }, []);
 
   const pickedProducts = products.filter((p) => productIds.includes(p.id));
@@ -34,7 +40,7 @@ export default function DiscoverPage() {
       const r = await fetch('/api/infuz/topics/discover', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ direction, defaultType, productIds, count: 10 }),
+        body: JSON.stringify({ direction, defaultType, productIds, count }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
@@ -69,8 +75,9 @@ export default function DiscoverPage() {
           <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
         </div>
         <p className="mt-1 text-sm text-stone-600">
-          描述要走的方向 + 選要帶哪些產品(可不帶) → AI 建議 10 個「主題」 → 勾選加入主題清單。
-          每個主題之後可產出 10-30 篇連貫的文案。
+          描述方向 + 選要帶的產品 → AI 建議 N 個「主題」→ 勾選加入清單。
+          每個主題之後可產出多篇連貫的文案。
+          {existingTopics.length > 0 && <span className="text-purple-700"> · 已有 {existingTopics.length} 個主題,AI 會自動避開重複</span>}
         </p>
       </div>
 
@@ -85,23 +92,43 @@ export default function DiscoverPage() {
           />
         </div>
 
-        <div>
-          <label className="label text-xs">📝 預設類型</label>
-          <div className="flex gap-2">
-            {[
-              { key: 'text', label: '📝 文字 (100-200 字)' },
-              { key: 'long', label: '📄 長文 (300-600 字)' },
-              { key: 'image', label: '🖼️ 圖片 (AI 生圖)' },
-            ].map((o) => (
-              <button
-                key={o.key}
-                type="button"
-                onClick={() => setDefaultType(o.key)}
-                className={`rounded-md px-3 py-1.5 text-xs ${defaultType === o.key ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
-              >{o.label}</button>
-            ))}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label text-xs">📝 類型 (所有主題統一)</label>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { key: 'text', label: '📝 文字' },
+                { key: 'long', label: '📄 長文' },
+                { key: 'image', label: '🖼️ 圖片' },
+              ].map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setDefaultType(o.key)}
+                  className={`rounded-md px-3 py-1.5 text-xs ${defaultType === o.key ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                >{o.label}</button>
+              ))}
+            </div>
+            <div className="mt-1 text-[10px] text-stone-500">
+              {defaultType === 'text' && '短文 100-200 字 · 適合 Threads 快讀'}
+              {defaultType === 'long' && '長文 300-600 字 · 適合 FB 深度觀點'}
+              {defaultType === 'image' && '圖文 100-200 字 + AI 生一張搭配圖'}
+            </div>
           </div>
-          <div className="mt-1 text-[10px] text-stone-500">AI 建議時可能會每個主題選不同類型,這只是提示</div>
+          <div>
+            <label className="label text-xs">📊 建議幾個主題</label>
+            <div className="flex gap-2">
+              {[1, 3, 5, 7].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setCount(n)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium ${count === n ? 'bg-purple-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                >{n} 個</button>
+              ))}
+            </div>
+            <div className="mt-1 text-[10px] text-stone-500">先小量試, 覺得對味再多要幾個</div>
+          </div>
         </div>
 
         <div>
@@ -164,7 +191,7 @@ export default function DiscoverPage() {
         <div className="flex justify-end">
           <button onClick={askAI} disabled={suggesting}
             className="rounded-lg bg-purple-600 px-5 py-2.5 text-sm text-white hover:bg-purple-700 disabled:opacity-50">
-            {suggesting ? '💭 AI 發想中(約 30s)…' : '💡 AI 建議 10 個主題'}
+            {suggesting ? '💭 AI 發想中…' : `💡 AI 建議 ${count} 個新主題`}
           </button>
         </div>
       </div>
@@ -195,17 +222,18 @@ export default function DiscoverPage() {
                       className="size-4 rounded border-stone-300 mt-0.5"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold text-sm text-stone-900">{t.name}</div>
-                        <span className="text-[10px] rounded bg-stone-100 px-1.5 py-0.5 text-stone-600">
-                          {t.suggestedType === 'long' ? '📄 長文' : t.suggestedType === 'image' ? '🖼️ 圖片' : '📝 文字'}
-                        </span>
-                      </div>
+                      <div className="font-semibold text-sm text-stone-900">{t.name}</div>
                       <p className="mt-1 text-stone-600 leading-relaxed">{t.description}</p>
                       {t.sampleHook && (
                         <div className="mt-1.5 rounded bg-white/60 px-2 py-1 text-[11px] italic text-stone-500">
                           Hook 範例:「{t.sampleHook}」
                         </div>
+                      )}
+                      {t.postingAngle && (
+                        <details className="mt-1.5">
+                          <summary className="text-[10px] text-stone-500 cursor-pointer hover:text-purple-700">📝 寫作方向(產文時會用)</summary>
+                          <p className="mt-1 text-[10px] text-stone-600 leading-relaxed">{t.postingAngle}</p>
+                        </details>
                       )}
                     </div>
                   </div>

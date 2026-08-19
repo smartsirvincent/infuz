@@ -115,49 +115,66 @@ function ProducePageInner() {
         </p>
       </div>
 
-      <div className="card space-y-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr,120px,auto]">
-          <div>
-            <label className="label text-xs">🎯 選主題</label>
-            <select className="input" value={topicId} onChange={(e) => setTopicId(e.target.value)}>
-              <option value="">--- 選主題 ---</option>
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.type === 'long' ? '長文' : t.type === 'image' ? '圖片' : '文字'} · {(t.productIds || []).length} 產品)
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label text-xs">📊 篇數</label>
-            <input type="number" min={1} max={20} className="input"
-              value={count} onChange={(e) => setCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
-          </div>
-          <div className="flex items-end">
-            <button onClick={produce} disabled={generating || !topicId}
-              className="w-full rounded-lg bg-fuchsia-600 px-5 py-2.5 text-sm text-white hover:bg-fuchsia-700 disabled:opacity-50">
-              {generating ? (isImage ? `產文+生圖中(約 ${count * 30}s)…` : '產文中…') : '🚀 開始產文'}
-            </button>
-          </div>
+      <div className="card space-y-4">
+        <div>
+          <label className="label text-xs">🎯 選主題</label>
+          <select className="input" value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+            <option value="">--- 選主題 ---</option>
+            {topics.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {topic && (
-          <div className="rounded-lg bg-stone-50 p-2 text-[11px] text-stone-600">
-            <div><strong>{topic.name}</strong> · {topic.description || '(無描述)'}</div>
-            <div className="text-stone-500 mt-0.5">
-              類型: {topic.type === 'long' ? '📄 長文 300-600 字' : topic.type === 'image' ? '🖼️ 圖片 100-200 字 + AI 生圖' : '📝 文字 100-200 字'}
-              {(topic.productIds || []).length > 0 && ` · 綁定 ${(topic.productIds || []).length} 件產品(輪流帶入)`}
+          <div className="rounded-lg border border-fuchsia-200 bg-fuchsia-50/50 p-3 space-y-2">
+            <div className="flex items-start gap-2 flex-wrap">
+              <span className={`shrink-0 text-[11px] rounded px-2 py-0.5 ${
+                topic.type === 'long' ? 'bg-emerald-600 text-white' :
+                topic.type === 'image' ? 'bg-purple-600 text-white' :
+                'bg-blue-600 text-white'
+              }`}>
+                {topic.type === 'long' ? '📄 長文 300-600 字' : topic.type === 'image' ? '🖼️ 圖片 100-200 字 + AI 生圖' : '📝 文字 100-200 字'}
+              </span>
+              <div className="text-sm text-stone-800 font-medium">{topic.name}</div>
             </div>
+            {topic.description && <p className="text-[11px] text-stone-600 leading-relaxed">{topic.description}</p>}
+            {(topic.productIds || []).length > 0 && (
+              <div className="text-[11px] text-emerald-700">🛒 綁定 {topic.productIds.length} 件產品(產文時輪流帶入,無需再選)</div>
+            )}
           </div>
         )}
 
+        <div>
+          <label className="label text-xs">📊 這次產幾篇</label>
+          <div className="flex gap-2 items-center">
+            {[1, 3, 5, 10].map((n) => (
+              <button key={n} type="button" onClick={() => setCount(n)}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium ${count === n ? 'bg-fuchsia-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+              >{n} 篇</button>
+            ))}
+            <input type="number" min={1} max={20} className="input w-20 text-sm"
+              value={count} onChange={(e) => setCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
+          </div>
+          {isImage && count > 3 && (
+            <div className="mt-1 text-[10px] text-amber-700">⏳ 圖片類型每篇 30-60s, {count} 篇約 {count * 45}s</div>
+          )}
+        </div>
+
         {topics.length === 0 && (
           <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-            還沒有主題 · <Link href="/social/topics/discover" className="underline">先去 AI 發想主題</Link>
+            還沒有主題 · <Link href="/social/topics/discover" className="underline font-semibold">先去 AI 發想主題</Link>
           </div>
         )}
 
         {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">⚠ {error}</div>}
+
+        <button onClick={produce} disabled={generating || !topicId}
+          className="w-full rounded-lg bg-fuchsia-600 px-5 py-3 text-base font-medium text-white hover:bg-fuchsia-700 disabled:opacity-50">
+          {generating ? (isImage ? `⏳ 產文+生圖中(約 ${count * 45}s)…` : '⏳ 產文中…') : `🚀 開始產 ${count} 篇`}
+        </button>
       </div>
 
       {drafts.length > 0 && (
