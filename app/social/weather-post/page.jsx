@@ -395,7 +395,7 @@ export default function WeatherPostPage() {
             <div className="flex gap-2">
               <button onClick={tryPreview} disabled={previewing || !weatherReady}
                 className="rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 disabled:opacity-50">
-                {previewing ? (editing.withImage ? '產文+生圖中(約 60s)…' : '生成中…') : '🔎 試發預覽(不真發)'}
+                {previewing ? '生成中…' : '🔎 試發預覽(產文+挑產品,不生圖)'}
               </button>
               <button onClick={trySave} disabled={saving}
                 className="rounded-md bg-emerald-600 px-4 py-1.5 text-xs text-white hover:bg-emerald-700 disabled:opacity-50">
@@ -511,6 +511,11 @@ function PreviewBox({ data }) {
       )}
       {data.preview?.imageError && (
         <div className="rounded bg-red-50 p-2 text-[11px] text-red-700">⚠ 生圖失敗:{data.preview.imageError}</div>
+      )}
+      {data.preview?.imagePrompt && !data.preview?.imageUrl && (
+        <div className="rounded bg-purple-50 border border-purple-200 p-2 text-[10px] text-purple-700">
+          ℹ️ 預覽不真的生圖(避免 Vercel Hobby 60s 限制),實際到點 tick 時才會呼叫 KIE 生一張。想看真圖按下方「⚡ 立即觸發 tick」。
+        </div>
       )}
       <div className="mt-2 rounded bg-white p-2">
         <div className="text-[10px] text-stone-500 mb-1">生成的貼文:</div>

@@ -20,7 +20,15 @@ export async function POST(req) {
         snapshot: check.snapshot,
       });
     }
-    const built = await mod.buildContent({ config: config || {}, snapshot: check.snapshot, withImage: Boolean(withImage) });
+    // preview 不真的生圖(Vercel Hobby 60s 上限撐不住 KIE 30-120s)
+    // 只跑產文 + 挑產品 + 回 imagePrompt, 讓用戶預覽會發什麼; 實際生圖交給 tick
+    const built = await mod.buildContent({
+      config: config || {},
+      snapshot: check.snapshot,
+      snapshots: check.snapshots,
+      withImage: Boolean(withImage),
+      dryRunImage: true,
+    });
     return NextResponse.json({
       fire: true,
       reason: check.reason,
