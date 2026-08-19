@@ -5,6 +5,7 @@
 //   請求 header 需帶 Authorization: Bearer $CRON_SECRET (Vercel Cron 會自動帶)
 import { NextResponse } from 'next/server';
 import { tick } from '@/lib/infuz-realtime.js';
+import { tickTopics } from '@/lib/infuz-topic-scheduler.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -18,8 +19,14 @@ export async function GET(req) {
     }
   }
   try {
-    const stats = await tick();
-    return NextResponse.json({ ok: true, ts: new Date().toISOString(), ...stats });
+    // 平行跑氣候即時 + 主題排程 (兩套獨立)
+    const [realtimeStats, topicStats] = await Promise.allSettled([tick(), tickTopics()]);
+    return NextResponse.json({
+      ok: true,
+      ts: new Date().toISOString(),
+      realtime: realtimeStats.status === 'fulfilled' ? realtimeStats.value : { error: realtimeStats.reason?.message },
+      topics: topicStats.status === 'fulfilled' ? topicStats.value : { error: topicStats.reason?.message },
+    });
   } catch (e) {
     console.error('[cron/tick] 錯誤:', e);
     return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
