@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { buildTextWithLink } from '@/lib/topic-publish-helper.js';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const TAB = { queued: '📥 待發', published: '✓ 已發', failed: '✗ 失敗' };
@@ -244,6 +245,17 @@ export default function TopicDetailPage() {
             onRetry={tab === 'failed' ? () => retryPost(post) : null}
             onPublishNow={tab === 'queued' ? () => publishNow(post) : null}
             onToggleLink={(checked) => toggleIncludeLink(post, checked)}
+            onSaveToAssets={async () => {
+              if (!post.imageUrl) return;
+              const r = await fetch('/api/infuz/topic_posts/save-to-assets', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ postId: post.id }),
+              });
+              const d = await r.json();
+              if (!r.ok) return alert('失敗:' + d.error);
+              alert(d.alreadyExists ? '這張圖已在素材庫' : `✓ 已存到素材庫 (${d.assetId})`);
+            }}
             publishing={publishingId === post.id}
           />
         ))}
@@ -260,13 +272,16 @@ export default function TopicDetailPage() {
   );
 }
 
-function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onPublishNow, onToggleLink, publishing }) {
+function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onPublishNow, onToggleLink, onSaveToAssets, publishing }) {
   const picked = post.pickedProductId ? products.find((p) => p.id === post.pickedProductId) : null;
   const hasLink = picked?.purchase_url;
   const utm = settings?.utm;
-  const linkPreview = hasLink && post.includePurchaseUrl
-    ? withUtmPreview(picked.purchase_url, utm)
-    : null;
+  // 用 helper 拼接完整發文預覽 (含 hashtags + 連結)
+  const previewText = buildTextWithLink({
+    post: { ...post, pickedProductId: post.pickedProductId },
+    productsDb: { items: products },
+    utmCfg: utm,
+  });
 
   return (
     <div className="rounded-lg border border-stone-200 bg-white p-4">
@@ -291,9 +306,27 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
             )}
           </div>
 
-          <pre className="mt-2 whitespace-pre-wrap text-sm text-stone-900 font-sans leading-relaxed">{post.text}</pre>
+          {/* 完整發文預覽 (含 hashtags + 帶連結時的 URL) */}
+          <pre className="mt-2 whitespace-pre-wrap text-sm text-stone-900 font-sans leading-relaxed">{previewText}</pre>
 
-          {post.hashtags && <div className="mt-2 text-xs text-emerald-700">{post.hashtags}</div>}
+          {/* 參考產品照 (可點放大, 對比生成圖) */}
+          {picked?.image_front && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 p-2">
+              <button onClick={() => onZoom(picked.image_front)} className="shrink-0 group relative">
+                <img src={picked.image_front} alt="" className="size-16 rounded object-cover border" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded transition flex items-center justify-center text-white opacity-0 group-hover:opacity-100 text-[10px]">
+                  🔍
+                </div>
+              </button>
+              <div className="flex-1 min-w-0 text-[11px] text-stone-600">
+                <div className="text-stone-500 text-[10px]">📸 產品參考照 (KIE 生圖 reference)</div>
+                <div className="text-stone-900 font-medium truncate">{picked.name}</div>
+                {picked.purchase_url && (
+                  <a href={picked.purchase_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 hover:underline break-all">{picked.purchase_url}</a>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 帶購買連結 toggle - 只有 queued + 有 pickedProduct + product 有 purchase_url 才顯示 */}
           {post.status === 'queued' && hasLink && (
@@ -304,11 +337,6 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
                   className="size-4 rounded border-stone-300" />
                 <span className="font-medium text-emerald-800">🔗 發文時附上購買連結 (含 UTM)</span>
               </label>
-              {linkPreview && (
-                <div className="rounded bg-white/70 p-1.5 text-[10px] text-stone-600 font-mono break-all">
-                  👉 {linkPreview}
-                </div>
-              )}
               {!utm && (
                 <div className="text-[10px] text-amber-700">
                   💡 <Link href="/settings" className="underline">設定 UTM 參數</Link> 追蹤來源
@@ -359,6 +387,12 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
           )}
           {onRetry && (
             <button onClick={onRetry} className="text-[11px] text-blue-700 hover:underline">🔄 重試</button>
+          )}
+          {post.imageUrl && onSaveToAssets && (
+            <button onClick={onSaveToAssets}
+              className="rounded-md border border-amber-300 text-amber-700 px-2.5 py-1 text-[11px] hover:bg-amber-50 whitespace-nowrap">
+              💾 存素材庫
+            </button>
           )}
           <button onClick={onDelete} className="text-[11px] text-red-600 hover:underline">🗑️ 刪除</button>
         </div>

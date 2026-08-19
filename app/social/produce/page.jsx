@@ -49,6 +49,34 @@ function ProducePageInner() {
     finally { setGenerating(false); }
   }
 
+  async function saveDraftToAssets(draft) {
+    const idx = drafts.findIndex((d) => d._localId === draft._localId);
+    if (idx < 0) return;
+    updateDraft(draft._localId, { _savingAsset: true });
+    try {
+      const r = await fetch('/api/infuz/topic_posts/save-to-assets', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          draft: {
+            topicId: draft.topicId,
+            text: draft.text,
+            hashtags: draft.hashtags,
+            imageUrl: draft.imageUrl,
+            imagePrompt: draft.imagePrompt,
+            pickedProductId: draft.pickedProductId,
+          },
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      updateDraft(draft._localId, { _savingAsset: false, _savedAssetId: d.assetId });
+    } catch (e) {
+      updateDraft(draft._localId, { _savingAsset: false });
+      alert('存素材失敗:' + e.message);
+    }
+  }
+
   async function regenImage(draft) {
     const idx = drafts.findIndex((d) => d._localId === draft._localId);
     if (idx < 0) return;
@@ -198,6 +226,7 @@ function ProducePageInner() {
               onChange={(patch) => updateDraft(d._localId, patch)}
               onRemove={() => removeDraft(d._localId)}
               onRegenImage={() => regenImage(d)}
+              onSaveToAssets={() => saveDraftToAssets(d)}
               onZoom={(url) => setLightbox(url)}
             />
           ))}
@@ -220,7 +249,7 @@ function ProducePageInner() {
   );
 }
 
-function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onZoom }) {
+function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onSaveToAssets, onZoom }) {
   const [showImagePrompt, setShowImagePrompt] = useState(false);
   return (
     <div className={`rounded-lg border p-3 ${on ? 'border-emerald-300 bg-emerald-50/30' : 'border-stone-200 bg-white'}`}>
@@ -228,16 +257,27 @@ function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onZo
         <input type="checkbox" checked={on} onChange={onToggle} className="size-4 rounded border-stone-300 mt-1" />
         <div className="flex-1 min-w-0 space-y-2">
           {draft.pickedProductName && (
-            <div className="flex items-center gap-2 text-[11px] text-stone-600 flex-wrap">
-              {draft.pickedProductImage && <img src={draft.pickedProductImage} alt="" className="size-8 rounded object-cover border" />}
-              <span>🛒 帶產品:<strong>{draft.pickedProductName}</strong></span>
-              <label className="ml-auto flex items-center gap-1 text-[10px] text-emerald-700 cursor-pointer">
-                <input type="checkbox"
-                  checked={draft.includePurchaseUrl !== false}
-                  onChange={(e) => onChange({ includePurchaseUrl: e.target.checked })}
-                  className="size-3.5 rounded border-stone-300" />
-                🔗 發文時帶購買連結
-              </label>
+            <div className="rounded-lg border border-stone-200 bg-stone-50 p-2 flex items-center gap-2 flex-wrap">
+              {draft.pickedProductImage && (
+                <button type="button" onClick={() => onZoom(draft.pickedProductImage)}
+                  className="shrink-0 group relative">
+                  <img src={draft.pickedProductImage} alt="" className="size-14 rounded object-cover border" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded transition flex items-center justify-center text-white opacity-0 group-hover:opacity-100 text-[10px]">🔍</div>
+                </button>
+              )}
+              <div className="flex-1 min-w-0 text-[11px] text-stone-700">
+                <div className="text-stone-500 text-[10px]">📸 產品參考照 (點放大比對生成圖)</div>
+                <div className="font-medium truncate">🛒 {draft.pickedProductName}</div>
+              </div>
+              {draft.pickedProductPurchaseUrl && (
+                <label className="shrink-0 flex items-center gap-1 text-[10px] text-emerald-700 cursor-pointer bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                  <input type="checkbox"
+                    checked={!!draft.includePurchaseUrl}
+                    onChange={(e) => onChange({ includePurchaseUrl: e.target.checked })}
+                    className="size-3.5 rounded border-stone-300" />
+                  🔗 帶購買連結
+                </label>
+              )}
             </div>
           )}
           <div>
@@ -276,6 +316,13 @@ function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onZo
                   <div className="flex items-center justify-between">
                     <div className="text-[10px] text-purple-700 font-semibold">🎨 配圖</div>
                     <div className="flex gap-2 text-[10px]">
+                      {draft.imageUrl && draft._savedAssetId && <span className="text-emerald-600">✓ 已存</span>}
+                      {draft.imageUrl && !draft._savedAssetId && (
+                        <button onClick={onSaveToAssets} disabled={draft._savingAsset}
+                          className="text-amber-700 hover:underline disabled:opacity-50">
+                          {draft._savingAsset ? '存中…' : '💾 存素材庫'}
+                        </button>
+                      )}
                       <button onClick={() => setShowImagePrompt(!showImagePrompt)} className="text-stone-600 hover:underline">
                         {showImagePrompt ? '收起 prompt' : '看/改 prompt'}
                       </button>

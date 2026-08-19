@@ -31,7 +31,10 @@ export async function POST(req) {
     }));
     const results = await Promise.all(jobs);
 
-    return NextResponse.json({ posts: results });
+    return NextResponse.json({
+      posts: results,
+      topicIncludePurchaseUrl: Boolean(topic.includePurchaseUrl),
+    });
   } catch (e) {
     console.error('[produce] 錯誤:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -123,5 +126,8 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
     pickedProductId: picked?.id || null,
     pickedProductName: picked?.name || null,
     pickedProductImage: picked?.image_front || null,
+    pickedProductPurchaseUrl: picked?.purchase_url || null,
+    // 若 topic 有設 includePurchaseUrl,draft 預設帶連結
+    includePurchaseUrl: Boolean(topic.includePurchaseUrl && picked?.purchase_url),
   };
 }
