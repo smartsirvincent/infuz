@@ -188,16 +188,26 @@ export default function TopicDetailPage() {
             </div>
           </div>
           <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5">
-            <div className="text-[10px] text-emerald-800 font-semibold">🛒 綁定產品 ({boundProducts.length})</div>
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div className="text-[10px] text-emerald-800 font-semibold">🛒 綁定產品 ({boundProducts.length}) · 點圖放大對比</div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
               {boundProducts.length === 0 && <span className="text-xs text-stone-500">不帶產品 · 依品牌人格發文</span>}
-              {boundProducts.slice(0, 4).map((p) => (
-                <span key={p.id} className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] text-stone-700 border border-emerald-100">
-                  {p.image_front && <img src={p.image_front} alt="" className="size-3.5 rounded object-cover" />}
-                  {p.name.slice(0, 12)}
-                </span>
+              {boundProducts.map((p) => (
+                <button key={p.id} type="button"
+                  onClick={() => p.image_front && setLightbox(p.image_front)}
+                  disabled={!p.image_front}
+                  title={p.name}
+                  className="group relative shrink-0"
+                >
+                  {p.image_front ? (
+                    <>
+                      <img src={p.image_front} alt={p.name} className="size-14 rounded object-cover border border-emerald-200 group-hover:border-emerald-500 transition" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded transition flex items-center justify-center text-white opacity-0 group-hover:opacity-100 text-[10px]">🔍</div>
+                    </>
+                  ) : (
+                    <div className="size-14 rounded border border-dashed border-stone-300 flex items-center justify-center text-[9px] text-stone-400">無圖</div>
+                  )}
+                </button>
               ))}
-              {boundProducts.length > 4 && <span className="text-[10px] text-stone-500 self-center">+{boundProducts.length - 4}</span>}
             </div>
           </div>
         </div>
