@@ -9,6 +9,18 @@
     },
     "app/api/download/[id]/route.js": {
       "maxDuration": 30
+    },
+    "app/api/infuz/cron/tick/route.js": {
+      "maxDuration": 300
+    },
+    "app/api/infuz/publish/route.js": {
+      "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/infuz/cron/tick",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

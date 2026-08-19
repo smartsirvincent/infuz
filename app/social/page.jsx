@@ -10,7 +10,7 @@ export default function SocialHub() {
         </p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           href="/social/text-post"
           className="group card hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg transition"
@@ -54,6 +54,22 @@ export default function SocialHub() {
               <p className="mt-1 text-[11px] text-stone-600">選產品 + 自動加 UTM</p>
               <p className="mt-2 text-[11px] text-stone-500">
                 導購型 · UTM 參數在系統設定設
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/social/weather-post"
+          className="group card hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-lg transition"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-sky-100 text-2xl">☀️</div>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-stone-900 group-hover:text-sky-700">氣候即時預約</h2>
+              <p className="mt-1 text-[11px] text-stone-600">CWA 氣象 → 到點自動發</p>
+              <p className="mt-2 text-[11px] text-stone-500">
+                每日/週幾 · 條件觸發(雨/熱/冷)
               </p>
             </div>
           </div>
