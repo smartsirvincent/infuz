@@ -1,9 +1,7 @@
 'use client';
 
 // 氣候即時預約發文
-// 到指定時間 → 抓中央氣象署當下預報 → 依觸發條件判斷是否要發 → 產文 → 發布
-// 排程列表在下方,可新增/編輯/刪除/暫停
-
+// 支援多縣市(任一達標即發) + 配圖(從產品庫隨機挑女裝,KIE image-to-image)
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -14,12 +12,13 @@ const DEFAULT_PROMPT = `依當下的氣溫與降雨機率,給 25-40 歲的通勤
 或直接寫生活觀察,不推銷。長度 100-180 字。`;
 
 export default function WeatherPostPage() {
-  const [meta, setMeta] = useState(null); // { items, modules, weather }
+  const [meta, setMeta] = useState(null);
   const [conn, setConn] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null); // 正在編輯的 job (null = 新增)
+  const [editing, setEditing] = useState(null);
   const [preview, setPreview] = useState(null);
   const [previewing, setPreviewing] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,16 +48,30 @@ export default function WeatherPostPage() {
       withImage: false,
       enabled: true,
       config: {
-        location: '臺北市',
+        locations: ['臺北市'],
         minPoP: '',
         minMaxT: '',
         maxMinT: '',
         prompt: DEFAULT_PROMPT,
         imagePrompt: '',
+        productPool: 'female',
+        modelGender: 'female',
+        aspectRatio: '4:5',
       },
     });
     setPreview(null);
     setError('');
+  }
+
+  function normalizeForEdit(job) {
+    // 舊資料相容 (location -> locations[])
+    const config = { ...job.config };
+    if (!config.locations && config.location) config.locations = [config.location];
+    if (!config.locations) config.locations = ['臺北市'];
+    if (!config.productPool) config.productPool = 'female';
+    if (!config.modelGender) config.modelGender = 'female';
+    if (!config.aspectRatio) config.aspectRatio = '4:5';
+    return { ...job, config };
   }
 
   async function trySave() {
@@ -115,6 +128,27 @@ export default function WeatherPostPage() {
     finally { setPreviewing(false); }
   }
 
+  async function suggestImagePrompt() {
+    setSuggesting(true); setError('');
+    try {
+      const r = await fetch('/api/infuz/realtime/suggest-image-prompt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          locations: editing.config.locations,
+          modelGender: editing.config.modelGender,
+          productPool: editing.config.productPool,
+          prompt: editing.config.prompt,
+          aspectRatio: editing.config.aspectRatio,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setEditing({ ...editing, config: { ...editing.config, imagePrompt: d.imagePrompt } });
+    } catch (e) { setError('建議失敗:' + e.message); }
+    finally { setSuggesting(false); }
+  }
+
   async function fireNow() {
     setError('');
     if (!confirm('立即觸發所有已排程的 job (照原本的觸發條件過濾)?')) return;
@@ -141,11 +175,11 @@ export default function WeatherPostPage() {
           <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
         </div>
         <p className="mt-1 text-sm text-stone-600">
-          到指定時間 → 抓中央氣象署預報 → 依觸發條件產出當下應景的貼文 → 直發 Threads / IG / FB。
+          到指定時間 → 抓中央氣象署預報(可多縣市) → 依觸發條件產出當下應景的貼文 → 選配從產品庫隨機挑一件搭配生圖 → 直發 Threads / IG / FB。
         </p>
         {!weatherReady && (
           <div className="mt-2 rounded-lg bg-amber-100 p-2 text-xs text-amber-800">
-            ⚠ CWA_API_KEY 環境變數尚未設定 — 到 Vercel 或 <code>.env</code> 加上這顆 key(<a className="underline" href="https://opendata.cwa.gov.tw/user/authkey" target="_blank" rel="noreferrer">免費申請</a>) 才能抓氣象資料。
+            ⚠ CWA_API_KEY 環境變數尚未設定 — 到 Vercel 加上這顆 key 才能抓氣象資料。
           </div>
         )}
       </div>
@@ -168,7 +202,7 @@ export default function WeatherPostPage() {
           <JobRow
             key={job.id}
             job={job}
-            onEdit={() => { setEditing(job); setPreview(null); setError(''); }}
+            onEdit={() => { setEditing(normalizeForEdit(job)); setPreview(null); setError(''); }}
             onDelete={() => tryDelete(job.id)}
             onToggle={() => toggleEnabled(job)}
           />
@@ -182,34 +216,44 @@ export default function WeatherPostPage() {
             {editing.id ? '✏️ 編輯排程' : '➕ 新增排程'}
           </h2>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="label text-xs">排程名稱</label>
-              <input className="input text-sm" value={editing.name}
-                onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-              />
+          <div>
+            <label className="label text-xs">排程名稱</label>
+            <input className="input text-sm" value={editing.name}
+              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+            />
+          </div>
+
+          {/* 多選縣市 */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="label !mb-0 text-xs">📍 縣市 (可複選 · 任一縣市達觸發條件就發)</label>
+              <span className="text-[10px] text-stone-500">已選 {editing.config.locations.length} 個</span>
             </div>
-            <div>
-              <label className="label text-xs">縣市</label>
-              <select className="input text-sm" value={editing.config.location}
-                onChange={(e) => setEditing({ ...editing, config: { ...editing.config, location: e.target.value } })}
-              >
-                {(meta?.weather?.locations || []).map((loc) => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
+              {(meta?.weather?.locations || []).map((loc) => {
+                const on = editing.config.locations.includes(loc);
+                return (
+                  <button key={loc} type="button"
+                    onClick={() => {
+                      const next = on ? editing.config.locations.filter((x) => x !== loc) : [...editing.config.locations, loc];
+                      setEditing({ ...editing, config: { ...editing.config, locations: next } });
+                    }}
+                    className={`rounded-md px-2 py-1 text-[11px] ${on ? 'bg-emerald-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                  >{loc}</button>
+                );
+              })}
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <div>
-              <label className="label text-xs">發文時間</label>
+              <label className="label text-xs">⏰ 發文時間</label>
               <input type="time" className="input text-sm" value={editing.time}
                 onChange={(e) => setEditing({ ...editing, time: e.target.value })}
               />
             </div>
             <div className="sm:col-span-3">
-              <label className="label text-xs">星期幾發</label>
+              <label className="label text-xs">📆 星期幾發</label>
               <div className="flex gap-2 pt-1">
                 {DAY_NAMES.map((n, i) => {
                   const on = editing.days.includes(i);
@@ -228,58 +272,97 @@ export default function WeatherPostPage() {
           </div>
 
           <div className="rounded-lg border border-stone-200 bg-stone-50 p-3 space-y-2">
-            <div className="text-[11px] font-semibold text-stone-700">🎯 觸發條件 (全空 = 每次都發)</div>
+            <div className="text-[11px] font-semibold text-stone-700">🎯 觸發條件 (OR · 全空 = 每次都發)</div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div>
-                <label className="label text-[10px]">降雨機率 ≥ %</label>
-                <input type="number" className="input text-sm" placeholder="例:60"
-                  value={editing.config.minPoP}
-                  onChange={(e) => setEditing({ ...editing, config: { ...editing.config, minPoP: e.target.value } })}
-                />
-              </div>
-              <div>
-                <label className="label text-[10px]">最高溫 ≥ °C</label>
-                <input type="number" className="input text-sm" placeholder="例:30"
-                  value={editing.config.minMaxT}
-                  onChange={(e) => setEditing({ ...editing, config: { ...editing.config, minMaxT: e.target.value } })}
-                />
-              </div>
-              <div>
-                <label className="label text-[10px]">最低溫 ≤ °C</label>
-                <input type="number" className="input text-sm" placeholder="例:15"
-                  value={editing.config.maxMinT}
-                  onChange={(e) => setEditing({ ...editing, config: { ...editing.config, maxMinT: e.target.value } })}
-                />
-              </div>
+              <NumField label="降雨機率 ≥ %" value={editing.config.minPoP} placeholder="例:60"
+                onChange={(v) => setEditing({ ...editing, config: { ...editing.config, minPoP: v } })}
+              />
+              <NumField label="最高溫 ≥ °C" value={editing.config.minMaxT} placeholder="例:30"
+                onChange={(v) => setEditing({ ...editing, config: { ...editing.config, minMaxT: v } })}
+              />
+              <NumField label="最低溫 ≤ °C" value={editing.config.maxMinT} placeholder="例:15"
+                onChange={(v) => setEditing({ ...editing, config: { ...editing.config, maxMinT: v } })}
+              />
             </div>
-            <div className="text-[10px] text-stone-500">滿足任一條件即觸發 (OR)。例如降雨 ≥60% ∪ 最低溫 ≤15°C</div>
           </div>
 
           <div>
-            <label className="label text-xs">產文提示詞</label>
+            <label className="label text-xs">📝 產文提示詞</label>
             <textarea className="input min-h-[120px] text-xs leading-relaxed"
               value={editing.config.prompt}
               onChange={(e) => setEditing({ ...editing, config: { ...editing.config, prompt: e.target.value } })}
             />
-            <div className="mt-1 text-[10px] text-stone-500">品牌人格 / 受眾 / 台灣用語會自動帶入,這裡只寫這個排程特有的方向</div>
+            <div className="mt-1 text-[10px] text-stone-500">品牌人格 / 受眾 / 台灣用語會自動帶入</div>
           </div>
 
-          <div>
-            <label className="label text-xs flex items-center gap-2">
+          {/* AI 配圖 */}
+          <div className="rounded-lg border border-purple-200 bg-purple-50/40 p-3 space-y-3">
+            <label className="label text-xs flex items-center gap-2 !mb-0">
               <input type="checkbox" checked={editing.withImage}
                 onChange={(e) => setEditing({ ...editing, withImage: e.target.checked })}
                 className="size-3.5 rounded border-stone-300"
-              /> 產 AI 配圖 (實驗性,MVP 未實裝,先不勾)
+              /> 🖼️ 產 AI 配圖(從產品庫隨機挑一件搭配生圖)
             </label>
+
             {editing.withImage && (
-              <textarea className="input min-h-[80px] text-xs leading-relaxed mt-1"
-                placeholder="配圖英文 prompt (KIE)。留空用預設"
-                value={editing.config.imagePrompt}
-                onChange={(e) => setEditing({ ...editing, config: { ...editing.config, imagePrompt: e.target.value } })}
-              />
+              <div className="space-y-3 pl-5">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div>
+                    <label className="label text-[10px]">👔 從哪批產品挑</label>
+                    <select className="input text-xs"
+                      value={editing.config.productPool}
+                      onChange={(e) => setEditing({ ...editing, config: { ...editing.config, productPool: e.target.value } })}
+                    >
+                      <option value="female">女裝(gender=女性 或 無)</option>
+                      <option value="male">男裝(gender=男性)</option>
+                      <option value="all">全部(不限)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label text-[10px]">👤 模特兒</label>
+                    <select className="input text-xs"
+                      value={editing.config.modelGender}
+                      onChange={(e) => setEditing({ ...editing, config: { ...editing.config, modelGender: e.target.value } })}
+                    >
+                      <option value="female">女性</option>
+                      <option value="male">男性</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label text-[10px]">📐 圖片比例</label>
+                    <select className="input text-xs"
+                      value={editing.config.aspectRatio}
+                      onChange={(e) => setEditing({ ...editing, config: { ...editing.config, aspectRatio: e.target.value } })}
+                    >
+                      <option value="4:5">4:5 (IG 直式)</option>
+                      <option value="1:1">1:1 (方形)</option>
+                      <option value="9:16">9:16 (限動)</option>
+                      <option value="16:9">16:9 (橫式)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="label !mb-0 text-[10px]">🎨 配圖 imagePrompt(英文,給 KIE)</label>
+                    <button onClick={suggestImagePrompt} disabled={suggesting}
+                      className="text-[10px] text-purple-700 hover:underline disabled:opacity-50"
+                    >{suggesting ? '生成中…' : '✨ AI 建議一版'}</button>
+                  </div>
+                  <textarea className="input min-h-[90px] text-[11px] leading-relaxed font-mono"
+                    placeholder="留空發文時 AI 會依當下天氣+挑到的產品自動寫。或按上面『AI 建議一版』先看範本再改。"
+                    value={editing.config.imagePrompt}
+                    onChange={(e) => setEditing({ ...editing, config: { ...editing.config, imagePrompt: e.target.value } })}
+                  />
+                  <div className="mt-1 text-[10px] text-stone-500">
+                    💡 KIE 會用挑到的產品照當 image-to-image reference,所以生出來的模特兒會穿那件產品。
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
+          {/* 平台 */}
           <div>
             <div className="text-xs font-semibold text-stone-700 mb-1">📤 發到哪些平台</div>
             <div className="grid grid-cols-3 gap-2">
@@ -305,7 +388,6 @@ export default function WeatherPostPage() {
 
           {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">⚠ {error}</div>}
 
-          {/* 試發預覽 */}
           {preview && <PreviewBox data={preview} />}
 
           <div className="flex items-center justify-between gap-2 border-t border-stone-200 pt-3">
@@ -313,7 +395,7 @@ export default function WeatherPostPage() {
             <div className="flex gap-2">
               <button onClick={tryPreview} disabled={previewing || !weatherReady}
                 className="rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 disabled:opacity-50">
-                {previewing ? '生成中…' : '🔎 試發預覽(不真發)'}
+                {previewing ? (editing.withImage ? '產文+生圖中(約 60s)…' : '生成中…') : '🔎 試發預覽(不真發)'}
               </button>
               <button onClick={trySave} disabled={saving}
                 className="rounded-md bg-emerald-600 px-4 py-1.5 text-xs text-white hover:bg-emerald-700 disabled:opacity-50">
@@ -325,9 +407,9 @@ export default function WeatherPostPage() {
       )}
 
       <div className="card border-stone-100 bg-stone-50 text-xs text-stone-600 space-y-1">
-        <div>💡 <strong>執行時機</strong>:Vercel Cron 每 5 分鐘打一次 <code>/api/infuz/cron/tick</code>,到點才會執行。</div>
-        <div>💡 <strong>錯過補發</strong>:同時段內 6 小時內錯過會補發,超過就跳過(避免發舊資料)。</div>
-        <div>💡 <strong>觸發條件</strong>:任何條件滿足即觸發,例如「降雨 ≥60%」用在雨天穿搭提醒、「最低溫 ≤15」用在寒流保暖建議。</div>
+        <div>💡 <strong>多縣市</strong>:任一縣市達觸發條件就發,文案會提到所有選中縣市的天氣。</div>
+        <div>💡 <strong>AI 配圖</strong>:從產品庫過濾後隨機挑一件當「今天要搭配」的單品,KIE 用產品照當 reference 生模特兒穿搭圖。</div>
+        <div>💡 <strong>Cron</strong>:由 cron-job.org 定時打 <code>/api/infuz/cron/tick</code> 觸發,錯過 6h 內會補發。</div>
       </div>
     </main>
   );
@@ -336,6 +418,7 @@ export default function WeatherPostPage() {
 function JobRow({ job, onEdit, onDelete, onToggle }) {
   const days = job.days?.length === 7 ? '每天' : (job.days || []).map((d) => DAY_NAMES[d]).join('、');
   const platformLabels = Object.entries(job.platforms || {}).filter(([_, v]) => v).map(([k]) => k[0].toUpperCase() + k.slice(1)).join('/');
+  const locs = job.config?.locations || (job.config?.location ? [job.config.location] : []);
   const conds = [];
   if (job.config?.minPoP) conds.push(`雨≥${job.config.minPoP}%`);
   if (job.config?.minMaxT) conds.push(`≥${job.config.minMaxT}°`);
@@ -350,14 +433,17 @@ function JobRow({ job, onEdit, onDelete, onToggle }) {
               {job.enabled ? '● 啟用' : '○ 停用'}
             </button>
             <div className="font-medium text-sm text-stone-900 truncate">{job.name}</div>
+            {job.withImage && <span className="text-[10px] bg-purple-100 text-purple-700 rounded px-1.5 py-0.5">🖼️ 配圖</span>}
           </div>
           <div className="mt-1 text-[11px] text-stone-600">
-            📍 {job.config?.location} · ⏰ {job.time} · 📆 {days} · 📤 {platformLabels}
+            📍 {locs.length > 2 ? `${locs.slice(0, 2).join('/')} +${locs.length - 2}` : locs.join('/')} · ⏰ {job.time} · 📆 {days} · 📤 {platformLabels}
           </div>
           <div className="mt-0.5 text-[11px] text-stone-500">🎯 條件:{condText}</div>
           {job.lastResult && (
             <div className={`mt-1 text-[10px] rounded px-2 py-1 ${job.lastResult.ok ? 'bg-emerald-50 text-emerald-700' : job.lastResult.skipped ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>
               上次({new Date(job.lastResult.at).toLocaleString('zh-TW')}): {job.lastResult.ok ? '✓ 已發' : job.lastResult.skipped ? `- 跳過:${job.lastResult.reason}` : `✗ ${job.lastResult.error || '失敗'}`}
+              {job.lastResult.pickedProduct && <span className="ml-1 text-purple-700">· 搭配 {job.lastResult.pickedProduct.name}</span>}
+              {job.lastResult.imageError && <div className="text-red-600 mt-0.5">⚠ 生圖失敗:{job.lastResult.imageError}</div>}
               {job.lastResult.text && <div className="mt-0.5 text-stone-600 whitespace-pre-line line-clamp-2">{job.lastResult.text}</div>}
             </div>
           )}
@@ -386,27 +472,53 @@ function PlatBox({ label, enabled, checked, onChange, hint }) {
   );
 }
 
+function NumField({ label, value, placeholder, onChange }) {
+  return (
+    <div>
+      <label className="label text-[10px]">{label}</label>
+      <input type="number" className="input text-sm" placeholder={placeholder} value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
 function PreviewBox({ data }) {
   if (!data.fire) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs">
         <div className="font-semibold text-amber-800">✋ 目前不會發文</div>
         <div className="mt-1 text-amber-700">{data.reason}</div>
-        {data.snapshot && <SnapshotPreview snap={data.snapshot} />}
+        {data.snapshots?.length ? data.snapshots.map((s, i) => <SnapshotPreview key={i} snap={s} />) : (data.snapshot && <SnapshotPreview snap={data.snapshot} />)}
       </div>
     );
   }
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs space-y-2">
       <div className="font-semibold text-emerald-800">✓ 會發文 - {data.reason}</div>
-      {data.snapshot && <SnapshotPreview snap={data.snapshot} />}
+      {data.preview?.snapshots?.length ? data.preview.snapshots.map((s, i) => <SnapshotPreview key={i} snap={s} />) : (data.snapshot && <SnapshotPreview snap={data.snapshot} />)}
+      {data.preview?.pickedProduct && (
+        <div className="rounded bg-white p-2 flex items-center gap-2">
+          <img src={data.preview.pickedProduct.image} alt="" className="size-14 rounded object-cover border" />
+          <div className="text-[11px] text-stone-700">🎯 挑到搭配單品:<strong>{data.preview.pickedProduct.name}</strong></div>
+        </div>
+      )}
+      {data.preview?.imageUrl && (
+        <div className="rounded bg-white p-2">
+          <div className="text-[10px] text-stone-500 mb-1">🖼️ 生成的配圖:</div>
+          <img src={data.preview.imageUrl} alt="generated" className="max-w-full rounded border" />
+        </div>
+      )}
+      {data.preview?.imageError && (
+        <div className="rounded bg-red-50 p-2 text-[11px] text-red-700">⚠ 生圖失敗:{data.preview.imageError}</div>
+      )}
       <div className="mt-2 rounded bg-white p-2">
         <div className="text-[10px] text-stone-500 mb-1">生成的貼文:</div>
         <pre className="whitespace-pre-wrap text-xs text-stone-900 font-sans">{data.preview?.text}</pre>
         {data.preview?.hashtags && <div className="mt-1 text-[10px] text-emerald-700">{data.preview.hashtags}</div>}
         {data.preview?.imagePrompt && (
           <details className="mt-2 border-t border-stone-100 pt-1">
-            <summary className="text-[10px] text-stone-500 cursor-pointer">配圖 prompt (英文)</summary>
+            <summary className="text-[10px] text-stone-500 cursor-pointer">imagePrompt (英文)</summary>
             <pre className="mt-1 whitespace-pre-wrap text-[10px] text-stone-600">{data.preview.imagePrompt}</pre>
           </details>
         )}
@@ -417,8 +529,8 @@ function PreviewBox({ data }) {
 
 function SnapshotPreview({ snap }) {
   return (
-    <div className="mt-1 rounded bg-white/70 p-1.5">
-      <div className="text-[10px] text-stone-500">📊 抓到的氣象:</div>
+    <div className="rounded bg-white/70 p-1.5">
+      <div className="text-[10px] text-stone-500">📊 {snap.location}:</div>
       {(snap.periods || []).map((p, i) => (
         <div key={i} className="text-[10px] text-stone-700">
           {p.label}: {p.wx} · 雨{p.pop ?? '-'}% · {p.minT ?? '-'}–{p.maxT ?? '-'}°C
