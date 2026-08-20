@@ -112,6 +112,22 @@ function SchedulePageInner() {
     load();
   }
 
+  async function deleteTopic(topic, e) {
+    e.preventDefault(); e.stopPropagation();
+    const relatedPosts = posts.filter((p) => p.topicId === topic.id);
+    const msg = relatedPosts.length
+      ? `刪除主題「${topic.name}」?\n\n連同 ${relatedPosts.length} 篇 (待發/已發/失敗) 文章一起刪除,無法復原。`
+      : `刪除主題「${topic.name}」?`;
+    if (!confirm(msg)) return;
+    try {
+      await fetch(`/api/infuz/topics?id=${encodeURIComponent(topic.id)}`, { method: 'DELETE' });
+      for (const p of relatedPosts) {
+        await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+      }
+      await load();
+    } catch (err) { setError('刪除失敗:' + err.message); }
+  }
+
   if (loading) return <main className="card">載入中…</main>;
 
   const filtered = topics.filter((t) => !filter || t.name.toLowerCase().includes(filter.toLowerCase()));
@@ -176,6 +192,7 @@ function SchedulePageInner() {
             posts={posts.filter((p) => p.topicId === topic.id)}
             products={products}
             onToggleSchedule={(e) => toggleSchedule(topic, e)}
+            onDelete={(e) => deleteTopic(topic, e)}
           />
         ))}
       </section>
@@ -220,7 +237,7 @@ function StatBox({ label, value, sub, color }) {
   );
 }
 
-function TopicCard({ topic, posts, products, onToggleSchedule }) {
+function TopicCard({ topic, posts, products, onToggleSchedule, onDelete }) {
   const queued = posts.filter((p) => p.status === 'queued').length;
   const published = posts.filter((p) => p.status === 'published').length;
   const failed = posts.filter((p) => p.status === 'failed').length;
@@ -238,9 +255,15 @@ function TopicCard({ topic, posts, products, onToggleSchedule }) {
 
   return (
     <Link href={`/social/schedule/${topic.id}`}
-      className={`group rounded-xl border p-4 space-y-3 transition hover:-translate-y-0.5 hover:shadow-md ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-80'}`}>
+      className={`group relative rounded-xl border p-4 space-y-3 transition hover:-translate-y-0.5 hover:shadow-md ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-80'}`}>
+      {/* 刪除按鈕 (hover 才顯示,右上角) */}
+      <button onClick={onDelete}
+        className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-stone-200 text-stone-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+        title="刪除主題(含所有文章)"
+      >✕</button>
+
       {/* Top row: title + type + status */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2 pr-8">
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-stone-900 truncate group-hover:text-blue-700">{topic.name}</div>
           {topic.description && (
