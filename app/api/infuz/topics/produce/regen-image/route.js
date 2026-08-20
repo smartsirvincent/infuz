@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { loadDb } from '@/lib/infuz-db.js';
 import { submitAndPollV2WithRetry } from '@/lib/kie-image.js';
 import { uploadToCloudinary } from '@/lib/cloudinary.js';
+import { enforceFidelityPrompt, productReferenceUrls } from '@/lib/infuz-image-rules.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -16,11 +17,12 @@ export async function POST(req) {
     if (productId) {
       const db = await loadDb('products');
       const p = (db.items || []).find((x) => x.id === productId);
-      if (p?.image_front) refs = [p.image_front];
+      refs = productReferenceUrls(p); // 多角度參考照
     }
 
+    const finalPrompt = enforceFidelityPrompt(imagePrompt);
     const kieResult = await submitAndPollV2WithRetry(
-      { prompt: imagePrompt, referenceImages: refs, aspect_ratio: aspectRatio },
+      { prompt: finalPrompt, referenceImages: refs, aspect_ratio: aspectRatio },
       { maxRetries: 1 },
     );
     const uploaded = await uploadToCloudinary(kieResult.kieUrl, { folder: 'infuz/topics' });

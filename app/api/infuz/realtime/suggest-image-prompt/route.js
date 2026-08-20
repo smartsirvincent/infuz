@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { callJSON } from '@/lib/llm.js';
 import { INFUZ_BRAND } from '@/lib/infuz-brand.js';
 import { loadDb } from '@/lib/infuz-db.js';
+import { FIDELITY_INSTRUCTION_FOR_CLAUDE, enforceFidelityPrompt } from '@/lib/infuz-image-rules.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -32,7 +33,9 @@ Rules (must follow):
 - No face close-up, no children, no watermark
 - Scene should react to Taiwan weather (rain/heat/cold)
 - Aspect ratio target: ${aspectRatio}
-- 60-120 words, single paragraph, direct prompt (no numbering)`;
+- 60-120 words, single paragraph, direct prompt (no numbering)
+
+${FIDELITY_INSTRUCTION_FOR_CLAUDE}`;
 
     const user = `Locations context (weather-relevant scene inspiration): ${locations.join(', ') || 'Taipei'}
 Copy angle (what the post is about): ${prompt || '(unspecified — general daily-life outfit tip)'}
@@ -48,8 +51,10 @@ Write the image prompt now.`;
       endpoint: 'suggest-image-prompt',
     });
 
+    // 保證回傳的 prompt 前綴帶 fidelity rule (即使 Claude 忘了)
+    const safePrompt = enforceFidelityPrompt((result.imagePrompt || '').trim());
     return NextResponse.json({
-      imagePrompt: (result.imagePrompt || '').trim(),
+      imagePrompt: safePrompt,
       sampleProduct: sample ? { id: sample.id, name: sample.name, image_front: sample.image_front } : null,
     });
   } catch (e) {

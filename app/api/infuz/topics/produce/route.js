@@ -6,6 +6,7 @@ import { INFUZ_BRAND } from '@/lib/infuz-brand.js';
 import { loadDb } from '@/lib/infuz-db.js';
 import { submitAndPollV2WithRetry } from '@/lib/kie-image.js';
 import { uploadToCloudinary } from '@/lib/cloudinary.js';
+import { FIDELITY_INSTRUCTION_FOR_CLAUDE, enforceFidelityPrompt, productReferenceUrls } from '@/lib/infuz-image-rules.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -70,7 +71,9 @@ ${topic.systemPrompt ? `\n寫作方向: ${topic.systemPrompt}` : ''}
 - 台灣用語(不用「视频」「网站」等對岸詞)
 - 不用 emoji 開頭
 - 換行多、短句、有空氣感
-- 這是第 ${index + 1} 篇, 要跟同主題其他篇的 hook 有差異`;
+- 這是第 ${index + 1} 篇, 要跟同主題其他篇的 hook 有差異
+
+${wantImages ? FIDELITY_INSTRUCTION_FOR_CLAUDE : ''}`;
 
   const user = `【文案要求】
 長度: ${length}${productHint}
@@ -98,10 +101,13 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
   let imageError = null;
   if (wantImages && draft.imagePrompt) {
     try {
-      const refs = picked?.image_front ? [picked.image_front] : [];
+      // 多角度參考照 (front + back + detail) — 讓 KIE 更能識別「就是這一件」
+      const refs = productReferenceUrls(picked);
+      // 強制加 fidelity prefix — 即使 Claude 產的 prompt 沒帶,也 append 上去
+      const finalPrompt = enforceFidelityPrompt(draft.imagePrompt);
       const kieResult = await submitAndPollV2WithRetry(
         {
-          prompt: draft.imagePrompt,
+          prompt: finalPrompt,
           referenceImages: refs,
           aspect_ratio: topic.aspectRatio || '4:5',
         },
