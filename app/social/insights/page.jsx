@@ -4,6 +4,7 @@
 // MVP: 顯示發文狀態 + 平台圖示 + permalink · 深指標之後補
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader, StatCard, EmptyState } from '../_components.jsx';
 
 const PLATFORM_META = {
   threads: { label: '🧵 Threads', color: 'bg-black text-white' },
@@ -45,22 +46,20 @@ export default function InsightsPage() {
 
   return (
     <main className="space-y-5">
-      <div className="card border-amber-200 bg-amber-50/40">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-stone-900">📊 發文成效</h1>
-          <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
-        </div>
-        <p className="mt-1 text-sm text-stone-600">
-          所有已發貼文 · 分平台/主題/日期篩 · 點連結到原文看實際互動 · 深指標(reach/like/comment)之後補上
-        </p>
-      </div>
+      <PageHeader
+        icon="📊"
+        title="發文成效"
+        tone="amber"
+        breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '發文成效' }]}
+        description="所有已發貼文 · 分平台/主題/日期篩 · 點連結到原文看實際互動 · 深指標(reach/like/comment)之後補上"
+      />
 
       {/* Summary */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="總發文" value={data.total} />
-        <StatCard label="🧵 Threads" value={data.byPlatform.threads || 0} />
-        <StatCard label="📷 IG" value={data.byPlatform.instagram || 0} />
-        <StatCard label="👍 FB" value={data.byPlatform.facebook || 0} />
+        <StatCard label="總發文" value={data.total} icon="📮" />
+        <StatCard label="Threads" value={data.byPlatform.threads || 0} icon="🧵" />
+        <StatCard label="Instagram" value={data.byPlatform.instagram || 0} tone="purple" icon="📷" />
+        <StatCard label="Facebook" value={data.byPlatform.facebook || 0} tone="blue" icon="👍" />
       </section>
 
       {/* Filters */}
@@ -115,15 +114,6 @@ export default function InsightsPage() {
         </div>
       )}
     </main>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="rounded-xl border border-stone-200 bg-white p-3">
-      <div className="text-[11px] text-stone-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-stone-900">{value}</div>
-    </div>
   );
 }
 

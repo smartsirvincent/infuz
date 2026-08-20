@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PageHeader } from '../../_components.jsx';
 
 export default function DiscoverPage() {
   const router = useRouter();
@@ -68,18 +69,14 @@ export default function DiscoverPage() {
   }
 
   return (
-    <main className="space-y-5">
-      <div className="card border-purple-200 bg-purple-50/40">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-stone-900">💡 主題發想</h1>
-          <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
-        </div>
-        <p className="mt-1 text-sm text-stone-600">
-          描述方向 + 選要帶的產品 → AI 建議 N 個「主題」→ 勾選加入清單。
-          每個主題之後可產出多篇連貫的文案。
-          {existingTopics.length > 0 && <span className="text-purple-700"> · 已有 {existingTopics.length} 個主題,AI 會自動避開重複</span>}
-        </p>
-      </div>
+    <main className="space-y-6 pb-8">
+      <PageHeader
+        icon="💡"
+        title="主題發想"
+        tone="purple"
+        breadcrumbs={[{ href: '/social', label: '社群發文' }, { href: '/social/schedule', label: '排程管理' }, { label: '主題發想' }]}
+        description={`描述方向 + 選要帶的產品 → AI 建議 N 個主題 → 勾選加入清單${existingTopics.length > 0 ? ` · 已有 ${existingTopics.length} 個主題,AI 會自動避開重複` : ''}`}
+      />
 
       <div className="card space-y-3">
         <div>

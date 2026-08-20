@@ -4,6 +4,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { PageHeader, StatCard, EmptyState, Chip, Button } from '../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -136,54 +137,46 @@ function SchedulePageInner() {
   const totalFailed = posts.filter((p) => p.status === 'failed').length;
 
   return (
-    <main className="space-y-5">
-      <div className="card border-blue-200 bg-blue-50/40">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-stone-900">📅 排程管理</h1>
-          <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
-        </div>
-        <p className="mt-1 text-sm text-stone-600">
-          所有主題清單 · 點卡片進入看完整貼文 · 到點 tick 從佇列取一篇發
-        </p>
-      </div>
+    <main className="space-y-6 pb-8">
+      <PageHeader icon="📅" title="排程管理" tone="blue"
+        breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '排程管理' }]}
+        description="所有主題清單 · 點卡片進入看完整貼文 · 到點 cron 從佇列取一篇自動發"
+        actions={
+          <>
+            <Button href="/social/topics/discover" tone="purple" size="sm">💡 AI 發想</Button>
+            <Button onClick={newTopic} tone="success" size="sm">+ 手動新增</Button>
+          </>
+        }
+      />
 
       {/* 全站統計 */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatBox label="主題總數" value={topics.length} sub={`${topics.filter((t) => t.schedule?.enabled).length} 個排程中`} />
-        <StatBox label="待發" value={totalQueued} color="blue" sub="佇列中,到點自動發" />
-        <StatBox label="已發" value={totalPublished} color="emerald" sub="累計成功" />
-        <StatBox label="失敗" value={totalFailed} color="red" sub={totalFailed > 0 ? '需檢查' : '沒有失敗 ✨'} />
+        <StatCard label="主題總數" value={topics.length} sub={`${topics.filter((t) => t.schedule?.enabled).length} 個排程中`} icon="📋" />
+        <StatCard label="待發" value={totalQueued} tone="blue" sub="佇列中,到點自動發" icon="📥" />
+        <StatCard label="已發" value={totalPublished} tone="emerald" sub="累計成功" icon="✓" />
+        <StatCard label="失敗" value={totalFailed} tone={totalFailed > 0 ? 'red' : 'neutral'} sub={totalFailed > 0 ? '需檢查' : '沒有失敗'} icon="⚠" />
       </section>
 
-      {/* 工具列 */}
-      <div className="card">
-        <div className="flex items-center gap-3 flex-wrap">
-          <input className="input text-sm flex-1 min-w-[200px]" placeholder="🔍 搜尋主題名..."
-            value={filter} onChange={(e) => setFilter(e.target.value)} />
-          <Link href="/social/topics/discover"
-            className="rounded-md bg-purple-600 px-3 py-2 text-xs text-white hover:bg-purple-700 whitespace-nowrap">
-            💡 AI 發想主題
-          </Link>
-          <button onClick={newTopic}
-            className="rounded-md bg-emerald-600 px-3 py-2 text-xs text-white hover:bg-emerald-700 whitespace-nowrap">
-            + 手動新增
-          </button>
-        </div>
+      {/* 搜尋列 */}
+      <div className="relative">
+        <input
+          className="w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 pl-10 text-sm placeholder-stone-400 outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-200 transition"
+          placeholder="搜尋主題名..."
+          value={filter} onChange={(e) => setFilter(e.target.value)}
+        />
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">🔍</span>
       </div>
 
       {/* 主題 grid */}
       {filtered.length === 0 && (
-        <div className="card text-center py-12 space-y-3">
-          <div className="text-4xl">📝</div>
-          <div className="text-stone-600 text-sm">
-            {topics.length === 0 ? '還沒有任何主題' : `沒有符合「${filter}」的主題`}
-          </div>
-          {topics.length === 0 && (
-            <Link href="/social/topics/discover" className="inline-block rounded-md bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700">
-              💡 用 AI 幫你發想 3 個試試
-            </Link>
+        <EmptyState
+          icon={topics.length === 0 ? '💡' : '🔍'}
+          title={topics.length === 0 ? '還沒有任何主題' : `沒有符合「${filter}」的主題`}
+          description={topics.length === 0 ? '主題是一組具備連貫寫作角度的貼文系列。用 AI 幫你發想幾個開始' : '試試別的關鍵字'}
+          action={topics.length === 0 && (
+            <Button href="/social/topics/discover" tone="purple">💡 用 AI 幫你發想 3 個試試</Button>
           )}
-        </div>
+        />
       )}
       <section className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((topic) => (
@@ -248,55 +241,56 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onDelete }) {
   const boundProducts = (topic.productIds || []).map((id) => products.find((p) => p.id === id)).filter(Boolean);
 
   const typeInfo = {
-    text: { label: '📝 文字', bg: 'bg-blue-100 text-blue-700' },
-    long: { label: '📄 長文', bg: 'bg-emerald-100 text-emerald-700' },
-    image: { label: '🖼️ 圖片', bg: 'bg-purple-100 text-purple-700' },
-  }[topic.type] || { label: topic.type, bg: 'bg-stone-100 text-stone-700' };
+    text: { label: '📝 文字', tone: 'blue' },
+    long: { label: '📄 長文', tone: 'emerald' },
+    image: { label: '🖼️ 圖片', tone: 'purple' },
+  }[topic.type] || { label: topic.type, tone: 'neutral' };
 
   return (
     <Link href={`/social/schedule/${topic.id}`}
-      className={`group relative rounded-xl border p-4 space-y-3 transition hover:-translate-y-0.5 hover:shadow-md ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50 opacity-80'}`}>
+      className={`group relative rounded-2xl border p-5 space-y-4 transition hover:-translate-y-0.5 hover:shadow-md hover:border-stone-300 ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50/60 opacity-80'}`}>
       {/* 刪除按鈕 (hover 才顯示,右上角) */}
       <button onClick={onDelete}
-        className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-stone-200 text-stone-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+        className="absolute top-2.5 right-2.5 z-10 rounded-full bg-white/95 border border-stone-200 text-stone-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all shadow-sm"
         title="刪除主題(含所有文章)"
       >✕</button>
 
-      {/* Top row: title + type + status */}
-      <div className="flex items-start justify-between gap-2 pr-8">
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-stone-900 truncate group-hover:text-blue-700">{topic.name}</div>
-          {topic.description && (
-            <p className="mt-0.5 text-[11px] text-stone-500 line-clamp-2 leading-relaxed">{topic.description}</p>
-          )}
+      {/* Top row: title + type */}
+      <div className="pr-8 space-y-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Chip tone={typeInfo.tone} size="xs">{typeInfo.label}</Chip>
+          <span onClick={(e) => { e.preventDefault(); onToggleSchedule(e); }}
+            className={`inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 cursor-pointer transition ${scheduledEnabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-stone-200 text-stone-500 hover:bg-stone-300'}`}
+          >{scheduledEnabled ? '● 排程中' : '○ 停用'}</span>
         </div>
-        <span className={`shrink-0 text-[10px] rounded px-1.5 py-0.5 ${typeInfo.bg}`}>{typeInfo.label}</span>
+        <h3 className="font-semibold text-base text-stone-900 truncate group-hover:text-stone-700 tracking-tight">{topic.name}</h3>
+        {topic.description && (
+          <p className="text-xs text-stone-500 line-clamp-2 leading-relaxed">{topic.description}</p>
+        )}
       </div>
 
       {/* 排程摘要 */}
-      <div className="rounded-lg bg-stone-50 border border-stone-200 p-2 text-[11px]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-stone-700">
-            <span>⏰ {topic.schedule?.time || '未設'}</span>
-            <span className="text-stone-400">·</span>
-            <span>{days || '無'}</span>
-            <span className="text-stone-400">·</span>
-            <span>{platformIcons || '(無平台)'}</span>
-          </div>
-          <button onClick={onToggleSchedule}
-            className={`text-[9px] rounded-full px-1.5 py-0.5 shrink-0 ${scheduledEnabled ? 'bg-emerald-500 text-white' : 'bg-stone-300 text-stone-600'}`}>
-            {scheduledEnabled ? '● ON' : '○ OFF'}
-          </button>
+      <div className="rounded-lg bg-stone-50/60 border border-stone-100 p-2.5 text-[11px] text-stone-600">
+        <div className="flex items-center gap-1.5">
+          <span className="text-stone-400">⏰</span>
+          <span className="font-medium text-stone-800">{topic.schedule?.time || '未設'}</span>
+          <span className="text-stone-300">·</span>
+          <span>{days || '無'}</span>
+          <span className="text-stone-300">·</span>
+          <span className="tracking-wide">{platformIcons || '(無平台)'}</span>
         </div>
       </div>
 
       {/* 產品 + 貼文計數 */}
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="text-stone-500">🛒 {boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}</span>
-        <div className="flex gap-2">
-          <span className="text-blue-700">📥 {queued}</span>
-          <span className="text-emerald-700">✓ {published}</span>
-          {failed > 0 && <span className="text-red-700">✗ {failed}</span>}
+      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-stone-100">
+        <span className="text-stone-500 flex items-center gap-1">
+          <span>🛒</span>
+          <span>{boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}</span>
+        </span>
+        <div className="flex gap-2.5 font-medium">
+          <span className="text-blue-600" title="待發">📥 {queued}</span>
+          <span className="text-emerald-600" title="已發">✓ {published}</span>
+          {failed > 0 && <span className="text-red-600" title="失敗">✗ {failed}</span>}
         </div>
       </div>
     </Link>

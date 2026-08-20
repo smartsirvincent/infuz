@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { buildTextWithLink } from '@/lib/topic-publish-helper.js';
+import { PageHeader, TabBar, Chip, Button, EmptyState } from '../../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const TAB = { queued: '📥 待發', published: '✓ 已發', failed: '✗ 失敗' };
@@ -132,47 +133,35 @@ export default function TopicDetailPage() {
   const days = topic.schedule?.days?.length === 7 ? '每天' : (topic.schedule?.days || []).map((d) => DAY_NAMES[d]).join('、');
   const platforms = Object.entries(topic.schedule?.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: '🧵 T', instagram: '📷 IG', facebook: '👍 FB' })[k]).join(' ');
 
-  return (
-    <main className="space-y-5">
-      {/* 麵包屑 */}
-      <div className="text-xs text-stone-500 flex items-center gap-2">
-        <Link href="/social" className="hover:underline">📤 社群發文</Link>
-        <span>›</span>
-        <Link href="/social/schedule" className="hover:underline">📅 排程管理</Link>
-        <span>›</span>
-        <span className="text-stone-800 font-medium">{topic.name}</span>
-      </div>
+  const typeChip = topic.type === 'long' ? { tone: 'emerald', label: '📄 長文' } : topic.type === 'image' ? { tone: 'purple', label: '🖼️ 圖片' } : { tone: 'blue', label: '📝 文字' };
 
-      {/* Header */}
-      <div className="card space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-semibold text-stone-900">{topic.name}</h1>
-              <span className="text-[10px] rounded bg-stone-100 px-1.5 py-0.5 text-stone-600">
-                {topic.type === 'long' ? '📄 長文' : topic.type === 'image' ? '🖼️ 圖片' : '📝 文字'}
-              </span>
-              <button onClick={toggleSchedule}
-                className={`text-[10px] rounded-full px-2 py-0.5 ${topic.schedule?.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-200 text-stone-500'}`}>
-                {topic.schedule?.enabled ? '● 排程中' : '○ 停用中'}
-              </button>
-            </div>
-            {topic.description && <p className="mt-1 text-sm text-stone-600">{topic.description}</p>}
-          </div>
-          <div className="flex flex-col gap-1 shrink-0">
-            <Link href={`/social/produce?topic=${topic.id}`}
-              className="rounded-md bg-fuchsia-600 px-3 py-1.5 text-xs text-white hover:bg-fuchsia-700 whitespace-nowrap text-center">
-              ✨ 產文
-            </Link>
-            <Link href={`/social/schedule?edit=${topic.id}`}
-              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 text-center">
-              ✏️ 編輯
-            </Link>
-            <button onClick={deleteTopic}
-              className="rounded-md border border-red-200 text-red-600 px-3 py-1.5 text-xs hover:bg-red-50">
-              🗑️ 刪除
-            </button>
-          </div>
+  return (
+    <main className="space-y-6 pb-8">
+      <PageHeader
+        title={topic.name}
+        tone="blue"
+        breadcrumbs={[
+          { href: '/social', label: '社群發文' },
+          { href: '/social/schedule', label: '排程管理' },
+          { label: topic.name },
+        ]}
+        description={topic.description}
+        actions={
+          <>
+            <Button href={`/social/produce?topic=${topic.id}`} tone="purple" size="sm">✨ 產文</Button>
+            <Button href={`/social/schedule?edit=${topic.id}`} tone="secondary" size="sm">✏️ 編輯</Button>
+            <Button onClick={deleteTopic} tone="danger" size="sm">🗑️ 刪除</Button>
+          </>
+        }
+      />
+
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 space-y-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Chip tone={typeChip.tone} size="sm">{typeChip.label}</Chip>
+          <button onClick={toggleSchedule}
+            className={`inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 transition ${topic.schedule?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-stone-200 text-stone-500 hover:bg-stone-300'}`}>
+            {topic.schedule?.enabled ? '● 排程中(點暫停)' : '○ 停用中(點啟用)'}
+          </button>
         </div>
 
         {/* 排程 + 產品資訊 */}
@@ -218,33 +207,27 @@ export default function TopicDetailPage() {
             <p className="mt-1 text-xs text-stone-700 leading-relaxed whitespace-pre-wrap">{topic.systemPrompt}</p>
           </details>
         )}
-      </div>
+      </section>
 
       {/* Tabs */}
-      <div className="card space-y-3">
-        <div className="flex gap-1 border-b border-stone-200 -mt-2 -mx-2 px-2 pb-2">
-          {Object.entries(TAB).map(([k, label]) => {
-            const on = tab === k;
-            const cnt = byStatus[k].length;
-            return (
-              <button key={k} onClick={() => setTab(k)}
-                className={`px-3 py-1.5 text-sm rounded-md transition ${on ? 'bg-stone-100 text-stone-900 font-medium' : 'text-stone-500 hover:text-stone-800'}`}>
-                {label} <span className={`text-[10px] ml-1 rounded-full px-1.5 py-0.5 ${on ? 'bg-white' : 'bg-stone-100'}`}>{cnt}</span>
-              </button>
-            );
-          })}
-        </div>
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5 space-y-3">
+        <TabBar
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { value: 'queued', label: '📥 待發', count: byStatus.queued.length },
+            { value: 'published', label: '✓ 已發', count: byStatus.published.length },
+            { value: 'failed', label: '✗ 失敗', count: byStatus.failed.length },
+          ]}
+        />
 
         {byStatus[tab].length === 0 && (
-          <div className="rounded-lg border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500">
-            {tab === 'queued' && (
-              <>
-                佇列是空的 · <Link href={`/social/produce?topic=${topic.id}`} className="text-fuchsia-700 underline">去產文</Link>
-              </>
-            )}
-            {tab === 'published' && '還沒有已發的文章'}
-            {tab === 'failed' && '沒有失敗的文章 ✨'}
-          </div>
+          <EmptyState
+            icon={tab === 'queued' ? '📥' : tab === 'published' ? '📮' : '✨'}
+            title={tab === 'queued' ? '佇列是空的' : tab === 'published' ? '還沒有已發的文章' : '沒有失敗的文章'}
+            description={tab === 'queued' ? '產文後會進到這裡等排程時間到自動發' : tab === 'published' ? '第一篇發出後就會出現在這' : '一切正常'}
+            action={tab === 'queued' && <Button href={`/social/produce?topic=${topic.id}`} tone="purple" size="sm">✨ 去產文</Button>}
+          />
         )}
 
         {byStatus[tab].map((post) => (

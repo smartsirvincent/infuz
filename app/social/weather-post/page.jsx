@@ -4,6 +4,7 @@
 // 支援多縣市(任一達標即發) + 配圖(從產品庫隨機挑女裝,KIE image-to-image)
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -168,21 +169,19 @@ export default function WeatherPostPage() {
   const weatherReady = meta?.weather?.ready;
 
   return (
-    <main className="space-y-5">
-      <div className="card border-sky-200 bg-sky-50/40">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-stone-900">☀️ 氣候即時預約</h1>
-          <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
+    <main className="space-y-6 pb-8">
+      <PageHeader
+        icon="☀️"
+        title="氣候即時預約"
+        tone="sky"
+        breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '氣候即時預約' }]}
+        description="到指定時間 → 抓中央氣象署預報(可多縣市) → 依觸發條件產出當下應景的貼文 → 從產品庫隨機挑搭配生圖 → 直發 Threads/IG/FB"
+      />
+      {!weatherReady && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          ⚠ CWA_API_KEY 環境變數尚未設定 — 到 Vercel 加上這顆 key 才能抓氣象資料。
         </div>
-        <p className="mt-1 text-sm text-stone-600">
-          到指定時間 → 抓中央氣象署預報(可多縣市) → 依觸發條件產出當下應景的貼文 → 選配從產品庫隨機挑一件搭配生圖 → 直發 Threads / IG / FB。
-        </p>
-        {!weatherReady && (
-          <div className="mt-2 rounded-lg bg-amber-100 p-2 text-xs text-amber-800">
-            ⚠ CWA_API_KEY 環境變數尚未設定 — 到 Vercel 加上這顆 key 才能抓氣象資料。
-          </div>
-        )}
-      </div>
+      )}
 
       {/* 排程列表 */}
       <div className="card space-y-3">

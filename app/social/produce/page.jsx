@@ -4,6 +4,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { PageHeader, Chip, Button } from '../_components.jsx';
 
 function ProducePageInner() {
   const searchParams = useSearchParams();
@@ -132,16 +133,14 @@ function ProducePageInner() {
   }
 
   return (
-    <main className="space-y-5">
-      <div className="card border-fuchsia-200 bg-fuchsia-50/40">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-stone-900">✨ 主題產文</h1>
-          <Link href="/social" className="text-xs text-stone-500 hover:underline">← 回社群發文</Link>
-        </div>
-        <p className="mt-1 text-sm text-stone-600">
-          選主題 + 篇數 → AI 依主題設定產出多篇 → 逐篇編輯 → 加入待發佇列(依主題排程時間自動發)。
-        </p>
-      </div>
+    <main className="space-y-6 pb-8">
+      <PageHeader
+        icon="✨"
+        title="主題產文"
+        tone="fuchsia"
+        breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '主題產文' }]}
+        description="選主題 + 篇數 → AI 產出多篇 → 逐篇編輯 → 加入待發佇列"
+      />
 
       <div className="card space-y-4">
         <div>
