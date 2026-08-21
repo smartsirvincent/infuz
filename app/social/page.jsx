@@ -1,16 +1,34 @@
 import Link from 'next/link';
 import { HubTile, PageHeader } from './_components.jsx';
+import { BRAND_HERO, BRAND_DIVIDER } from './_brand-assets.js';
 
 // Editorial hub · serial 編號 + 大字, 排程/發想主, 產文/成效/氣候次
 // 拒絕 three-equal-column feature cards (taste-skill 明文禁)
 export default function SocialHub() {
   return (
     <main className="space-y-10 pb-12 max-w-6xl mx-auto">
-      <PageHeader
-        eyebrow="Content Ops"
-        title="社群發文"
-        description="從主題發想到排程發文的完整工作流。品牌設定在素材,產品清單在產品頁,發文帳號在系統設定。"
-      />
+      {/* Hero band · Brand atmosphere image + 大字 title */}
+      {BRAND_HERO ? (
+        <section className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-100 aspect-[21/9] sm:aspect-[24/9]">
+          <img src={BRAND_HERO} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="relative h-full flex flex-col justify-end p-6 sm:p-10">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-white/70 mb-3">Content Ops · 內容作業系統</div>
+            <h1 className="font-editorial text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-[1.1] max-w-2xl">
+              社群發文
+            </h1>
+            <p className="mt-3 text-sm sm:text-base text-white/80 max-w-xl leading-relaxed">
+              從主題發想到排程發文的完整工作流。品牌設定在素材,產品在產品頁,發文帳號在系統設定。
+            </p>
+          </div>
+        </section>
+      ) : (
+        <PageHeader
+          eyebrow="Content Ops"
+          title="社群發文"
+          description="從主題發想到排程發文的完整工作流。品牌設定在素材,產品清單在產品頁,發文帳號在系統設定。"
+        />
+      )}
 
       {/* Asymmetric bento · 排程/發想為大卡, 其餘三個為次 */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
@@ -31,17 +49,39 @@ export default function SocialHub() {
           hint="接中央氣象署即時預報,條件觸發(下雨 / 寒流 / 酷熱)自動發。" />
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 space-y-3">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">System flow</div>
-        <ol className="text-sm text-zinc-700 leading-relaxed space-y-1.5 list-none">
-          <li><span className="font-mono text-zinc-400 mr-2">01</span>主題發想 · 加入清單</li>
-          <li><span className="font-mono text-zinc-400 mr-2">02</span>主題產文 (N 篇) · 存入佇列</li>
-          <li><span className="font-mono text-zinc-400 mr-2">03</span>排程時間到 · cron tick 從佇列取一篇發</li>
-          <li><span className="font-mono text-zinc-400 mr-2">04</span>成效紀錄 · 分平台 / 主題查看</li>
-        </ol>
-        <div className="pt-3 border-t border-zinc-100 text-[11px] text-zinc-500 space-y-1">
-          <div>沒連接 Threads / FB? 去 <Link className="text-zinc-900 underline underline-offset-2" href="/settings">系統設定</Link> 底下「多平台直發帳號」連接</div>
-          <div>Cron 由 cron-job.org 定期打 <code className="bg-zinc-100 px-1 py-0.5 rounded text-[10px] font-mono">/api/infuz/cron/tick</code></div>
+      {/* 品牌氛圍 divider band */}
+      {BRAND_DIVIDER && (
+        <div className="rounded-2xl overflow-hidden border border-zinc-200 aspect-[21/3] bg-zinc-100">
+          <img src={BRAND_DIVIDER} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
+
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-4">System flow</div>
+          <ol className="text-sm text-zinc-700 leading-loose space-y-1 list-none">
+            <li className="flex gap-3"><span className="font-mono text-zinc-400 tabular-nums shrink-0">01</span><span>主題發想 · 加入清單</span></li>
+            <li className="flex gap-3"><span className="font-mono text-zinc-400 tabular-nums shrink-0">02</span><span>主題產文 · 存入佇列</span></li>
+            <li className="flex gap-3"><span className="font-mono text-zinc-400 tabular-nums shrink-0">03</span><span>排程時間到 · cron 從佇列取一篇發</span></li>
+            <li className="flex gap-3"><span className="font-mono text-zinc-400 tabular-nums shrink-0">04</span><span>成效紀錄 · 分平台 / 主題查看</span></li>
+          </ol>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-4">Quick links</div>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-baseline justify-between gap-3 border-b border-zinc-100 pb-2">
+              <span className="text-zinc-500">未接 Threads / FB</span>
+              <Link href="/settings" className="text-zinc-950 hover:underline underline-offset-2">系統設定 →</Link>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 border-b border-zinc-100 pb-2">
+              <span className="text-zinc-500">產品清單</span>
+              <Link href="/products" className="text-zinc-950 hover:underline underline-offset-2">產品資料庫 →</Link>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-zinc-500">Cron 觸發</span>
+              <code className="text-[10px] font-mono text-zinc-700 bg-zinc-100 rounded px-1.5 py-0.5">/api/infuz/cron/tick</code>
+            </div>
+          </div>
         </div>
       </section>
     </main>

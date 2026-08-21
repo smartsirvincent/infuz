@@ -16,6 +16,12 @@ export default {
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', '"PingFang TC"', '"Noto Sans TC"', 'sans-serif'],
+        // Editorial serif · 給 heading / display 用
+        serif: ['"Noto Serif TC"', 'Georgia', '"Songti TC"', '"STZhongsong"', 'serif'],
+        mono: ['ui-monospace', '"SF Mono"', 'Menlo', 'Consolas', 'monospace'],
+      },
+      letterSpacing: {
+        tightest: '-0.04em',
       },
     },
   },

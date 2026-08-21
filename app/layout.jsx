@@ -1,31 +1,40 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Infuz AI 系統 — 服飾 / 珠寶',
-  description: 'Infuz 服飾 + 珠寶 AI 社群素材產生器:文字貼文 / 圖片貼文 / 素材',
+  title: 'Infuz — 服飾 · 珠寶內容系統',
+  description: 'Infuz 品牌內容管理系統 · 主題發想 · 產文 · 排程 · 成效追蹤',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-TW">
-      <body className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-50">
-        <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/80 backdrop-blur-md">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-            <a href="/" className="flex items-baseline gap-1 font-bold hover:opacity-80">
-              <span className="bg-gradient-to-r from-brand-500 to-purple-500 bg-clip-text text-xl tracking-tight text-transparent">Infuz</span>
-              <span className="hidden text-sm font-medium text-stone-500 sm:inline">AI 系統</span>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-zinc-50 text-zinc-950 antialiased">
+        <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/85 backdrop-blur-md">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+            <a href="/" className="group flex items-baseline gap-2 hover:opacity-90 transition motion-reduce:transition-none">
+              <span className="font-serif text-xl font-semibold text-zinc-950 tracking-tight">Infuz</span>
+              <span className="hidden text-[10px] font-mono uppercase tracking-widest text-zinc-500 sm:inline">Content OS</span>
             </a>
             <nav className="flex flex-wrap items-center gap-1 text-sm sm:gap-2">
-              <NavLink href="/products" icon="👕" label="產品" />
-              <NavLink href="/models" icon="👤" label="模特" />
-              <NavLink href="/scenarios" icon="🎬" label="情境" />
-              <NavLink href="/material" icon="✨" label="素材" />
-              <NavLink href="/assets" icon="🗂" label="素材庫" />
-              <NavLink href="/social" icon="📤" label="社群發文" />
+              <NavLink href="/products" label="產品" />
+              <NavLink href="/models" label="模特" />
+              <NavLink href="/scenarios" label="情境" />
+              <NavLink href="/material" label="素材" />
+              <NavLink href="/assets" label="素材庫" />
+              <NavLink href="/social" label="社群發文" primary />
+              <NavLink href="/settings" label="設定" />
             </nav>
           </div>
         </header>
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
           {children}
         </div>
       </body>
@@ -33,14 +42,16 @@ export default function RootLayout({ children }) {
   );
 }
 
-function NavLink({ href, icon, label }) {
+function NavLink({ href, label, primary }) {
+  const cls = primary
+    ? 'text-zinc-950 font-medium hover:text-brand-600'
+    : 'text-zinc-500 hover:text-zinc-950';
   return (
     <a
       href={href}
-      className="rounded-lg px-2 py-1.5 text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 sm:px-3"
+      className={`rounded-md px-2.5 py-1.5 text-sm transition sm:px-3 motion-reduce:transition-none ${cls}`}
     >
-      <span className="sm:mr-1">{icon}</span>
-      <span className="hidden sm:inline">{label}</span>
+      {label}
     </a>
   );
 }

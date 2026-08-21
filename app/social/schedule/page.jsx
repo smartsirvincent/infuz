@@ -4,7 +4,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { PageHeader, StatCard, EmptyState, Chip, Button } from '../_components.jsx';
+import { PageHeader, StatCard, EmptyState, Chip, Button, SkeletonCard, Skeleton } from '../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -161,7 +161,22 @@ function SchedulePageInner() {
     } catch (err) { setError('刪除失敗:' + err.message); }
   }
 
-  if (loading) return <main className="card">載入中…</main>;
+  if (loading) return (
+    <main className="space-y-6 pb-8">
+      <div className="pt-2 pb-6 border-b border-zinc-200">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-9 w-64 mt-4" />
+        <Skeleton className="h-4 w-96 mt-3" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[0,1,2,3].map((i) => <Skeleton key={i} className="h-24" rounded="xl" />)}
+      </div>
+      <Skeleton className="h-64" rounded="2xl" />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {[0,1,2,3,4,5].map((i) => <SkeletonCard key={i} />)}
+      </div>
+    </main>
+  );
 
   const filtered = topics.filter((t) => !filter || t.name.toLowerCase().includes(filter.toLowerCase()));
   const totalQueued = posts.filter((p) => p.status === 'queued').length;
@@ -203,11 +218,11 @@ function SchedulePageInner() {
       {/* 主題 grid */}
       {filtered.length === 0 && (
         <EmptyState
-          icon={topics.length === 0 ? '💡' : '🔍'}
+          mark={topics.length === 0 ? '— No topics yet —' : '— No match —'}
           title={topics.length === 0 ? '還沒有任何主題' : `沒有符合「${filter}」的主題`}
-          description={topics.length === 0 ? '主題是一組具備連貫寫作角度的貼文系列。用 AI 幫你發想幾個開始' : '試試別的關鍵字'}
+          description={topics.length === 0 ? '主題是一組具備連貫寫作角度的貼文系列。用 AI 幫你發想幾個開始。' : '試試別的關鍵字'}
           action={topics.length === 0 && (
-            <Button href="/social/topics/discover" tone="purple">💡 用 AI 幫你發想 3 個試試</Button>
+            <Button href="/social/topics/discover" tone="primary">用 AI 發想 3 個試試</Button>
           )}
         />
       )}
@@ -312,31 +327,32 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
     + realtimeJobs.filter((j) => j.enabled).length;
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
-      <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-stone-200">
+    <section className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-200">
         <div>
-          <h2 className="text-sm font-semibold text-stone-900">📆 本週排程一覽</h2>
-          <div className="text-[11px] text-stone-500 mt-0.5">
-            {activeCount === 0 ? '沒有啟用中的排程 · 到主題編輯頁打開排程,或去 ☀️ 氣候即時 新增' : `${activeCount} 個排程中(含主題+氣候即時)· 週一為首`}
-          </div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Weekly overview</div>
+          <h2 className="font-editorial text-lg font-semibold text-zinc-950 tracking-tight mt-0.5">本週排程</h2>
+        </div>
+        <div className="text-[11px] font-mono tabular-nums text-zinc-500">
+          {activeCount === 0 ? '無啟用排程' : `${activeCount} active`}
         </div>
       </div>
 
       {slots.length === 0 ? (
-        <div className="px-4 py-8 text-center text-sm text-stone-500">
+        <div className="px-6 py-10 text-center text-sm text-zinc-500">
           {topics.length === 0 ? '還沒有主題' : '所有主題都停用中 · 進主題頁面點「排程中」開啟'}
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50/50">
-                <th className="text-left px-3 py-2 text-stone-500 font-medium w-16 sticky left-0 bg-stone-50/95">時段</th>
+              <tr className="border-b border-zinc-200">
+                <th className="text-left px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-zinc-500 w-16 sticky left-0 bg-white">Time</th>
                 {dayOrder.map((d, i) => (
-                  <th key={d} className={`text-left px-2 py-2 font-medium min-w-[110px] ${d === todayDow ? 'text-stone-900 bg-blue-50' : 'text-stone-500'}`}>
-                    <div className="flex flex-col">
-                      <span>{dayLabels[i]}</span>
-                      {d === todayDow && <span className="text-[9px] text-blue-600 font-normal">今天</span>}
+                  <th key={d} className={`text-left px-2 py-3 min-w-[110px] ${d === todayDow ? 'text-zinc-950 bg-zinc-50' : 'text-zinc-500'}`}>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={d === todayDow ? 'font-semibold' : 'font-medium'}>{dayLabels[i]}</span>
+                      {d === todayDow && <span className="text-[9px] text-zinc-500 font-normal font-mono">TODAY</span>}
                     </div>
                   </th>
                 ))}
@@ -344,28 +360,26 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
             </thead>
             <tbody>
               {slots.map((time) => (
-                <tr key={time} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/40">
-                  <td className="px-3 py-2 font-mono text-[11px] text-stone-700 sticky left-0 bg-white">⏰ {time}</td>
+                <tr key={time} className="border-b border-zinc-100 last:border-0">
+                  <td className="px-4 py-2.5 font-mono tabular-nums text-[11px] text-zinc-700 sticky left-0 bg-white">{time}</td>
                   {dayOrder.map((d) => {
                     const items = bySlot[time]?.[d] || [];
                     return (
-                      <td key={d} className={`px-2 py-2 align-top ${d === todayDow ? 'bg-blue-50/40' : ''}`}>
+                      <td key={d} className={`px-2 py-2 align-top ${d === todayDow ? 'bg-zinc-50/60' : ''}`}>
                         <div className="flex flex-col gap-1">
-                          {items.length === 0 && <span className="text-stone-300 text-[10px]">·</span>}
+                          {items.length === 0 && <span className="text-zinc-300 text-[10px]">·</span>}
                           {items.map((it) => {
                             const isRt = it.kind === 'realtime';
-                            const typeIcon = it.type === 'weather' ? '☀️' : it.type === 'long' ? '📄' : it.type === 'image' ? '🖼️' : '📝';
-                            const platformCode = Object.entries(it.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'T', instagram: 'I', facebook: 'F' })[k]).join('');
+                            const platformCode = Object.entries(it.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'TH', instagram: 'IG', facebook: 'FB' })[k]).join(' ');
                             return (
                               <Link key={it.id} href={it.href}
-                                className={`group rounded-md border p-1.5 hover:shadow-sm transition text-left ${isRt ? 'border-sky-200 bg-sky-50/50 hover:border-sky-400' : 'border-stone-200 bg-white hover:border-blue-300'}`}
+                                className={`group rounded-md border px-2 py-1.5 transition text-left motion-reduce:transition-none ${isRt ? 'border-zinc-300 bg-zinc-50 hover:border-zinc-900 hover:bg-white' : 'border-zinc-200 bg-white hover:border-zinc-900'}`}
                                 title={it.name + (isRt ? ' (氣候即時)' : '')}
                               >
-                                <div className="flex items-center gap-1 mb-0.5">
-                                  <span className="text-[9px]">{typeIcon}</span>
-                                  <span className="text-[10px] text-stone-500 font-mono">{platformCode}</span>
-                                </div>
-                                <div className={`text-[11px] font-medium truncate ${isRt ? 'text-sky-800 group-hover:text-sky-900' : 'text-stone-800 group-hover:text-blue-700'}`}>{it.name}</div>
+                                <div className={`text-[11px] font-medium truncate ${isRt ? 'text-zinc-700 group-hover:text-zinc-950' : 'text-zinc-900 group-hover:text-zinc-950'}`}>{it.name}</div>
+                                {platformCode && (
+                                  <div className="text-[9px] font-mono tracking-wider text-zinc-400 mt-0.5">{platformCode}</div>
+                                )}
                               </Link>
                             );
                           })}
@@ -401,55 +415,53 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onD
 
   return (
     <Link href={`/social/schedule/${topic.id}`}
-      className={`group relative rounded-2xl border p-5 space-y-4 transition hover:-translate-y-0.5 hover:shadow-md hover:border-stone-300 ${scheduledEnabled ? 'border-stone-200 bg-white' : 'border-stone-200 bg-stone-50/60 opacity-80'}`}>
+      className={`group relative rounded-2xl border p-5 space-y-4 transition motion-reduce:transition-none hover:border-zinc-900 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.08)] ${scheduledEnabled ? 'border-zinc-200 bg-white' : 'border-zinc-200 bg-zinc-50/60 opacity-70'}`}>
       {/* 刪除按鈕 (hover 才顯示,右上角) */}
       <button onClick={onDelete}
-        className="absolute top-2.5 right-2.5 z-10 rounded-full bg-white/95 border border-stone-200 text-stone-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-        title="刪除主題(含所有文章)"
+        className="absolute top-3 right-3 z-10 rounded-full bg-white/95 border border-zinc-200 text-zinc-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all motion-reduce:transition-none"
+        title="刪除主題"
       >✕</button>
 
-      {/* Top row: title + type */}
-      <div className="pr-8 space-y-1.5">
+      {/* Top row */}
+      <div className="pr-8 space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <Chip tone={typeInfo.tone} size="xs">{typeInfo.label}</Chip>
+          <Chip tone={typeInfo.tone} size="xs" variant="outline">{typeInfo.label}</Chip>
           <span onClick={(e) => { e.preventDefault(); onToggleSchedule(e); }}
-            className={`inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 cursor-pointer transition ${scheduledEnabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-stone-200 text-stone-500 hover:bg-stone-300'}`}
-          >{scheduledEnabled ? '● 排程中' : '○ 停用'}</span>
+            className={`inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 cursor-pointer transition font-mono uppercase tracking-wider ${scheduledEnabled ? 'bg-zinc-950 text-white hover:bg-zinc-800' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}`}
+          >{scheduledEnabled ? 'ON' : 'OFF'}</span>
         </div>
-        <h3 className="font-semibold text-base text-stone-900 truncate group-hover:text-stone-700 tracking-tight">{topic.name}</h3>
+        <h3 className="font-editorial font-semibold text-lg text-zinc-950 truncate group-hover:text-zinc-700 tracking-tight leading-snug">{topic.name}</h3>
         {topic.description && (
-          <p className="text-xs text-stone-500 line-clamp-2 leading-relaxed">{topic.description}</p>
+          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{topic.description}</p>
         )}
       </div>
 
-      {/* 排程摘要 (時間可 inline 編輯) */}
-      <div className="rounded-lg bg-stone-50/60 border border-stone-100 p-2.5 text-[11px] text-stone-600">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-stone-400">⏰</span>
+      {/* 排程摘要 · time inline 編輯 */}
+      <div className="rounded-lg bg-zinc-50 border border-zinc-100 p-3 text-[11px] text-zinc-700">
+        <div className="flex items-center gap-2 flex-wrap">
           <input type="time"
             value={topic.schedule?.time || '10:00'}
             onClick={(e) => e.preventDefault()}
             onChange={(e) => onChangeTime(e.target.value, e)}
-            className="font-medium text-stone-800 bg-transparent border-b border-dashed border-stone-300 hover:border-blue-400 focus:border-blue-500 outline-none px-0.5 cursor-pointer w-[65px] text-[11px]"
+            className="font-mono tabular-nums font-medium text-zinc-950 bg-transparent border-b border-dashed border-zinc-300 hover:border-zinc-900 focus:border-zinc-950 outline-none px-0.5 cursor-pointer w-[65px] text-[11px]"
             title="點時間直接改"
           />
-          <span className="text-stone-300">·</span>
-          <span>{days || '無'}</span>
-          <span className="text-stone-300">·</span>
-          <span className="tracking-wide">{platformIcons || '(無平台)'}</span>
+          <span className="text-zinc-300">·</span>
+          <span className="text-zinc-500">{days || '無'}</span>
+          <span className="text-zinc-300">·</span>
+          <span className="text-zinc-500 font-mono tracking-wider text-[10px]">{platformIcons || '—'}</span>
         </div>
       </div>
 
       {/* 產品 + 貼文計數 */}
-      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-stone-100">
-        <span className="text-stone-500 flex items-center gap-1">
-          <span>🛒</span>
-          <span>{boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}</span>
+      <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-100">
+        <span className="text-zinc-500">
+          {boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}
         </span>
-        <div className="flex gap-2.5 font-medium">
-          <span className="text-blue-600" title="待發">📥 {queued}</span>
-          <span className="text-emerald-600" title="已發">✓ {published}</span>
-          {failed > 0 && <span className="text-red-600" title="失敗">✗ {failed}</span>}
+        <div className="flex gap-3 font-mono tabular-nums text-[11px]">
+          <span className="text-zinc-500" title="待發"><span className="text-zinc-950 font-medium">{queued}</span> queued</span>
+          <span className="text-zinc-500" title="已發"><span className="text-zinc-950 font-medium">{published}</span> sent</span>
+          {failed > 0 && <span className="text-red-600" title="失敗"><span className="font-medium">{failed}</span> fail</span>}
         </div>
       </div>
     </Link>

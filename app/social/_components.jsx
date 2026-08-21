@@ -32,7 +32,7 @@ export function PageHeader({ title, description, breadcrumbs, actions, eyebrow }
           {eyebrow && (
             <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{eyebrow}</div>
           )}
-          <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-950 tracking-tight leading-tight">{title}</h1>
+          <h1 className="font-editorial text-3xl sm:text-4xl font-semibold text-zinc-950 tracking-tight leading-[1.15]">{title}</h1>
           {description && (
             <p className="mt-2 text-sm text-zinc-500 leading-relaxed max-w-2xl">{description}</p>
           )}
@@ -199,19 +199,53 @@ export function Button({ children, tone = 'primary', size = 'md', disabled, onCl
 }
 
 // ============================================================
+// Skeleton · Loading 佔位, 取代「載入中...」文字
+// ============================================================
+export function Skeleton({ className = 'h-4 w-full', rounded = 'md' }) {
+  const r = { sm: 'rounded-sm', md: 'rounded-md', lg: 'rounded-lg', xl: 'rounded-xl', '2xl': 'rounded-2xl', full: 'rounded-full' }[rounded];
+  return <div className={`skeleton ${r} ${className}`} />;
+}
+
+export function SkeletonCard() {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 space-y-3">
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="h-6 w-full" />
+      <Skeleton className="h-3 w-3/4" />
+      <div className="flex gap-2 pt-1">
+        <Skeleton className="h-4 w-16" rounded="full" />
+        <Skeleton className="h-4 w-12" rounded="full" />
+      </div>
+    </div>
+  );
+}
+
+export function SkeletonRow() {
+  return (
+    <div className="flex items-center gap-3 p-3">
+      <Skeleton className="size-10" rounded="xl" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // HubTile · Editorial · Serial 編號 + 大字, 無 emoji 主宰
 // ============================================================
 export function HubTile({ href, index, title, hint, size = 'sm', className = '' }) {
   const isLarge = size === 'lg';
   return (
     <Link href={href}
-      className={`group flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-400 motion-reduce:transition-none ${isLarge ? 'sm:p-8' : ''} ${className}`}
+      className={`group flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-900 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.08)] motion-reduce:transition-none ${isLarge ? 'sm:p-8' : ''} ${className}`}
     >
       <div>
         {index && (
           <div className="text-[10px] font-mono tracking-widest text-zinc-400 mb-3">{index}</div>
         )}
-        <h2 className={`font-semibold text-zinc-950 tracking-tight ${isLarge ? 'text-2xl' : 'text-lg'}`}>{title}</h2>
+        <h2 className={`font-editorial font-semibold text-zinc-950 tracking-tight leading-tight ${isLarge ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl'}`}>{title}</h2>
         {hint && <p className={`text-zinc-500 leading-relaxed ${isLarge ? 'text-sm mt-3' : 'text-[13px] mt-2'}`}>{hint}</p>}
       </div>
       <div className="mt-6 flex items-center gap-1 text-xs text-zinc-400 group-hover:text-zinc-900 transition">

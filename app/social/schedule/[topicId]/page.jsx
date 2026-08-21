@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { buildTextWithLink } from '@/lib/topic-publish-helper.js';
-import { PageHeader, TabBar, Chip, Button, EmptyState } from '../../_components.jsx';
+import { PageHeader, TabBar, Chip, Button, EmptyState, Skeleton, SkeletonCard } from '../../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const TAB = { queued: '📥 待發', published: '✓ 已發', failed: '✗ 失敗' };
@@ -116,7 +116,24 @@ export default function TopicDetailPage() {
     router.push('/social/schedule');
   }
 
-  if (loading) return <main className="card">載入中…</main>;
+  if (loading) return (
+    <main className="space-y-6 pb-8">
+      <div className="pt-2 pb-6 border-b border-zinc-200">
+        <Skeleton className="h-3 w-40" />
+        <Skeleton className="h-9 w-72 mt-4" />
+        <Skeleton className="h-4 w-96 mt-3" />
+      </div>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 space-y-3">
+        <div className="flex gap-2"><Skeleton className="h-6 w-16" rounded="md" /><Skeleton className="h-6 w-20" rounded="full" /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-16" rounded="lg" />
+          <Skeleton className="h-16" rounded="lg" />
+        </div>
+      </div>
+      <SkeletonCard />
+      <SkeletonCard />
+    </main>
+  );
   if (!topic) return (
     <main className="card">
       找不到這個主題 · <Link href="/social/schedule" className="text-blue-700 underline">回主題清單</Link>
@@ -223,10 +240,10 @@ export default function TopicDetailPage() {
 
         {byStatus[tab].length === 0 && (
           <EmptyState
-            icon={tab === 'queued' ? '📥' : tab === 'published' ? '📮' : '✨'}
+            mark={tab === 'queued' ? '— Queue —' : tab === 'published' ? '— Archive —' : '— All Clear —'}
             title={tab === 'queued' ? '佇列是空的' : tab === 'published' ? '還沒有已發的文章' : '沒有失敗的文章'}
             description={tab === 'queued' ? '產文後會進到這裡等排程時間到自動發' : tab === 'published' ? '第一篇發出後就會出現在這' : '一切正常'}
-            action={tab === 'queued' && <Button href={`/social/produce?topic=${topic.id}`} tone="purple" size="sm">✨ 去產文</Button>}
+            action={tab === 'queued' && <Button href={`/social/produce?topic=${topic.id}`} tone="primary" size="sm">去產文</Button>}
           />
         )}
 

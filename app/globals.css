@@ -3,39 +3,80 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #fafaf9;
-  --color-fg: #1c1917;
+  --color-bg: #fafafa;
+  --color-fg: #09090b;
 }
 
 html, body {
   background: var(--color-bg);
   color: var(--color-fg);
-  font-feature-settings: 'cv11';
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Serif heading utility (Noto Serif TC) 給主要 display heading 用 */
+.font-editorial {
+  font-family: 'Noto Serif TC', Georgia, 'Songti TC', serif;
+  font-feature-settings: 'palt';
+}
+
+/* Focus ring 一致 (a11y) */
+*:focus-visible {
+  outline: 2px solid rgb(9 9 11);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skeleton pulse loader */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: skeleton-pulse 2s ease-in-out infinite; background: #f4f4f5; }
+}
+
+/* Selection · brand accent */
+::selection {
+  background: #fdba74;
+  color: #09090b;
+}
+
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition;
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition motion-reduce:transition-none;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply btn bg-zinc-950 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply btn border border-stone-300 bg-white text-stone-700 hover:bg-stone-50;
+    @apply btn border border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50;
   }
   .input {
-    @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm
-           placeholder-stone-400 outline-none transition
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
+    @apply w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm
+           placeholder-zinc-400 outline-none transition
+           focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200
+           motion-reduce:transition-none;
   }
   .label {
-    @apply mb-1.5 block text-sm font-medium text-stone-700;
+    @apply mb-1.5 block text-sm font-medium text-zinc-700;
   }
   .card {
-    @apply rounded-2xl border border-stone-200 bg-white p-6 shadow-sm;
+    @apply rounded-2xl border border-zinc-200 bg-white p-6;
   }
 }
