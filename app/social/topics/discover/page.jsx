@@ -158,7 +158,7 @@ export default function DiscoverPage() {
                 onChange={(e) => setProductFilter(e.target.value)}
               />
               <div className="max-h-[240px] overflow-y-auto space-y-1">
-                {products.filter((p) => !productFilter || (p.name + p.category + p.gender).toLowerCase().includes(productFilter.toLowerCase())).map((p) => {
+                {products.filter((p) => !p.paused && (!productFilter || (p.name + p.category + p.gender).toLowerCase().includes(productFilter.toLowerCase()))).map((p) => {
                   const on = productIds.includes(p.id);
                   return (
                     <label key={p.id} className={`flex items-center gap-2 rounded-md p-1.5 text-[11px] cursor-pointer ${on ? 'bg-emerald-100' : 'hover:bg-stone-100'}`}>

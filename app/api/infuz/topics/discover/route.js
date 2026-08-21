@@ -30,7 +30,7 @@ export async function POST(req) {
     let productHint = '';
     if (productIds.length) {
       const db = await loadDb('products');
-      const items = (db.items || []).filter((p) => productIds.includes(p.id));
+      const items = (db.items || []).filter((p) => productIds.includes(p.id) && !p.paused);
       productHint = items.length
         ? `\n\n【綁定產品(產文時輪流帶入)】\n` + items.map((p, i) => {
             const feat = typeof p.features === 'string' ? p.features : Array.isArray(p.features) ? p.features.join(', ') : '';

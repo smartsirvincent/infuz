@@ -91,15 +91,18 @@ export default function ProductsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
-            <article key={p.id} className="card flex gap-3 hover:border-emerald-300">
+            <article key={p.id} className={`card flex gap-3 hover:border-emerald-300 transition ${p.paused ? 'opacity-60 bg-stone-50' : ''}`}>
               {p.image_front ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={p.image_front} alt={p.name} className="size-24 rounded-md object-cover" loading="lazy" />
+                <img src={p.image_front} alt={p.name} className={`size-24 rounded-md object-cover ${p.paused ? 'grayscale' : ''}`} loading="lazy" />
               ) : (
                 <div className="flex size-24 items-center justify-center rounded-md bg-stone-100 text-2xl">📷</div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] font-mono text-stone-500">{p.id}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-[11px] font-mono text-stone-500">{p.id}</div>
+                  {p.paused && <span className="text-[10px] bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 font-medium">⏸ 暫停</span>}
+                </div>
                 <div className="truncate text-sm font-medium text-stone-900">{p.name || '(無名)'}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-stone-500">
                   {p.gender && <span className={`rounded px-1.5 py-0.5 ${p.gender === '女性' ? 'bg-pink-100 text-pink-700' : p.gender === '男性' ? 'bg-blue-100 text-blue-700' : 'bg-stone-100'}`}>{p.gender}</span>}
@@ -107,7 +110,21 @@ export default function ProductsPage() {
                   {p.colors && <span>{p.colors}</span>}
                   {p.price && <span className="text-emerald-700">${p.price}</span>}
                 </div>
-                <div className="mt-2 flex gap-2">
+                <div className="mt-2 flex gap-3">
+                  <button
+                    onClick={async () => {
+                      await fetch(`/api/infuz/products?id=${encodeURIComponent(p.id)}`, {
+                        method: 'PATCH',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ paused: !p.paused }),
+                      });
+                      window.location.reload();
+                    }}
+                    className={`text-xs hover:underline ${p.paused ? 'text-emerald-600' : 'text-amber-700'}`}
+                    title={p.paused ? '解除暫停,產文/發文會出現此產品' : '暫停使用,產文/發文選擇時會跳過'}
+                  >
+                    {p.paused ? '▶ 恢復' : '⏸ 暫停'}
+                  </button>
                   <button onClick={() => startEdit(p)} className="text-xs text-brand-600 hover:underline">編輯</button>
                   <button onClick={() => handleDelete(p.id)} className="text-xs text-red-600 hover:underline">刪除</button>
                 </div>

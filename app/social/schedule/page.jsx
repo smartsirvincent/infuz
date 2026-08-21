@@ -157,6 +157,9 @@ function SchedulePageInner() {
         <StatCard label="失敗" value={totalFailed} tone={totalFailed > 0 ? 'red' : 'neutral'} sub={totalFailed > 0 ? '需檢查' : '沒有失敗'} icon="⚠" />
       </section>
 
+      {/* 週歷儀表板 */}
+      <WeeklyCalendar topics={topics} />
+
       {/* 搜尋列 */}
       <div className="relative">
         <input
@@ -227,6 +230,99 @@ function StatBox({ label, value, sub, color }) {
       <div className={`mt-1 text-2xl font-bold ${colorCls}`}>{value}</div>
       {sub && <div className="text-[10px] text-stone-500 mt-0.5">{sub}</div>}
     </div>
+  );
+}
+
+function WeeklyCalendar({ topics }) {
+  // 週一為首 (工作型排程慣例) — mapping: [週一,週二,週三,週四,週五,週六,週日]
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  const dayLabels = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+
+  // 台北今天是週幾
+  const taipeiNow = new Date(Date.now() + 8 * 3600 * 1000);
+  const todayDow = taipeiNow.getUTCDay(); // 0=週日
+
+  // 收集所有 (topic, day, time)
+  const bySlot = {}; // { time: { day: [topics] } }
+  for (const t of topics) {
+    if (!t.schedule?.enabled || !t.schedule?.time) continue;
+    const days = (t.schedule.days || []).length ? t.schedule.days : [0, 1, 2, 3, 4, 5, 6];
+    const time = t.schedule.time;
+    if (!bySlot[time]) bySlot[time] = {};
+    for (const d of days) {
+      if (!bySlot[time][d]) bySlot[time][d] = [];
+      bySlot[time][d].push(t);
+    }
+  }
+  const slots = Object.keys(bySlot).sort();
+  const activeCount = topics.filter((t) => t.schedule?.enabled).length;
+
+  return (
+    <section className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-stone-200">
+        <div>
+          <h2 className="text-sm font-semibold text-stone-900">📆 本週排程一覽</h2>
+          <div className="text-[11px] text-stone-500 mt-0.5">
+            {activeCount === 0 ? '沒有啟用中的排程 — 到主題編輯頁打開排程' : `${activeCount} 個主題排程中 · 週一為首`}
+          </div>
+        </div>
+      </div>
+
+      {slots.length === 0 ? (
+        <div className="px-4 py-8 text-center text-sm text-stone-500">
+          {topics.length === 0 ? '還沒有主題' : '所有主題都停用中 — 進主題頁面點「排程中」開啟'}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-stone-200 bg-stone-50/50">
+                <th className="text-left px-3 py-2 text-stone-500 font-medium w-16 sticky left-0 bg-stone-50/95">時段</th>
+                {dayOrder.map((d, i) => (
+                  <th key={d} className={`text-left px-2 py-2 font-medium min-w-[110px] ${d === todayDow ? 'text-stone-900 bg-blue-50' : 'text-stone-500'}`}>
+                    <div className="flex flex-col">
+                      <span>{dayLabels[i]}</span>
+                      {d === todayDow && <span className="text-[9px] text-blue-600 font-normal">今天</span>}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {slots.map((time) => (
+                <tr key={time} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/40">
+                  <td className="px-3 py-2 font-mono text-[11px] text-stone-700 sticky left-0 bg-white">⏰ {time}</td>
+                  {dayOrder.map((d) => {
+                    const items = bySlot[time]?.[d] || [];
+                    return (
+                      <td key={d} className={`px-2 py-2 align-top ${d === todayDow ? 'bg-blue-50/40' : ''}`}>
+                        <div className="flex flex-col gap-1">
+                          {items.length === 0 && <span className="text-stone-300 text-[10px]">—</span>}
+                          {items.map((t) => (
+                            <Link key={t.id} href={`/social/schedule/${t.id}`}
+                              className="group rounded-md border border-stone-200 bg-white p-1.5 hover:border-blue-300 hover:shadow-sm transition text-left"
+                              title={t.name}
+                            >
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <span className="text-[9px]">{t.type === 'long' ? '📄' : t.type === 'image' ? '🖼️' : '📝'}</span>
+                                <span className="text-[10px] text-stone-500 font-mono">
+                                  {Object.entries(t.schedule?.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'T', instagram: 'I', facebook: 'F' })[k]).join('')}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-stone-800 font-medium truncate group-hover:text-blue-700">{t.name}</div>
+                            </Link>
+                          ))}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -343,12 +439,36 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
       </div>
 
       {editing.type === 'image' && (
-        <div>
-          <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空 AI 依當篇自動寫)</label>
-          <textarea className="input min-h-[60px] text-xs font-mono"
-            placeholder="Editorial fashion photography, Asian female..."
-            value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
-        </div>
+        <>
+          <div>
+            <label className="label text-xs">🖼️ 圖片來源 (預設)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button"
+                onClick={() => setEditing({ ...editing, imageSource: 'product_photo' })}
+                className={`rounded-md border p-2 text-left text-xs ${(editing.imageSource || 'ai_generated') === 'product_photo' ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+              >
+                <div className="font-semibold text-stone-900">📸 原本產品圖</div>
+                <div className="text-[10px] text-stone-500 mt-0.5">直接用產品照 · 100% 保真 · 免費秒回</div>
+              </button>
+              <button type="button"
+                onClick={() => setEditing({ ...editing, imageSource: 'ai_generated' })}
+                className={`rounded-md border p-2 text-left text-xs ${(editing.imageSource || 'ai_generated') === 'ai_generated' ? 'border-purple-500 bg-purple-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+              >
+                <div className="font-semibold text-stone-900">🎨 AI 生圖</div>
+                <div className="text-[10px] text-stone-500 mt-0.5">KIE image-to-image · 模特兒穿搭 · 30-60s/篇</div>
+              </button>
+            </div>
+            <div className="mt-1 text-[10px] text-stone-500">產文時仍可臨時覆寫這個選擇</div>
+          </div>
+          {(editing.imageSource || 'ai_generated') === 'ai_generated' && (
+            <div>
+              <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空 AI 依當篇自動寫)</label>
+              <textarea className="input min-h-[60px] text-xs font-mono"
+                placeholder="Editorial fashion photography, Asian female..."
+                value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
+            </div>
+          )}
+        </>
       )}
 
       <div>
@@ -373,7 +493,7 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
           <div className="rounded-lg border border-stone-200 bg-stone-50 p-2 space-y-2">
             <input className="input text-xs" placeholder="搜尋..." value={productFilter} onChange={(e) => setProductFilter(e.target.value)} />
             <div className="max-h-[200px] overflow-y-auto space-y-1">
-              {products.filter((p) => !productFilter || (p.name + p.category + p.gender).toLowerCase().includes(productFilter.toLowerCase())).map((p) => {
+              {products.filter((p) => !p.paused && (!productFilter || (p.name + p.category + p.gender).toLowerCase().includes(productFilter.toLowerCase()))).map((p) => {
                 const on = (editing.productIds || []).includes(p.id);
                 return (
                   <label key={p.id} className={`flex items-center gap-2 rounded-md p-1.5 text-[11px] cursor-pointer ${on ? 'bg-emerald-100' : 'hover:bg-stone-100'}`}>

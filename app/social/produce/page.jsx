@@ -3,14 +3,16 @@
 // 主題產文 — 選 topic + 篇數 → Claude 產 N 篇 draft → 每篇編輯/重生圖 → 存入佇列
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { PageHeader, Chip, Button } from '../_components.jsx';
 
 function ProducePageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialTopicId = searchParams.get('topic') || '';
 
   const [topics, setTopics] = useState([]);
+  const [products, setProducts] = useState([]);
   const [topicId, setTopicId] = useState(initialTopicId);
   const [count, setCount] = useState(3);
   const [generating, setGenerating] = useState(false);
@@ -20,6 +22,13 @@ function ProducePageInner() {
   const [error, setError] = useState('');
   const [lightbox, setLightbox] = useState(null);
 
+  // 本次覆寫 (只影響這次產文, 可勾 saveBack 存回主題)
+  const [showOverrides, setShowOverrides] = useState(false);
+  const [ov, setOv] = useState({ systemPrompt: '', imagePrompt: '', productIds: [], imageSource: 'ai_generated' });
+  const [saveBack, setSaveBack] = useState(false);
+  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [productFilter, setProductFilter] = useState('');
+
   useEffect(() => {
     fetch('/api/infuz/topics', { cache: 'no-store' })
       .then((r) => r.json())
@@ -28,26 +37,77 @@ function ProducePageInner() {
         if (!initialTopicId && d.items?.length) setTopicId(d.items[0].id);
       })
       .catch(() => {});
+    fetch('/api/infuz/products', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => setProducts(d.items || []))
+      .catch(() => {});
   }, [initialTopicId]);
 
   const topic = topics.find((t) => t.id === topicId);
   const isImage = topic?.type === 'image';
 
+  // 選 topic 變時, 用 topic 的值初始化 overrides
+  useEffect(() => {
+    if (!topic) return;
+    setOv({
+      systemPrompt: topic.systemPrompt || '',
+      imagePrompt: topic.imagePrompt || '',
+      productIds: topic.productIds || [],
+      imageSource: topic.imageSource || 'ai_generated',
+    });
+    setShowOverrides(false);
+    setSaveBack(false);
+  }, [topicId, topic?.id]);
+
+  const overridesChanged = topic && (
+    ov.systemPrompt !== (topic.systemPrompt || '') ||
+    ov.imagePrompt !== (topic.imagePrompt || '') ||
+    JSON.stringify(ov.productIds) !== JSON.stringify(topic.productIds || []) ||
+    ov.imageSource !== (topic.imageSource || 'ai_generated')
+  );
+
   async function produce() {
     if (!topicId) { setError('先選主題'); return; }
     setGenerating(true); setError(''); setDrafts([]); setSelected(new Set());
     try {
+      const body = { topicId, count };
+      if (overridesChanged) {
+        body.overrides = ov;
+        body.saveBack = saveBack;
+      }
       const r = await fetch('/api/infuz/topics/produce', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topicId, count }),
+        body: JSON.stringify(body),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
       setDrafts(d.posts || []);
       setSelected(new Set((d.posts || []).map((p) => p._localId)));
+      // saveBack 成功時, refresh topics 讓 UI 顯示新的 topic 值
+      if (saveBack && overridesChanged) {
+        const tRes = await fetch('/api/infuz/topics', { cache: 'no-store' });
+        const tData = await tRes.json();
+        setTopics(tData.items || []);
+      }
     } catch (e) { setError(e.message); }
     finally { setGenerating(false); }
+  }
+
+  async function deleteTopic() {
+    if (!topic) return;
+    if (!confirm(`刪除主題「${topic.name}」?\n連同該主題所有 (待發/已發/失敗) 文章一起刪除,無法復原。`)) return;
+    try {
+      // 先撈該 topic 的 posts 一起刪
+      const pRes = await fetch('/api/infuz/topic_posts', { cache: 'no-store' });
+      const pData = await pRes.json();
+      const related = (pData.items || []).filter((p) => p.topicId === topic.id);
+      await fetch(`/api/infuz/topics?id=${encodeURIComponent(topic.id)}`, { method: 'DELETE' });
+      for (const p of related) {
+        await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+      }
+      router.push('/social/schedule');
+    } catch (e) { setError('刪除失敗:' + e.message); }
   }
 
   async function saveDraftToAssets(draft) {
@@ -156,22 +216,134 @@ function ProducePageInner() {
         </div>
 
         {topic && (
-          <div className="rounded-lg border border-fuchsia-200 bg-fuchsia-50/50 p-3 space-y-2">
-            <div className="flex items-start gap-2 flex-wrap">
-              <span className={`shrink-0 text-[11px] rounded px-2 py-0.5 ${
-                topic.type === 'long' ? 'bg-emerald-600 text-white' :
-                topic.type === 'image' ? 'bg-purple-600 text-white' :
-                'bg-blue-600 text-white'
-              }`}>
-                {topic.type === 'long' ? '📄 長文 300-600 字' : topic.type === 'image' ? '🖼️ 圖片 100-200 字 + AI 生圖' : '📝 文字 100-200 字'}
-              </span>
-              <div className="text-sm text-stone-800 font-medium">{topic.name}</div>
+          <>
+            <div className="rounded-lg border border-fuchsia-200 bg-fuchsia-50/50 p-3 space-y-2">
+              <div className="flex items-start gap-2 flex-wrap">
+                <span className={`shrink-0 text-[11px] rounded px-2 py-0.5 ${
+                  topic.type === 'long' ? 'bg-emerald-600 text-white' :
+                  topic.type === 'image' ? 'bg-purple-600 text-white' :
+                  'bg-blue-600 text-white'
+                }`}>
+                  {topic.type === 'long' ? '📄 長文 300-600 字' : topic.type === 'image' ? '🖼️ 圖片 100-200 字' : '📝 文字 100-200 字'}
+                </span>
+                <div className="text-sm text-stone-800 font-medium flex-1 min-w-0 truncate">{topic.name}</div>
+                <button onClick={deleteTopic}
+                  className="text-[11px] text-red-600 hover:bg-red-50 rounded px-2 py-0.5 border border-red-200 shrink-0"
+                  title="刪除主題(含所有文章)">
+                  🗑 刪除主題
+                </button>
+              </div>
+              {topic.description && <p className="text-[11px] text-stone-600 leading-relaxed">{topic.description}</p>}
+              {(ov.productIds || []).length > 0 && (
+                <div className="text-[11px] text-emerald-700">🛒 綁定 {ov.productIds.length} 件產品(產文時輪流帶入)</div>
+              )}
             </div>
-            {topic.description && <p className="text-[11px] text-stone-600 leading-relaxed">{topic.description}</p>}
-            {(topic.productIds || []).length > 0 && (
-              <div className="text-[11px] text-emerald-700">🛒 綁定 {topic.productIds.length} 件產品(產文時輪流帶入,無需再選)</div>
-            )}
-          </div>
+
+            {/* 本次覆寫展開區 */}
+            <details className="rounded-lg border border-stone-200" open={showOverrides} onToggle={(e) => setShowOverrides(e.currentTarget.open)}>
+              <summary className="cursor-pointer px-3 py-2 text-xs text-stone-700 hover:bg-stone-50 flex items-center justify-between">
+                <span className="font-semibold">⚙️ 本次覆寫 (寫作方向 / 圖片 prompt / 產品 / 圖片來源)</span>
+                {overridesChanged && <span className="text-[10px] text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">已修改</span>}
+              </summary>
+              <div className="border-t border-stone-200 p-3 space-y-3 bg-stone-50/40">
+                <div>
+                  <label className="label text-[10px]">寫作方向 systemPrompt</label>
+                  <textarea className="input min-h-[80px] text-xs leading-relaxed"
+                    placeholder="留空則不加指示 (只依品牌人格 + 主題描述寫)"
+                    value={ov.systemPrompt}
+                    onChange={(e) => setOv({ ...ov, systemPrompt: e.target.value })}
+                  />
+                </div>
+
+                {isImage && (
+                  <div>
+                    <label className="label text-[10px]">🖼️ 圖片來源 (本次)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button"
+                        onClick={() => setOv({ ...ov, imageSource: 'product_photo' })}
+                        className={`rounded-md border p-2 text-left text-xs ${ov.imageSource === 'product_photo' ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+                      >
+                        <div className="font-semibold text-stone-900">📸 原本產品圖</div>
+                        <div className="text-[10px] text-stone-500 mt-0.5">直接用產品照 · 100% 保真 · 免費秒回</div>
+                      </button>
+                      <button type="button"
+                        onClick={() => setOv({ ...ov, imageSource: 'ai_generated' })}
+                        className={`rounded-md border p-2 text-left text-xs ${ov.imageSource === 'ai_generated' ? 'border-purple-500 bg-purple-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+                      >
+                        <div className="font-semibold text-stone-900">🎨 AI 生圖</div>
+                        <div className="text-[10px] text-stone-500 mt-0.5">KIE image-to-image · 模特兒穿搭 · 30-60s/篇</div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isImage && ov.imageSource === 'ai_generated' && (
+                  <div>
+                    <label className="label text-[10px]">🎨 圖片 imagePrompt (英文, 選填, 留空 AI 依當篇自動寫)</label>
+                    <textarea className="input min-h-[70px] text-[11px] font-mono leading-relaxed"
+                      placeholder="Editorial fashion photography, Asian woman..."
+                      value={ov.imagePrompt}
+                      onChange={(e) => setOv({ ...ov, imagePrompt: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="label !mb-0 text-[10px]">🛒 綁定產品 (本次可加/減)</label>
+                    <button type="button" onClick={() => setShowProductPicker(!showProductPicker)}
+                      className="text-[10px] text-emerald-700 hover:underline">
+                      {showProductPicker ? '收起 ▲' : `選產品... (已選 ${ov.productIds.length})`}
+                    </button>
+                  </div>
+                  {ov.productIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {products.filter((p) => ov.productIds.includes(p.id)).map((p) => (
+                        <span key={p.id} className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">
+                          {p.name.slice(0, 15)}
+                          <button onClick={() => setOv({ ...ov, productIds: ov.productIds.filter((x) => x !== p.id) })} className="text-emerald-500 hover:text-red-600">✕</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {showProductPicker && (
+                    <div className="rounded-lg border border-stone-200 bg-white p-2 space-y-2">
+                      <input className="input text-xs" placeholder="搜尋..." value={productFilter} onChange={(e) => setProductFilter(e.target.value)} />
+                      <div className="max-h-[180px] overflow-y-auto space-y-1">
+                        {products.filter((p) => !p.paused && (!productFilter || (p.name + p.category + (p.gender || '')).toLowerCase().includes(productFilter.toLowerCase()))).map((p) => {
+                          const on = ov.productIds.includes(p.id);
+                          return (
+                            <label key={p.id} className={`flex items-center gap-2 rounded-md p-1.5 text-[11px] cursor-pointer ${on ? 'bg-emerald-100' : 'hover:bg-stone-100'}`}>
+                              <input type="checkbox" checked={on}
+                                onChange={(e) => {
+                                  const next = e.target.checked ? [...ov.productIds, p.id] : ov.productIds.filter((x) => x !== p.id);
+                                  setOv({ ...ov, productIds: next });
+                                }}
+                                className="size-3.5 rounded border-stone-300" />
+                              {p.image_front && <img src={p.image_front} alt="" className="size-8 rounded object-cover" />}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-stone-900 truncate">{p.name}</div>
+                                <div className="text-stone-500 text-[10px]">{p.category} · {p.gender || '不分'}</div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {overridesChanged && (
+                  <label className="flex items-center gap-2 text-[11px] text-stone-700 cursor-pointer border-t border-stone-200 pt-2">
+                    <input type="checkbox" checked={saveBack}
+                      onChange={(e) => setSaveBack(e.target.checked)}
+                      className="size-3.5 rounded border-stone-300" />
+                    <span>同時把這些改動<strong>存回主題</strong>(下次不用再改)</span>
+                  </label>
+                )}
+              </div>
+            </details>
+          </>
         )}
 
         <div>
