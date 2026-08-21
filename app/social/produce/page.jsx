@@ -24,7 +24,7 @@ function ProducePageInner() {
 
   // 本次覆寫 (只影響這次產文, 可勾 saveBack 存回主題)
   const [showOverrides, setShowOverrides] = useState(false);
-  const [ov, setOv] = useState({ systemPrompt: '', imagePrompt: '', productIds: [], imageSource: 'ai_generated' });
+  const [ov, setOv] = useState({ systemPrompt: '', imagePrompt: '', productIds: [], imageSource: 'ai_generated', noFace: false, promoInfo: '' });
   const [saveBack, setSaveBack] = useState(false);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productFilter, setProductFilter] = useState('');
@@ -54,6 +54,8 @@ function ProducePageInner() {
       imagePrompt: topic.imagePrompt || '',
       productIds: topic.productIds || [],
       imageSource: topic.imageSource || 'ai_generated',
+      noFace: Boolean(topic.noFace),
+      promoInfo: topic.promoInfo || '',
     });
     setShowOverrides(false);
     setSaveBack(false);
@@ -63,7 +65,9 @@ function ProducePageInner() {
     ov.systemPrompt !== (topic.systemPrompt || '') ||
     ov.imagePrompt !== (topic.imagePrompt || '') ||
     JSON.stringify(ov.productIds) !== JSON.stringify(topic.productIds || []) ||
-    ov.imageSource !== (topic.imageSource || 'ai_generated')
+    ov.imageSource !== (topic.imageSource || 'ai_generated') ||
+    ov.noFace !== Boolean(topic.noFace) ||
+    ov.promoInfo !== (topic.promoInfo || '')
   );
 
   async function produce() {
@@ -255,6 +259,15 @@ function ProducePageInner() {
                   />
                 </div>
 
+                <div>
+                  <label className="label text-[10px]">🎁 促銷訊息 (選填 · 每篇會融入)</label>
+                  <textarea className="input min-h-[50px] text-xs leading-relaxed"
+                    placeholder="例:週年慶滿千折 100"
+                    value={ov.promoInfo}
+                    onChange={(e) => setOv({ ...ov, promoInfo: e.target.value })}
+                  />
+                </div>
+
                 {isImage && (
                   <div>
                     <label className="label text-[10px]">🖼️ 圖片來源 (本次)</label>
@@ -278,14 +291,25 @@ function ProducePageInner() {
                 )}
 
                 {isImage && ov.imageSource === 'ai_generated' && (
-                  <div>
-                    <label className="label text-[10px]">🎨 圖片 imagePrompt (英文, 選填, 留空 AI 依當篇自動寫)</label>
-                    <textarea className="input min-h-[70px] text-[11px] font-mono leading-relaxed"
-                      placeholder="Editorial fashion photography, Asian woman..."
-                      value={ov.imagePrompt}
-                      onChange={(e) => setOv({ ...ov, imagePrompt: e.target.value })}
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label className="label text-[10px]">🎨 圖片 imagePrompt (英文, 選填, 留空 AI 依當篇自動寫)</label>
+                      <textarea className="input min-h-[70px] text-[11px] font-mono leading-relaxed"
+                        placeholder="Editorial fashion photography, Asian woman..."
+                        value={ov.imagePrompt}
+                        onChange={(e) => setOv({ ...ov, imagePrompt: e.target.value })}
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-[11px] cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
+                      <input type="checkbox" checked={ov.noFace}
+                        onChange={(e) => setOv({ ...ov, noFace: e.target.checked })}
+                        className="size-3.5 rounded border-stone-300" />
+                      <div>
+                        <div className="font-semibold text-amber-900">🙈 不露臉</div>
+                        <div className="text-[10px] text-stone-600">背影/側臉/被頭髮遮住/裁切,聚焦服裝</div>
+                      </div>
+                    </label>
+                  </>
                 )}
 
                 <div>

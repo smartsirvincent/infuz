@@ -21,13 +21,15 @@ export async function POST(req) {
     const topic = (topicsDb.items || []).find((t) => t.id === topicId);
     if (!topic) return NextResponse.json({ error: 'topic 不存在' }, { status: 404 });
 
-    // 有效值 = topic + overrides (只覆寫 4 個 key)
+    // 有效值 = topic + overrides
     const effective = {
       ...topic,
       systemPrompt: overrides.systemPrompt !== undefined ? overrides.systemPrompt : topic.systemPrompt,
       imagePrompt: overrides.imagePrompt !== undefined ? overrides.imagePrompt : topic.imagePrompt,
       productIds: overrides.productIds !== undefined ? overrides.productIds : topic.productIds,
       imageSource: overrides.imageSource !== undefined ? overrides.imageSource : (topic.imageSource || 'ai_generated'),
+      noFace: overrides.noFace !== undefined ? overrides.noFace : Boolean(topic.noFace),
+      promoInfo: overrides.promoInfo !== undefined ? overrides.promoInfo : (topic.promoInfo || ''),
     };
 
     const productsDb = await loadDb('products');
@@ -90,6 +92,7 @@ async function produceOne({ topic, boundProducts, index, wantImages, wantLong, u
 【當前主題】${topic.name}
 ${topic.description || ''}
 ${topic.systemPrompt ? `\n寫作方向: ${topic.systemPrompt}` : ''}
+${topic.promoInfo ? `\n【本次促銷訊息 (必須自然帶入文案)】\n${topic.promoInfo}\n(語氣不要像廣告 slogan, 要融入敘事)` : ''}
 
 必須遵守:
 - 用繁體中文寫作
@@ -104,7 +107,8 @@ ${needAiImagePrompt ? FIDELITY_INSTRUCTION_FOR_CLAUDE : ''}`;
 長度: ${length}${productHint}
 
 ${needAiImagePrompt ? `【配圖】
-需要生一張 AI 圖。imagePrompt (英文) 要描述: 一位 ${brand.brand} 女性模特兒穿著上面提到的產品${picked ? ` (${picked.name})` : ''}, 場景要呼應主題「${topic.name}」的氛圍。日系冷光、柔和、有空氣感、film grain aesthetic。左上角留白給 logo。不要露臉特寫、不要小孩、不要浮水印。文字/數字絕對不能出現在圖上。
+需要生一張 AI 圖。imagePrompt (英文) 要描述: 一位 ${brand.brand} 女性模特兒穿著上面提到的產品${picked ? ` (${picked.name})` : ''}, 場景要呼應主題「${topic.name}」的氛圍。日系冷光、柔和、有空氣感、film grain aesthetic。左上角留白給 logo。不要小孩、不要浮水印。文字/數字絕對不能出現在圖上。
+${topic.noFace ? '⚠ 本次要求不露臉: imagePrompt 必須明確寫 "no face visible / face cropped out / back view / side profile with hair covering face / face turned away from camera",不能出現正面臉部或臉部特寫。' : ''}
 ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
 ` : useProductPhoto ? '\n【配圖】會直接用產品原圖, 不用你產 imagePrompt\n' : ''}
 請回傳 JSON:

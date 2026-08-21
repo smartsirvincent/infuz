@@ -16,6 +16,7 @@ function SchedulePageInner() {
   const [topics, setTopics] = useState([]);
   const [posts, setPosts] = useState([]);
   const [products, setProducts] = useState([]);
+  const [realtimeJobs, setRealtimeJobs] = useState([]);
   const [conn, setConn] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -36,16 +37,18 @@ function SchedulePageInner() {
   async function load() {
     setLoading(true);
     try {
-      const [tRes, pRes, prodRes, cRes] = await Promise.all([
+      const [tRes, pRes, prodRes, cRes, rtRes] = await Promise.all([
         fetch('/api/infuz/topics', { cache: 'no-store' }).then((r) => r.json()),
         fetch('/api/infuz/topic_posts', { cache: 'no-store' }).then((r) => r.json()),
         fetch('/api/infuz/products', { cache: 'no-store' }).then((r) => r.json()),
         fetch('/api/infuz/connections', { cache: 'no-store' }).then((r) => r.json()),
+        fetch('/api/infuz/realtime', { cache: 'no-store' }).then((r) => r.json()),
       ]);
       setTopics(tRes.items || []);
       setPosts(pRes.items || []);
       setProducts(prodRes.items || []);
       setConn((cRes.items || []).find((x) => x.id === 'main') || null);
+      setRealtimeJobs(rtRes.items || []);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }
@@ -105,10 +108,39 @@ function SchedulePageInner() {
 
   async function toggleSchedule(topic, e) {
     e.preventDefault(); e.stopPropagation();
+    const sch = topic.schedule || {};
+    // 帶 sensible defaults, 避免只有 enabled=true 但沒 time/days/platforms 導致 tick 略過
+    const newSchedule = {
+      ...sch,
+      enabled: !sch.enabled,
+      time: sch.time || '10:00',
+      days: (sch.days && sch.days.length) ? sch.days : [1, 2, 3, 4, 5],
+      platforms: sch.platforms || { threads: true },
+    };
     await fetch(`/api/infuz/topics?id=${encodeURIComponent(topic.id)}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ schedule: { ...topic.schedule, enabled: !topic.schedule.enabled } }),
+      body: JSON.stringify({ schedule: newSchedule }),
+    });
+    load();
+  }
+
+  async function patchTopicTime(topic, newTime, e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!newTime) return;
+    const sch = topic.schedule || {};
+    await fetch(`/api/infuz/topics?id=${encodeURIComponent(topic.id)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        schedule: {
+          ...sch,
+          time: newTime,
+          days: (sch.days && sch.days.length) ? sch.days : [1, 2, 3, 4, 5],
+          platforms: sch.platforms || { threads: true },
+          enabled: sch.enabled !== false,
+        },
+      }),
     });
     load();
   }
@@ -142,10 +174,7 @@ function SchedulePageInner() {
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '排程管理' }]}
         description="所有主題清單 · 點卡片進入看完整貼文 · 到點 cron 從佇列取一篇自動發"
         actions={
-          <>
-            <Button href="/social/topics/discover" tone="purple" size="sm">💡 AI 發想</Button>
-            <Button onClick={newTopic} tone="success" size="sm">+ 手動新增</Button>
-          </>
+          <Button onClick={newTopic} tone="success" size="sm">+ 手動新增主題</Button>
         }
       />
 
@@ -158,7 +187,7 @@ function SchedulePageInner() {
       </section>
 
       {/* 週歷儀表板 */}
-      <WeeklyCalendar topics={topics} />
+      <WeeklyCalendar topics={topics} realtimeJobs={realtimeJobs} />
 
       {/* 搜尋列 */}
       <div className="relative">
@@ -188,6 +217,7 @@ function SchedulePageInner() {
             posts={posts.filter((p) => p.topicId === topic.id)}
             products={products}
             onToggleSchedule={(e) => toggleSchedule(topic, e)}
+            onChangeTime={(t, e) => patchTopicTime(topic, t, e)}
             onDelete={(e) => deleteTopic(topic, e)}
           />
         ))}
@@ -233,29 +263,52 @@ function StatBox({ label, value, sub, color }) {
   );
 }
 
-function WeeklyCalendar({ topics }) {
-  // 週一為首 (工作型排程慣例) — mapping: [週一,週二,週三,週四,週五,週六,週日]
+function WeeklyCalendar({ topics, realtimeJobs = [] }) {
   const dayOrder = [1, 2, 3, 4, 5, 6, 0];
   const dayLabels = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
 
-  // 台北今天是週幾
   const taipeiNow = new Date(Date.now() + 8 * 3600 * 1000);
-  const todayDow = taipeiNow.getUTCDay(); // 0=週日
+  const todayDow = taipeiNow.getUTCDay();
 
-  // 收集所有 (topic, day, time)
-  const bySlot = {}; // { time: { day: [topics] } }
-  for (const t of topics) {
-    if (!t.schedule?.enabled || !t.schedule?.time) continue;
-    const days = (t.schedule.days || []).length ? t.schedule.days : [0, 1, 2, 3, 4, 5, 6];
-    const time = t.schedule.time;
+  // 收集所有 (item, day, time) 兩種 source: topics + realtime_jobs
+  const bySlot = {}; // { time: { day: [items] } }
+  const addToSlot = (time, days, item) => {
     if (!bySlot[time]) bySlot[time] = {};
     for (const d of days) {
       if (!bySlot[time][d]) bySlot[time][d] = [];
-      bySlot[time][d].push(t);
+      bySlot[time][d].push(item);
     }
+  };
+
+  for (const t of topics) {
+    if (!t.schedule?.enabled || !t.schedule?.time) continue;
+    const days = (t.schedule.days || []).length ? t.schedule.days : [0, 1, 2, 3, 4, 5, 6];
+    addToSlot(t.schedule.time, days, {
+      kind: 'topic',
+      id: t.id,
+      name: t.name,
+      type: t.type,
+      platforms: t.schedule.platforms,
+      href: `/social/schedule/${t.id}`,
+    });
   }
+
+  for (const j of realtimeJobs) {
+    if (!j.enabled || !j.time) continue;
+    const days = (j.days && j.days.length) ? j.days : [0, 1, 2, 3, 4, 5, 6];
+    addToSlot(j.time, days, {
+      kind: 'realtime',
+      id: j.id,
+      name: j.name || '氣候即時',
+      type: 'weather',
+      platforms: j.platforms,
+      href: `/social/weather-post`,
+    });
+  }
+
   const slots = Object.keys(bySlot).sort();
-  const activeCount = topics.filter((t) => t.schedule?.enabled).length;
+  const activeCount = topics.filter((t) => t.schedule?.enabled).length
+    + realtimeJobs.filter((j) => j.enabled).length;
 
   return (
     <section className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
@@ -263,7 +316,7 @@ function WeeklyCalendar({ topics }) {
         <div>
           <h2 className="text-sm font-semibold text-stone-900">📆 本週排程一覽</h2>
           <div className="text-[11px] text-stone-500 mt-0.5">
-            {activeCount === 0 ? '沒有啟用中的排程 — 到主題編輯頁打開排程' : `${activeCount} 個主題排程中 · 週一為首`}
+            {activeCount === 0 ? '沒有啟用中的排程 — 到主題編輯頁打開排程,或去 ☀️ 氣候即時 新增' : `${activeCount} 個排程中(含主題+氣候即時)· 週一為首`}
           </div>
         </div>
       </div>
@@ -298,20 +351,23 @@ function WeeklyCalendar({ topics }) {
                       <td key={d} className={`px-2 py-2 align-top ${d === todayDow ? 'bg-blue-50/40' : ''}`}>
                         <div className="flex flex-col gap-1">
                           {items.length === 0 && <span className="text-stone-300 text-[10px]">—</span>}
-                          {items.map((t) => (
-                            <Link key={t.id} href={`/social/schedule/${t.id}`}
-                              className="group rounded-md border border-stone-200 bg-white p-1.5 hover:border-blue-300 hover:shadow-sm transition text-left"
-                              title={t.name}
-                            >
-                              <div className="flex items-center gap-1 mb-0.5">
-                                <span className="text-[9px]">{t.type === 'long' ? '📄' : t.type === 'image' ? '🖼️' : '📝'}</span>
-                                <span className="text-[10px] text-stone-500 font-mono">
-                                  {Object.entries(t.schedule?.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'T', instagram: 'I', facebook: 'F' })[k]).join('')}
-                                </span>
-                              </div>
-                              <div className="text-[11px] text-stone-800 font-medium truncate group-hover:text-blue-700">{t.name}</div>
-                            </Link>
-                          ))}
+                          {items.map((it) => {
+                            const isRt = it.kind === 'realtime';
+                            const typeIcon = it.type === 'weather' ? '☀️' : it.type === 'long' ? '📄' : it.type === 'image' ? '🖼️' : '📝';
+                            const platformCode = Object.entries(it.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'T', instagram: 'I', facebook: 'F' })[k]).join('');
+                            return (
+                              <Link key={it.id} href={it.href}
+                                className={`group rounded-md border p-1.5 hover:shadow-sm transition text-left ${isRt ? 'border-sky-200 bg-sky-50/50 hover:border-sky-400' : 'border-stone-200 bg-white hover:border-blue-300'}`}
+                                title={it.name + (isRt ? ' (氣候即時)' : '')}
+                              >
+                                <div className="flex items-center gap-1 mb-0.5">
+                                  <span className="text-[9px]">{typeIcon}</span>
+                                  <span className="text-[10px] text-stone-500 font-mono">{platformCode}</span>
+                                </div>
+                                <div className={`text-[11px] font-medium truncate ${isRt ? 'text-sky-800 group-hover:text-sky-900' : 'text-stone-800 group-hover:text-blue-700'}`}>{it.name}</div>
+                              </Link>
+                            );
+                          })}
                         </div>
                       </td>
                     );
@@ -326,7 +382,7 @@ function WeeklyCalendar({ topics }) {
   );
 }
 
-function TopicCard({ topic, posts, products, onToggleSchedule, onDelete }) {
+function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onDelete }) {
   const queued = posts.filter((p) => p.status === 'queued').length;
   const published = posts.filter((p) => p.status === 'published').length;
   const failed = posts.filter((p) => p.status === 'failed').length;
@@ -365,11 +421,17 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onDelete }) {
         )}
       </div>
 
-      {/* 排程摘要 */}
+      {/* 排程摘要 (時間可 inline 編輯) */}
       <div className="rounded-lg bg-stone-50/60 border border-stone-100 p-2.5 text-[11px] text-stone-600">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-stone-400">⏰</span>
-          <span className="font-medium text-stone-800">{topic.schedule?.time || '未設'}</span>
+          <input type="time"
+            value={topic.schedule?.time || '10:00'}
+            onClick={(e) => e.preventDefault()}
+            onChange={(e) => onChangeTime(e.target.value, e)}
+            className="font-medium text-stone-800 bg-transparent border-b border-dashed border-stone-300 hover:border-blue-400 focus:border-blue-500 outline-none px-0.5 cursor-pointer w-[65px] text-[11px]"
+            title="點時間直接改"
+          />
           <span className="text-stone-300">·</span>
           <span>{days || '無'}</span>
           <span className="text-stone-300">·</span>
@@ -438,6 +500,14 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
           value={editing.systemPrompt} onChange={(e) => setEditing({ ...editing, systemPrompt: e.target.value })} />
       </div>
 
+      <div>
+        <label className="label text-xs">🎁 促銷訊息 (選填 · 產文時 AI 會自然帶入)</label>
+        <textarea className="input min-h-[60px] text-xs leading-relaxed"
+          placeholder="例:週年慶滿千折 100 · 加購第二件 5 折 · 免運至 12/31"
+          value={editing.promoInfo || ''} onChange={(e) => setEditing({ ...editing, promoInfo: e.target.value })} />
+        <div className="mt-1 text-[10px] text-stone-500">留空 = 一般文案 · 有內容 = 每篇文案融入這個訊息(不是硬廣告口吻)</div>
+      </div>
+
       {editing.type === 'image' && (
         <>
           <div>
@@ -461,12 +531,23 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
             <div className="mt-1 text-[10px] text-stone-500">產文時仍可臨時覆寫這個選擇</div>
           </div>
           {(editing.imageSource || 'ai_generated') === 'ai_generated' && (
-            <div>
-              <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空 AI 依當篇自動寫)</label>
-              <textarea className="input min-h-[60px] text-xs font-mono"
-                placeholder="Editorial fashion photography, Asian female..."
-                value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
-            </div>
+            <>
+              <div>
+                <label className="label text-xs">配圖英文 prompt (imagePrompt · 選填,留空 AI 依當篇自動寫)</label>
+                <textarea className="input min-h-[60px] text-xs font-mono"
+                  placeholder="Editorial fashion photography, Asian female..."
+                  value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
+              </div>
+              <label className="flex items-center gap-2 text-xs cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
+                <input type="checkbox" checked={!!editing.noFace}
+                  onChange={(e) => setEditing({ ...editing, noFace: e.target.checked })}
+                  className="size-4 rounded border-stone-300" />
+                <div>
+                  <div className="font-semibold text-amber-900">🙈 不露臉</div>
+                  <div className="text-[10px] text-stone-600 mt-0.5">AI 生圖時強制不出現正面臉部(背影/側臉/被頭髮遮住/裁切),適合怕肖像權問題或想聚焦服裝</div>
+                </div>
+              </label>
+            </>
           )}
         </>
       )}
