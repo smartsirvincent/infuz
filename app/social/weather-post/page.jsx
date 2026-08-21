@@ -171,11 +171,10 @@ export default function WeatherPostPage() {
   return (
     <main className="space-y-6 pb-8">
       <PageHeader
-        icon="☀️"
+        eyebrow="Weather"
         title="氣候即時預約"
-        tone="sky"
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '氣候即時預約' }]}
-        description="到指定時間 → 抓中央氣象署預報(可多縣市) → 依觸發條件產出當下應景的貼文 → 從產品庫隨機挑搭配生圖 → 直發 Threads/IG/FB"
+        description="到指定時間抓中央氣象署預報(可多縣市),依觸發條件產出應景貼文,從產品庫隨機挑搭配生圖,直發 Threads / IG / FB。"
       />
       {!weatherReady && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">

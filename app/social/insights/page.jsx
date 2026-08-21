@@ -47,19 +47,17 @@ export default function InsightsPage() {
   return (
     <main className="space-y-5">
       <PageHeader
-        icon="📊"
+        eyebrow="Insights"
         title="發文成效"
-        tone="amber"
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '發文成效' }]}
-        description="所有已發貼文 · 分平台/主題/日期篩 · 點連結到原文看實際互動 · 深指標(reach/like/comment)之後補上"
+        description="所有已發貼文,分平台 / 主題 / 日期篩選。點連結到原文看實際互動。深指標之後補上。"
       />
 
-      {/* Summary */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="總發文" value={data.total} icon="📮" />
-        <StatCard label="Threads" value={data.byPlatform.threads || 0} icon="🧵" />
-        <StatCard label="Instagram" value={data.byPlatform.instagram || 0} tone="purple" icon="📷" />
-        <StatCard label="Facebook" value={data.byPlatform.facebook || 0} tone="blue" icon="👍" />
+        <StatCard label="Total" value={data.total} />
+        <StatCard label="Threads" value={data.byPlatform.threads || 0} />
+        <StatCard label="Instagram" value={data.byPlatform.instagram || 0} />
+        <StatCard label="Facebook" value={data.byPlatform.facebook || 0} />
       </section>
 
       {/* Filters */}

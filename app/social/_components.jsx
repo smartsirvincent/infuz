@@ -1,106 +1,95 @@
-// 社群發文 5 頁共用 UI 元件 · Linear/Vercel Dashboard 風
-// 中性色為主 · 精緻陰影 · 明確層級 · subtle hover
+// 社群發文 5 頁共用 UI 元件 · Editorial monochrome (Vercel Dashboard + Linear + Substack)
+// - 一個 accent (brand orange 只用於主 CTA), 其餘 zinc 灰階
+// - Heading 大字 tight tracking, 無 emoji 裝飾
+// - Cards border-only, hover 微陰影
+// - motion-reduce friendly
 'use client';
 
 import Link from 'next/link';
 
 // ============================================================
-// PageHeader · 每頁頂部
-// breadcrumbs = [{href, label}, ...]
-// actions = <div>...</div> 右邊按鈕組
+// PageHeader · editorial · 大字 heading + 麵包屑 + 右邊 actions
 // ============================================================
-export function PageHeader({ icon, title, description, breadcrumbs, actions, tone = 'neutral' }) {
-  const toneMap = {
-    neutral: 'bg-white border-stone-200',
-    blue: 'bg-gradient-to-br from-blue-50 to-white border-blue-100',
-    purple: 'bg-gradient-to-br from-purple-50 to-white border-purple-100',
-    fuchsia: 'bg-gradient-to-br from-fuchsia-50 to-white border-fuchsia-100',
-    amber: 'bg-gradient-to-br from-amber-50 to-white border-amber-100',
-    sky: 'bg-gradient-to-br from-sky-50 to-white border-sky-100',
-    emerald: 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100',
-  };
+export function PageHeader({ title, description, breadcrumbs, actions, eyebrow }) {
   return (
-    <div className={`rounded-2xl border ${toneMap[tone]} p-5 sm:p-6`}>
+    <header className="pt-2 pb-6 border-b border-zinc-200">
       {breadcrumbs?.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-xs text-stone-500 mb-3">
+        <nav className="flex items-center gap-1.5 text-[11px] text-zinc-500 mb-4 font-mono">
           {breadcrumbs.map((b, i) => (
             <span key={i} className="flex items-center gap-1.5">
               {b.href ? (
-                <Link href={b.href} className="hover:text-stone-800 transition">{b.label}</Link>
+                <Link href={b.href} className="hover:text-zinc-900 transition">{b.label}</Link>
               ) : (
-                <span className="text-stone-800 font-medium">{b.label}</span>
+                <span className="text-zinc-900">{b.label}</span>
               )}
-              {i < breadcrumbs.length - 1 && <span className="text-stone-300">/</span>}
+              {i < breadcrumbs.length - 1 && <span className="text-zinc-300">/</span>}
             </span>
           ))}
         </nav>
       )}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-end justify-between gap-6 flex-wrap">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5">
-            {icon && <span className="text-2xl leading-none">{icon}</span>}
-            <h1 className="text-xl sm:text-2xl font-semibold text-stone-900 tracking-tight">{title}</h1>
-          </div>
+          {eyebrow && (
+            <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">{eyebrow}</div>
+          )}
+          <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-950 tracking-tight leading-tight">{title}</h1>
           {description && (
-            <p className="mt-1.5 text-sm text-stone-600 leading-relaxed max-w-3xl">{description}</p>
+            <p className="mt-2 text-sm text-zinc-500 leading-relaxed max-w-2xl">{description}</p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
-    </div>
+    </header>
   );
 }
 
 // ============================================================
-// StatCard · Header 下方一排統計
+// StatCard · 大數字主宰, 極簡
 // ============================================================
-export function StatCard({ label, value, sub, tone = 'neutral', icon }) {
+export function StatCard({ label, value, sub, tone = 'neutral' }) {
   const valueColor = {
-    neutral: 'text-stone-900',
-    blue: 'text-blue-700',
-    emerald: 'text-emerald-700',
-    amber: 'text-amber-700',
-    red: 'text-red-700',
-    purple: 'text-purple-700',
-  }[tone];
+    neutral: 'text-zinc-950',
+    accent: 'text-brand-600',
+    muted: 'text-zinc-400',
+    positive: 'text-emerald-600',
+    warn: 'text-amber-600',
+    danger: 'text-red-600',
+  }[tone] || 'text-zinc-950';
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4 hover:border-stone-300 transition">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-medium text-stone-500 uppercase tracking-wide">{label}</div>
-        {icon && <span className="text-base opacity-60">{icon}</span>}
-      </div>
-      <div className={`mt-2 text-2xl sm:text-3xl font-semibold tracking-tight ${valueColor}`}>{value}</div>
-      {sub && <div className="mt-1 text-[11px] text-stone-500">{sub}</div>}
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-300">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">{label}</div>
+      <div className={`mt-2 text-3xl font-semibold tabular-nums tracking-tight ${valueColor}`}>{value}</div>
+      {sub && <div className="mt-1 text-[11px] text-zinc-500">{sub}</div>}
     </div>
   );
 }
 
 // ============================================================
-// EmptyState · 空狀態,大 emoji + heading + CTA
+// EmptyState · editorial · 極簡, 無大 emoji
 // ============================================================
-export function EmptyState({ icon = '📭', title, description, action }) {
+export function EmptyState({ title, description, action, mark }) {
   return (
-    <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50/50 py-12 sm:py-16 px-6 text-center space-y-3">
-      <div className="text-5xl leading-none">{icon}</div>
-      <div className="text-base font-semibold text-stone-800">{title}</div>
-      {description && <div className="text-sm text-stone-500 max-w-md mx-auto">{description}</div>}
-      {action && <div className="pt-2">{action}</div>}
+    <div className="rounded-2xl border border-dashed border-zinc-200 bg-white py-16 px-6 text-center space-y-4">
+      {mark && <div className="text-3xl leading-none text-zinc-300 font-mono">{mark}</div>}
+      <div className="text-base font-medium text-zinc-950">{title}</div>
+      {description && <div className="text-sm text-zinc-500 max-w-sm mx-auto leading-relaxed">{description}</div>}
+      {action && <div className="pt-1">{action}</div>}
     </div>
   );
 }
 
 // ============================================================
-// SectionCard · 內容分區
+// SectionCard · 內容分區, 純白 + border
 // ============================================================
 export function SectionCard({ title, description, actions, children, className = '', padding = 'default' }) {
-  const p = { default: 'p-4 sm:p-5', tight: 'p-3', lg: 'p-6' }[padding];
+  const p = { default: 'p-5 sm:p-6', tight: 'p-4', lg: 'p-6 sm:p-8' }[padding];
   return (
-    <section className={`rounded-2xl border border-stone-200 bg-white ${p} ${className}`}>
+    <section className={`rounded-2xl border border-zinc-200 bg-white ${p} ${className}`}>
       {(title || actions) && (
-        <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0">
-            {title && <h2 className="text-sm font-semibold text-stone-900">{title}</h2>}
-            {description && <p className="mt-0.5 text-xs text-stone-500">{description}</p>}
+            {title && <h2 className="text-sm font-semibold text-zinc-950 tracking-tight">{title}</h2>}
+            {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
           </div>
           {actions && <div className="flex items-center gap-1.5 shrink-0">{actions}</div>}
         </div>
@@ -111,20 +100,33 @@ export function SectionCard({ title, description, actions, children, className =
 }
 
 // ============================================================
-// Chip · 標籤/徽章
+// Chip · border-only 為主, 精緻
 // ============================================================
-export function Chip({ children, tone = 'neutral', size = 'sm', className = '' }) {
-  const tones = {
-    neutral: 'bg-stone-100 text-stone-700 border-stone-200',
+export function Chip({ children, tone = 'neutral', size = 'sm', variant = 'solid', className = '' }) {
+  const solidTones = {
+    neutral: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    accent: 'bg-brand-50 text-brand-700 border-brand-200',
+    positive: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    blue: 'bg-blue-50 text-blue-700 border-blue-200',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200',
-    fuchsia: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
+    warn: 'bg-amber-50 text-amber-700 border-amber-200',
     amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    red: 'bg-red-50 text-red-700 border-red-200',
-    sky: 'bg-sky-50 text-sky-700 border-sky-200',
-    dark: 'bg-stone-900 text-white border-stone-900',
+    danger: 'bg-red-50 text-red-700 border-red-200',
+    dark: 'bg-zinc-950 text-white border-zinc-950',
+    // fallback tones for legacy pages · 全部 map 到 neutral 灰 (editorial monochrome)
+    blue: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    purple: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    fuchsia: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    sky: 'bg-zinc-100 text-zinc-700 border-zinc-200',
   };
+  const outlineTones = {
+    neutral: 'border-zinc-300 text-zinc-700 bg-white',
+    accent: 'border-brand-300 text-brand-700 bg-white',
+    positive: 'border-emerald-300 text-emerald-700 bg-white',
+    warn: 'border-amber-300 text-amber-700 bg-white',
+    danger: 'border-red-300 text-red-700 bg-white',
+    dark: 'border-zinc-950 text-zinc-950 bg-white',
+  };
+  const tones = variant === 'outline' ? outlineTones : solidTones;
   const sizes = {
     xs: 'text-[10px] px-1.5 py-0.5',
     sm: 'text-xs px-2 py-0.5',
@@ -138,28 +140,28 @@ export function Chip({ children, tone = 'neutral', size = 'sm', className = '' }
 }
 
 // ============================================================
-// TabBar · 主題 detail 頁 tabs
+// TabBar · Vercel 風下劃線, 極簡
 // ============================================================
 export function TabBar({ tabs, value, onChange }) {
   return (
-    <div className="flex gap-1 border-b border-stone-200 -mx-px px-px pb-0 mb-4">
+    <div className="flex gap-1 border-b border-zinc-200 mb-5">
       {tabs.map((t) => {
         const on = value === t.value;
         return (
           <button key={t.value} onClick={() => onChange(t.value)}
-            className={`relative px-3 py-2 text-sm font-medium transition ${
-              on ? 'text-stone-900' : 'text-stone-500 hover:text-stone-800'
+            className={`relative px-3 py-2.5 text-sm transition -mb-px ${
+              on ? 'text-zinc-950 font-medium' : 'text-zinc-500 hover:text-zinc-900'
             }`}
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-2">
               {t.label}
               {typeof t.count === 'number' && (
-                <span className={`text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center ${on ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-500'}`}>
+                <span className={`text-[10px] font-mono tabular-nums rounded px-1.5 py-0.5 min-w-[20px] text-center ${on ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
                   {t.count}
                 </span>
               )}
             </span>
-            {on && <span className="absolute -bottom-px left-0 right-0 h-0.5 bg-stone-900 rounded-full" />}
+            {on && <span className="absolute -bottom-px left-0 right-0 h-px bg-zinc-950" />}
           </button>
         );
       })}
@@ -168,48 +170,54 @@ export function TabBar({ tabs, value, onChange }) {
 }
 
 // ============================================================
-// Button · 統一按鈕
+// Button · Vercel dashboard 風
 // ============================================================
 export function Button({ children, tone = 'primary', size = 'md', disabled, onClick, href, type = 'button', className = '', title }) {
   const tones = {
-    primary: 'bg-stone-900 text-white hover:bg-stone-700 disabled:bg-stone-300',
+    // 主要動作用黑底白字 (Vercel/Linear 風)
+    primary: 'bg-zinc-950 text-white hover:bg-zinc-800 disabled:bg-zinc-300',
+    // 品牌強調用 accent (只用於重要「產文/發文」)
     accent: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300',
-    secondary: 'border border-stone-200 bg-white text-stone-800 hover:bg-stone-50 disabled:opacity-50',
-    ghost: 'text-stone-600 hover:bg-stone-100 hover:text-stone-900',
-    danger: 'border border-red-200 text-red-700 bg-white hover:bg-red-50',
-    success: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
-    purple: 'bg-purple-600 text-white hover:bg-purple-700 disabled:bg-purple-300',
+    // 次要, 白底邊框
+    secondary: 'border border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 disabled:opacity-50',
+    // 透明, 只有 hover
+    ghost: 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
+    // 破壞性
+    danger: 'border border-red-200 text-red-700 bg-white hover:bg-red-50 hover:border-red-300',
+    // 正向
+    positive: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
   };
   const sizes = {
     xs: 'text-xs px-2 py-1 rounded-md',
     sm: 'text-xs px-3 py-1.5 rounded-md',
-    md: 'text-sm px-4 py-2 rounded-lg',
-    lg: 'text-base px-5 py-2.5 rounded-lg font-medium',
+    md: 'text-sm px-4 py-2 rounded-md',
+    lg: 'text-sm px-5 py-2.5 rounded-md font-medium',
   };
-  const cls = `inline-flex items-center justify-center gap-1.5 font-medium transition disabled:cursor-not-allowed ${tones[tone]} ${sizes[size]} ${className}`;
+  const cls = `inline-flex items-center justify-center gap-1.5 font-medium transition disabled:cursor-not-allowed motion-reduce:transition-none ${tones[tone]} ${sizes[size]} ${className}`;
   if (href) return <Link href={href} className={cls} title={title}>{children}</Link>;
   return <button type={type} onClick={onClick} disabled={disabled} className={cls} title={title}>{children}</button>;
 }
 
 // ============================================================
-// HubTile · /social hub 5 卡
+// HubTile · Editorial · Serial 編號 + 大字, 無 emoji 主宰
 // ============================================================
-export function HubTile({ href, icon, title, hint, tone = 'neutral', className = '' }) {
-  const toneMap = {
-    blue: { bg: 'bg-blue-50', text: 'text-blue-700', hover: 'hover:border-blue-300' },
-    purple: { bg: 'bg-purple-50', text: 'text-purple-700', hover: 'hover:border-purple-300' },
-    fuchsia: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', hover: 'hover:border-fuchsia-300' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-700', hover: 'hover:border-amber-300' },
-    sky: { bg: 'bg-sky-50', text: 'text-sky-700', hover: 'hover:border-sky-300' },
-  };
-  const t = toneMap[tone] || toneMap.blue;
+export function HubTile({ href, index, title, hint, size = 'sm', className = '' }) {
+  const isLarge = size === 'lg';
   return (
     <Link href={href}
-      className={`group flex flex-col rounded-2xl border border-stone-200 bg-white p-5 transition ${t.hover} hover:shadow-md hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${className}`}
+      className={`group flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-400 motion-reduce:transition-none ${isLarge ? 'sm:p-8' : ''} ${className}`}
     >
-      <div className={`flex size-11 items-center justify-center rounded-xl ${t.bg} text-2xl mb-3`}>{icon}</div>
-      <h2 className={`text-base font-semibold text-stone-900 group-hover:${t.text} transition`}>{title}</h2>
-      <p className="mt-1 text-xs text-stone-500 leading-relaxed">{hint}</p>
+      <div>
+        {index && (
+          <div className="text-[10px] font-mono tracking-widest text-zinc-400 mb-3">{index}</div>
+        )}
+        <h2 className={`font-semibold text-zinc-950 tracking-tight ${isLarge ? 'text-2xl' : 'text-lg'}`}>{title}</h2>
+        {hint && <p className={`text-zinc-500 leading-relaxed ${isLarge ? 'text-sm mt-3' : 'text-[13px] mt-2'}`}>{hint}</p>}
+      </div>
+      <div className="mt-6 flex items-center gap-1 text-xs text-zinc-400 group-hover:text-zinc-900 transition">
+        <span>進入</span>
+        <span className="group-hover:translate-x-0.5 transition-transform motion-reduce:transform-none">→</span>
+      </div>
     </Link>
   );
 }

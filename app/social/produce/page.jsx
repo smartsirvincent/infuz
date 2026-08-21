@@ -201,11 +201,10 @@ function ProducePageInner() {
   return (
     <main className="space-y-6 pb-8">
       <PageHeader
-        icon="✨"
+        eyebrow="Produce"
         title="主題產文"
-        tone="fuchsia"
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '主題產文' }]}
-        description="選主題 + 篇數 → AI 產出多篇 → 逐篇編輯 → 加入待發佇列"
+        description="選主題與篇數,AI 產出多篇 draft,逐篇編輯後加入待發佇列。"
       />
 
       <div className="card space-y-4">

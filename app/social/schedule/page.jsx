@@ -170,20 +170,21 @@ function SchedulePageInner() {
 
   return (
     <main className="space-y-6 pb-8">
-      <PageHeader icon="📅" title="排程管理" tone="blue"
+      <PageHeader
+        eyebrow="Schedule"
+        title="排程管理"
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { label: '排程管理' }]}
         description="所有主題清單 · 點卡片進入看完整貼文 · 到點 cron 從佇列取一篇自動發"
         actions={
-          <Button onClick={newTopic} tone="success" size="sm">+ 手動新增主題</Button>
+          <Button onClick={newTopic} tone="primary" size="sm">+ 手動新增主題</Button>
         }
       />
 
-      {/* 全站統計 */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="主題總數" value={topics.length} sub={`${topics.filter((t) => t.schedule?.enabled).length} 個排程中`} icon="📋" />
-        <StatCard label="待發" value={totalQueued} tone="blue" sub="佇列中,到點自動發" icon="📥" />
-        <StatCard label="已發" value={totalPublished} tone="emerald" sub="累計成功" icon="✓" />
-        <StatCard label="失敗" value={totalFailed} tone={totalFailed > 0 ? 'red' : 'neutral'} sub={totalFailed > 0 ? '需檢查' : '沒有失敗'} icon="⚠" />
+        <StatCard label="主題總數" value={topics.length} sub={`${topics.filter((t) => t.schedule?.enabled).length} 個排程中`} />
+        <StatCard label="待發" value={totalQueued} sub="佇列中,到點自動發" />
+        <StatCard label="已發" value={totalPublished} tone="positive" sub="累計成功" />
+        <StatCard label="失敗" value={totalFailed} tone={totalFailed > 0 ? 'danger' : 'muted'} sub={totalFailed > 0 ? '需檢查' : '沒有失敗'} />
       </section>
 
       {/* 週歷儀表板 */}

@@ -138,8 +138,8 @@ export default function TopicDetailPage() {
   return (
     <main className="space-y-6 pb-8">
       <PageHeader
+        eyebrow="Topic"
         title={topic.name}
-        tone="blue"
         breadcrumbs={[
           { href: '/social', label: '社群發文' },
           { href: '/social/schedule', label: '排程管理' },
@@ -148,9 +148,9 @@ export default function TopicDetailPage() {
         description={topic.description}
         actions={
           <>
-            <Button href={`/social/produce?topic=${topic.id}`} tone="purple" size="sm">✨ 產文</Button>
-            <Button href={`/social/schedule?edit=${topic.id}`} tone="secondary" size="sm">✏️ 編輯</Button>
-            <Button onClick={deleteTopic} tone="danger" size="sm">🗑️ 刪除</Button>
+            <Button href={`/social/produce?topic=${topic.id}`} tone="primary" size="sm">產文</Button>
+            <Button href={`/social/schedule?edit=${topic.id}`} tone="secondary" size="sm">編輯</Button>
+            <Button onClick={deleteTopic} tone="danger" size="sm">刪除</Button>
           </>
         }
       />

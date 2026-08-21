@@ -71,11 +71,10 @@ export default function DiscoverPage() {
   return (
     <main className="space-y-6 pb-8">
       <PageHeader
-        icon="💡"
+        eyebrow="Discover"
         title="主題發想"
-        tone="purple"
         breadcrumbs={[{ href: '/social', label: '社群發文' }, { href: '/social/schedule', label: '排程管理' }, { label: '主題發想' }]}
-        description={`描述方向 + 選要帶的產品 → AI 建議 N 個主題 → 勾選加入清單${existingTopics.length > 0 ? ` · 已有 ${existingTopics.length} 個主題,AI 會自動避開重複` : ''}`}
+        description={`描述方向與綁定產品,AI 建議 N 個主題,勾選加入清單。${existingTopics.length > 0 ? `已有 ${existingTopics.length} 個主題,AI 會自動避開重複。` : ''}`}
       />
 
       <div className="card space-y-3">
