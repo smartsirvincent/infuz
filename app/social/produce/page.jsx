@@ -16,6 +16,7 @@ function ProducePageInner() {
   const [topicId, setTopicId] = useState(initialTopicId);
   const [count, setCount] = useState(3);
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [drafts, setDrafts] = useState([]);
   const [selected, setSelected] = useState(new Set());
   const [saving, setSaving] = useState(false);
@@ -72,32 +73,107 @@ function ProducePageInner() {
     ov.promoInfo !== (topic.promoInfo || '')
   );
 
+  // Progressive · 每篇獨立呼 API (count=1 startIndex=i), 每篇獨立 300s 不會撞 timeout
+  // Concurrent workers · 圖片 3 workers, 文字 5 workers, 一篇好一篇 push
   async function produce() {
     if (!topicId) { setError('先選主題'); return; }
     setGenerating(true); setError(''); setDrafts([]); setSelected(new Set());
-    try {
-      const body = { topicId, count };
-      if (overridesChanged) {
-        body.overrides = ov;
-        body.saveBack = saveBack;
+    setProgress({ done: 0, total: count });
+
+    const useProductPhoto = ov.imageSource === 'product_photo';
+    const isImageAI = isImage && !useProductPhoto;
+    const CONCURRENCY = isImageAI ? 3 : 5;
+
+    let started = 0;
+    const worker = async () => {
+      while (true) {
+        const i = started++;
+        if (i >= count) return;
+        try {
+          const body = { topicId, count: 1, startIndex: i };
+          if (overridesChanged) {
+            body.overrides = ov;
+            // 只在第 0 篇時 saveBack, 避免每篇 PATCH
+            body.saveBack = i === 0 && saveBack;
+          }
+          const r = await fetch('/api/infuz/topics/produce', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          // 先看 content-type, 避免 timeout 回 HTML 讓 JSON.parse 炸「Unexpected token 'A'」
+          const ct = r.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            throw new Error(`伺服器回非 JSON (${r.status}) · 可能 timeout, 稍後重試這篇`);
+          }
+          const d = await r.json();
+          if (r.ok && d.posts?.length) {
+            setDrafts((prev) => [...prev, ...d.posts]);
+            setSelected((prev) => {
+              const next = new Set(prev);
+              d.posts.forEach((p) => next.add(p._localId));
+              return next;
+            });
+          } else {
+            setDrafts((prev) => [...prev, {
+              _localId: `err_${Date.now()}_${i}`,
+              _isError: true,
+              _errorMsg: d.error || `HTTP ${r.status}`,
+              _seq: i + 1,
+              topicId, text: '', hashtags: '',
+            }]);
+          }
+        } catch (e) {
+          setDrafts((prev) => [...prev, {
+            _localId: `err_${Date.now()}_${i}`,
+            _isError: true,
+            _errorMsg: e.message,
+            _seq: i + 1,
+            topicId, text: '', hashtags: '',
+          }]);
+        } finally {
+          setProgress((prev) => ({ done: prev.done + 1, total: prev.total }));
+        }
       }
-      const r = await fetch('/api/infuz/topics/produce', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      setDrafts(d.posts || []);
-      setSelected(new Set((d.posts || []).map((p) => p._localId)));
-      // saveBack 成功時, refresh topics 讓 UI 顯示新的 topic 值
-      if (saveBack && overridesChanged) {
+    };
+
+    await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+
+    // saveBack refresh topics
+    if (saveBack && overridesChanged) {
+      try {
         const tRes = await fetch('/api/infuz/topics', { cache: 'no-store' });
         const tData = await tRes.json();
         setTopics(tData.items || []);
+      } catch (_) {}
+    }
+
+    setGenerating(false);
+  }
+
+  async function retryOneDraft(errDraft) {
+    const i = (errDraft._seq || 1) - 1;
+    // 移除 error placeholder
+    setDrafts((prev) => prev.filter((d) => d._localId !== errDraft._localId));
+    try {
+      const body = { topicId, count: 1, startIndex: i };
+      if (overridesChanged) body.overrides = ov;
+      const r = await fetch('/api/infuz/topics/produce', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const ct = r.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) throw new Error(`HTTP ${r.status} · 仍然失敗`);
+      const d = await r.json();
+      if (r.ok && d.posts?.length) {
+        setDrafts((prev) => [...prev, ...d.posts]);
+        setSelected((prev) => { const n = new Set(prev); d.posts.forEach(p => n.add(p._localId)); return n; });
+      } else {
+        setDrafts((prev) => [...prev, { _localId: `err_${Date.now()}_r`, _isError: true, _errorMsg: d.error || `HTTP ${r.status}`, _seq: i + 1, topicId, text: '', hashtags: '' }]);
       }
-    } catch (e) { setError(e.message); }
-    finally { setGenerating(false); }
+    } catch (e) {
+      setDrafts((prev) => [...prev, { _localId: `err_${Date.now()}_r`, _isError: true, _errorMsg: e.message, _seq: i + 1, topicId, text: '', hashtags: '' }]);
+    }
   }
 
   async function deleteTopic() {
@@ -419,10 +495,30 @@ function ProducePageInner() {
         </button>
       </div>
 
+      {/* Progress bar (生成中) */}
+      {generating && progress.total > 0 && (
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="text-zinc-700">生成中 <span className="font-mono tabular-nums text-zinc-950">{progress.done}/{progress.total}</span></span>
+            <span className="text-zinc-500 font-mono tabular-nums">{Math.round((progress.done / progress.total) * 100)}%</span>
+          </div>
+          <div className="h-1 bg-zinc-100 rounded-full overflow-hidden">
+            <div className="h-full bg-zinc-950 transition-all duration-300 motion-reduce:transition-none" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+          </div>
+          <div className="mt-2 text-[10px] text-zinc-500">
+            每篇獨立呼叫 API · {isImage && ov.imageSource === 'ai_generated' ? '3 個並發' : '5 個並發'} · 一好一顯示,不用等全部
+          </div>
+        </div>
+      )}
+
       {drafts.length > 0 && (
-        <div className="card space-y-3">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-stone-800">📝 產出 {drafts.length} 篇 (已選 {selected.size})</h2>
+            <h2 className="text-sm font-semibold text-zinc-950 tracking-tight">
+              產出 <span className="font-mono tabular-nums">{drafts.filter(d => !d._isError).length}</span> 篇
+              {drafts.some(d => d._isError) && <span className="text-red-600 text-xs ml-2">({drafts.filter(d => d._isError).length} 失敗)</span>}
+              <span className="ml-2 text-xs text-zinc-500 font-normal">已選 {selected.size}</span>
+            </h2>
             <div className="flex gap-2 text-xs">
               <button onClick={() => setSelected(new Set(drafts.map((d) => d._localId)))} className="text-stone-600 hover:underline">全選</button>
               <button onClick={() => setSelected(new Set())} className="text-stone-600 hover:underline">全清</button>
@@ -430,19 +526,32 @@ function ProducePageInner() {
           </div>
 
           {drafts.map((d) => (
-            <DraftCard key={d._localId} draft={d}
-              on={selected.has(d._localId)}
-              onToggle={() => {
-                const next = new Set(selected);
-                if (next.has(d._localId)) next.delete(d._localId); else next.add(d._localId);
-                setSelected(next);
-              }}
-              onChange={(patch) => updateDraft(d._localId, patch)}
-              onRemove={() => removeDraft(d._localId)}
-              onRegenImage={() => regenImage(d)}
-              onSaveToAssets={() => saveDraftToAssets(d)}
-              onZoom={(url) => setLightbox(url)}
-            />
+            d._isError ? (
+              <div key={d._localId} className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-red-800">第 {d._seq} 篇失敗</div>
+                  <div className="text-red-700 mt-0.5 break-all">{d._errorMsg}</div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => retryOneDraft(d)} className="text-blue-700 hover:underline whitespace-nowrap">🔄 重試</button>
+                  <button onClick={() => removeDraft(d._localId)} className="text-red-500 hover:underline whitespace-nowrap">移除</button>
+                </div>
+              </div>
+            ) : (
+              <DraftCard key={d._localId} draft={d}
+                on={selected.has(d._localId)}
+                onToggle={() => {
+                  const next = new Set(selected);
+                  if (next.has(d._localId)) next.delete(d._localId); else next.add(d._localId);
+                  setSelected(next);
+                }}
+                onChange={(patch) => updateDraft(d._localId, patch)}
+                onRemove={() => removeDraft(d._localId)}
+                onRegenImage={() => regenImage(d)}
+                onSaveToAssets={() => saveDraftToAssets(d)}
+                onZoom={(url) => setLightbox(url)}
+              />
+            )
           ))}
 
           <div className="flex justify-end border-t border-stone-200 pt-3">

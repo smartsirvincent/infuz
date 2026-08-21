@@ -14,7 +14,7 @@ export const maxDuration = 300;
 
 export async function POST(req) {
   try {
-    const { topicId, count = 3, overrides = {}, saveBack = false } = await req.json();
+    const { topicId, count = 3, overrides = {}, saveBack = false, startIndex = 0 } = await req.json();
     if (!topicId) return NextResponse.json({ error: '缺 topicId' }, { status: 400 });
 
     const topicsDb = await loadDb('topics');
@@ -43,15 +43,15 @@ export async function POST(req) {
     const wantLong = topic.type === 'long';
     const useProductPhoto = wantImages && effective.imageSource === 'product_photo';
 
-    // 產 count 篇 draft — 分批避免同時開太多 concurrent connection (KIE rate limit + Claude)
-    // 文字類型: 每批 20 (無 IO 慢, Claude 3s/篇)
-    // 圖片類型: 每批 5 (KIE 30-60s/篇, 需要控制並發)
+    // 產 count 篇 draft
+    // 新流程: 前端一篇一篇呼(count=1), 每篇獨立 300s 不會撞 timeout, index 從 startIndex 起
+    // 舊流程(count>1): 保留分批處理相容, 文字每批 20/圖片每批 5
     const CHUNK = wantImages && !useProductPhoto ? 5 : 20;
     const results = [];
     for (let i = 0; i < count; i += CHUNK) {
       const chunkSize = Math.min(CHUNK, count - i);
       const chunk = Array.from({ length: chunkSize }, (_, k) => produceOne({
-        topic: effective, boundProducts, index: i + k, wantImages, wantLong, useProductPhoto,
+        topic: effective, boundProducts, index: startIndex + i + k, wantImages, wantLong, useProductPhoto,
       }));
       const chunkResults = await Promise.all(chunk);
       results.push(...chunkResults);
