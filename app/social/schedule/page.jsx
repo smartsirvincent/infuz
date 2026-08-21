@@ -1,6 +1,6 @@
 'use client';
 
-// 排程管理 (主題清單) — card grid, 每張 card 是一個主題摘要, 點進入 detail 看完整貼文
+// 排程管理 (主題清單) · card grid, 每張 card 是一個主題摘要, 點進入 detail 看完整貼文
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -316,14 +316,14 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
         <div>
           <h2 className="text-sm font-semibold text-stone-900">📆 本週排程一覽</h2>
           <div className="text-[11px] text-stone-500 mt-0.5">
-            {activeCount === 0 ? '沒有啟用中的排程 — 到主題編輯頁打開排程,或去 ☀️ 氣候即時 新增' : `${activeCount} 個排程中(含主題+氣候即時)· 週一為首`}
+            {activeCount === 0 ? '沒有啟用中的排程 · 到主題編輯頁打開排程,或去 ☀️ 氣候即時 新增' : `${activeCount} 個排程中(含主題+氣候即時)· 週一為首`}
           </div>
         </div>
       </div>
 
       {slots.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-stone-500">
-          {topics.length === 0 ? '還沒有主題' : '所有主題都停用中 — 進主題頁面點「排程中」開啟'}
+          {topics.length === 0 ? '還沒有主題' : '所有主題都停用中 · 進主題頁面點「排程中」開啟'}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -350,7 +350,7 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
                     return (
                       <td key={d} className={`px-2 py-2 align-top ${d === todayDow ? 'bg-blue-50/40' : ''}`}>
                         <div className="flex flex-col gap-1">
-                          {items.length === 0 && <span className="text-stone-300 text-[10px]">—</span>}
+                          {items.length === 0 && <span className="text-stone-300 text-[10px]">·</span>}
                           {items.map((it) => {
                             const isRt = it.kind === 'realtime';
                             const typeIcon = it.type === 'weather' ? '☀️' : it.type === 'long' ? '📄' : it.type === 'image' ? '🖼️' : '📝';
@@ -538,15 +538,26 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
                   placeholder="Editorial fashion photography, Asian female..."
                   value={editing.imagePrompt || ''} onChange={(e) => setEditing({ ...editing, imagePrompt: e.target.value })} />
               </div>
-              <label className="flex items-center gap-2 text-xs cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
-                <input type="checkbox" checked={!!editing.noFace}
-                  onChange={(e) => setEditing({ ...editing, noFace: e.target.checked })}
-                  className="size-4 rounded border-stone-300" />
-                <div>
-                  <div className="font-semibold text-amber-900">🙈 不露臉</div>
-                  <div className="text-[10px] text-stone-600 mt-0.5">AI 生圖時強制不出現正面臉部(背影/側臉/被頭髮遮住/裁切),適合怕肖像權問題或想聚焦服裝</div>
-                </div>
-              </label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-xs cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
+                  <input type="checkbox" checked={!!editing.noFace}
+                    onChange={(e) => setEditing({ ...editing, noFace: e.target.checked, removeHead: e.target.checked ? false : editing.removeHead })}
+                    className="size-4 rounded border-stone-300" />
+                  <div>
+                    <div className="font-semibold text-amber-900">🙈 不露臉</div>
+                    <div className="text-[10px] text-stone-600 mt-0.5">頭在但看不到臉(背影/側臉/被頭髮遮/裁掉臉)</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer bg-stone-100 border border-stone-300 rounded-lg p-2">
+                  <input type="checkbox" checked={!!editing.removeHead}
+                    onChange={(e) => setEditing({ ...editing, removeHead: e.target.checked, noFace: e.target.checked ? false : editing.noFace })}
+                    className="size-4 rounded border-stone-300" />
+                  <div>
+                    <div className="font-semibold text-stone-900">✂️ 去除頭部</div>
+                    <div className="text-[10px] text-stone-600 mt-0.5">頸部以下,整個頭裁掉,聚焦服裝身型</div>
+                  </div>
+                </label>
+              </div>
             </>
           )}
         </>

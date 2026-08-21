@@ -179,7 +179,7 @@ export default function WeatherPostPage() {
       />
       {!weatherReady && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          ⚠ CWA_API_KEY 環境變數尚未設定 — 到 Vercel 加上這顆 key 才能抓氣象資料。
+          ⚠ CWA_API_KEY 環境變數尚未設定 · 到 Vercel 加上這顆 key 才能抓氣象資料。
         </div>
       )}
 

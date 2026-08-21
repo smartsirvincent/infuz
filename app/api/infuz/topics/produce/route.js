@@ -29,6 +29,7 @@ export async function POST(req) {
       productIds: overrides.productIds !== undefined ? overrides.productIds : topic.productIds,
       imageSource: overrides.imageSource !== undefined ? overrides.imageSource : (topic.imageSource || 'ai_generated'),
       noFace: overrides.noFace !== undefined ? overrides.noFace : Boolean(topic.noFace),
+      removeHead: overrides.removeHead !== undefined ? overrides.removeHead : Boolean(topic.removeHead),
       promoInfo: overrides.promoInfo !== undefined ? overrides.promoInfo : (topic.promoInfo || ''),
     };
 
@@ -42,11 +43,19 @@ export async function POST(req) {
     const wantLong = topic.type === 'long';
     const useProductPhoto = wantImages && effective.imageSource === 'product_photo';
 
-    // 產 count 篇 draft 平行
-    const jobs = Array.from({ length: count }, (_, i) => produceOne({
-      topic: effective, boundProducts, index: i, wantImages, wantLong, useProductPhoto,
-    }));
-    const results = await Promise.all(jobs);
+    // 產 count 篇 draft — 分批避免同時開太多 concurrent connection (KIE rate limit + Claude)
+    // 文字類型: 每批 20 (無 IO 慢, Claude 3s/篇)
+    // 圖片類型: 每批 5 (KIE 30-60s/篇, 需要控制並發)
+    const CHUNK = wantImages && !useProductPhoto ? 5 : 20;
+    const results = [];
+    for (let i = 0; i < count; i += CHUNK) {
+      const chunkSize = Math.min(CHUNK, count - i);
+      const chunk = Array.from({ length: chunkSize }, (_, k) => produceOne({
+        topic: effective, boundProducts, index: i + k, wantImages, wantLong, useProductPhoto,
+      }));
+      const chunkResults = await Promise.all(chunk);
+      results.push(...chunkResults);
+    }
 
     // 若 saveBack, 更新 topic 為 overrides 值
     if (saveBack && Object.keys(overrides).length) {
@@ -108,7 +117,7 @@ ${needAiImagePrompt ? FIDELITY_INSTRUCTION_FOR_CLAUDE : ''}`;
 
 ${needAiImagePrompt ? `【配圖】
 需要生一張 AI 圖。imagePrompt (英文) 要描述: 一位 ${brand.brand} 女性模特兒穿著上面提到的產品${picked ? ` (${picked.name})` : ''}, 場景要呼應主題「${topic.name}」的氛圍。日系冷光、柔和、有空氣感、film grain aesthetic。左上角留白給 logo。不要小孩、不要浮水印。文字/數字絕對不能出現在圖上。
-${topic.noFace ? '⚠ 本次要求不露臉: imagePrompt 必須明確寫 "no face visible / face cropped out / back view / side profile with hair covering face / face turned away from camera",不能出現正面臉部或臉部特寫。' : ''}
+${topic.removeHead ? '⚠ 本次要求「去除頭部」: imagePrompt 必須明確寫 "composition from neck down only, entire head cropped out of frame, torso and body focus, no head visible, no hair visible" — 整個頭部不出現於畫面,構圖從頸部以下開始。' : (topic.noFace ? '⚠ 本次要求不露臉(但保留頭部輪廓): imagePrompt 必須明確寫 "no face visible / face cropped out / back view / side profile with hair covering face / face turned away from camera",不能出現正面臉部或臉部特寫。' : '')}
 ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
 ` : useProductPhoto ? '\n【配圖】會直接用產品原圖, 不用你產 imagePrompt\n' : ''}
 請回傳 JSON:

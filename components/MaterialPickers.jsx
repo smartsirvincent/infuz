@@ -45,6 +45,7 @@ export function ProductPicker({ label, products, value, onChange, lockCategory }
   }, [lockCategory]);
 
   const filtered = products.filter((p) => {
+    if (p.paused) return false; // 暫停產品不顯示
     if (categoryFilter && p.category !== categoryFilter) return false;
     if (genderFilter && p.gender !== genderFilter) return false;
     if (!search) return true;
@@ -146,6 +147,7 @@ export function ProductMultiPicker({ label, products, value = [], onChange, maxI
   }
 
   const filtered = products.filter((p) => {
+    if (p.paused) return false; // 暫停產品不顯示
     if (categoryFilter && p.category !== categoryFilter) return false;
     if (genderFilter && p.gender !== genderFilter) return false;
     if (!search) return true;

@@ -1,6 +1,6 @@
 'use client';
 
-// 主題產文 — 選 topic + 篇數 → Claude 產 N 篇 draft → 每篇編輯/重生圖 → 存入佇列
+// 主題產文 · 選 topic + 篇數 → Claude 產 N 篇 draft → 每篇編輯/重生圖 → 存入佇列
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ function ProducePageInner() {
 
   // 本次覆寫 (只影響這次產文, 可勾 saveBack 存回主題)
   const [showOverrides, setShowOverrides] = useState(false);
-  const [ov, setOv] = useState({ systemPrompt: '', imagePrompt: '', productIds: [], imageSource: 'ai_generated', noFace: false, promoInfo: '' });
+  const [ov, setOv] = useState({ systemPrompt: '', imagePrompt: '', productIds: [], imageSource: 'ai_generated', noFace: false, removeHead: false, promoInfo: '' });
   const [saveBack, setSaveBack] = useState(false);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productFilter, setProductFilter] = useState('');
@@ -55,6 +55,7 @@ function ProducePageInner() {
       productIds: topic.productIds || [],
       imageSource: topic.imageSource || 'ai_generated',
       noFace: Boolean(topic.noFace),
+      removeHead: Boolean(topic.removeHead),
       promoInfo: topic.promoInfo || '',
     });
     setShowOverrides(false);
@@ -67,6 +68,7 @@ function ProducePageInner() {
     JSON.stringify(ov.productIds) !== JSON.stringify(topic.productIds || []) ||
     ov.imageSource !== (topic.imageSource || 'ai_generated') ||
     ov.noFace !== Boolean(topic.noFace) ||
+    ov.removeHead !== Boolean(topic.removeHead) ||
     ov.promoInfo !== (topic.promoInfo || '')
   );
 
@@ -300,15 +302,26 @@ function ProducePageInner() {
                         onChange={(e) => setOv({ ...ov, imagePrompt: e.target.value })}
                       />
                     </div>
-                    <label className="flex items-center gap-2 text-[11px] cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
-                      <input type="checkbox" checked={ov.noFace}
-                        onChange={(e) => setOv({ ...ov, noFace: e.target.checked })}
-                        className="size-3.5 rounded border-stone-300" />
-                      <div>
-                        <div className="font-semibold text-amber-900">🙈 不露臉</div>
-                        <div className="text-[10px] text-stone-600">背影/側臉/被頭髮遮住/裁切,聚焦服裝</div>
-                      </div>
-                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center gap-2 text-[11px] cursor-pointer bg-amber-50/60 border border-amber-200 rounded-lg p-2">
+                        <input type="checkbox" checked={ov.noFace}
+                          onChange={(e) => setOv({ ...ov, noFace: e.target.checked, removeHead: e.target.checked ? false : ov.removeHead })}
+                          className="size-3.5 rounded border-stone-300" />
+                        <div>
+                          <div className="font-semibold text-amber-900">🙈 不露臉</div>
+                          <div className="text-[10px] text-stone-600">頭在,看不到臉</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-2 text-[11px] cursor-pointer bg-stone-100 border border-stone-300 rounded-lg p-2">
+                        <input type="checkbox" checked={ov.removeHead}
+                          onChange={(e) => setOv({ ...ov, removeHead: e.target.checked, noFace: e.target.checked ? false : ov.noFace })}
+                          className="size-3.5 rounded border-stone-300" />
+                        <div>
+                          <div className="font-semibold text-stone-900">✂️ 去除頭部</div>
+                          <div className="text-[10px] text-stone-600">頸部以下</div>
+                        </div>
+                      </label>
+                    </div>
                   </>
                 )}
 
@@ -372,17 +385,24 @@ function ProducePageInner() {
 
         <div>
           <label className="label text-xs">📊 這次產幾篇</label>
-          <div className="flex gap-2 items-center">
-            {[1, 3, 5, 10].map((n) => (
+          <div className="flex gap-2 items-center flex-wrap">
+            {[3, 10, 30, 100].map((n) => (
               <button key={n} type="button" onClick={() => setCount(n)}
-                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium ${count === n ? 'bg-fuchsia-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                className={`flex-1 min-w-[60px] rounded-md px-3 py-2 text-sm font-medium ${count === n ? 'bg-fuchsia-600 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
               >{n} 篇</button>
             ))}
-            <input type="number" min={1} max={20} className="input w-20 text-sm"
-              value={count} onChange={(e) => setCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
+            <input type="number" min={1} max={100} className="input w-20 text-sm"
+              value={count} onChange={(e) => setCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
           </div>
-          {isImage && count > 3 && (
-            <div className="mt-1 text-[10px] text-amber-700">⏳ 圖片類型每篇 30-60s, {count} 篇約 {count * 45}s</div>
+          {isImage && ov.imageSource === 'ai_generated' && count > 10 && (
+            <div className="mt-1 text-[10px] text-amber-700">
+              ⏳ AI 生圖 {count} 篇約需 {Math.ceil(count / 5) * 60}s (backend 每批 5 篇分批處理)。建議 30 篇內為安全範圍
+            </div>
+          )}
+          {(!isImage || ov.imageSource === 'product_photo') && count > 30 && (
+            <div className="mt-1 text-[10px] text-stone-500">
+              ⏱ 文字類型 {count} 篇約需 {Math.ceil(count / 20) * 15}s
+            </div>
           )}
         </div>
 

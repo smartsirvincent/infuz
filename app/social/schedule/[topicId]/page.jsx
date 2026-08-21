@@ -1,6 +1,6 @@
 'use client';
 
-// 單一主題詳情 — 完整 topic 資訊 + 所有貼文(queued/published/failed)完整內容
+// 單一主題詳情 · 完整 topic 資訊 + 所有貼文(queued/published/failed)完整內容
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';

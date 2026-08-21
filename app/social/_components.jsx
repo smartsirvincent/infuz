@@ -1,11 +1,11 @@
-// 社群發文 5 頁共用 UI 元件 — Linear/Vercel Dashboard 風
+// 社群發文 5 頁共用 UI 元件 · Linear/Vercel Dashboard 風
 // 中性色為主 · 精緻陰影 · 明確層級 · subtle hover
 'use client';
 
 import Link from 'next/link';
 
 // ============================================================
-// PageHeader — 每頁頂部
+// PageHeader · 每頁頂部
 // breadcrumbs = [{href, label}, ...]
 // actions = <div>...</div> 右邊按鈕組
 // ============================================================
@@ -52,7 +52,7 @@ export function PageHeader({ icon, title, description, breadcrumbs, actions, ton
 }
 
 // ============================================================
-// StatCard — Header 下方一排統計
+// StatCard · Header 下方一排統計
 // ============================================================
 export function StatCard({ label, value, sub, tone = 'neutral', icon }) {
   const valueColor = {
@@ -76,7 +76,7 @@ export function StatCard({ label, value, sub, tone = 'neutral', icon }) {
 }
 
 // ============================================================
-// EmptyState — 空狀態,大 emoji + heading + CTA
+// EmptyState · 空狀態,大 emoji + heading + CTA
 // ============================================================
 export function EmptyState({ icon = '📭', title, description, action }) {
   return (
@@ -90,7 +90,7 @@ export function EmptyState({ icon = '📭', title, description, action }) {
 }
 
 // ============================================================
-// SectionCard — 內容分區
+// SectionCard · 內容分區
 // ============================================================
 export function SectionCard({ title, description, actions, children, className = '', padding = 'default' }) {
   const p = { default: 'p-4 sm:p-5', tight: 'p-3', lg: 'p-6' }[padding];
@@ -111,7 +111,7 @@ export function SectionCard({ title, description, actions, children, className =
 }
 
 // ============================================================
-// Chip — 標籤/徽章
+// Chip · 標籤/徽章
 // ============================================================
 export function Chip({ children, tone = 'neutral', size = 'sm', className = '' }) {
   const tones = {
@@ -138,7 +138,7 @@ export function Chip({ children, tone = 'neutral', size = 'sm', className = '' }
 }
 
 // ============================================================
-// TabBar — 主題 detail 頁 tabs
+// TabBar · 主題 detail 頁 tabs
 // ============================================================
 export function TabBar({ tabs, value, onChange }) {
   return (
@@ -168,7 +168,7 @@ export function TabBar({ tabs, value, onChange }) {
 }
 
 // ============================================================
-// Button — 統一按鈕
+// Button · 統一按鈕
 // ============================================================
 export function Button({ children, tone = 'primary', size = 'md', disabled, onClick, href, type = 'button', className = '', title }) {
   const tones = {
@@ -192,9 +192,9 @@ export function Button({ children, tone = 'primary', size = 'md', disabled, onCl
 }
 
 // ============================================================
-// HubTile — /social hub 5 卡
+// HubTile · /social hub 5 卡
 // ============================================================
-export function HubTile({ href, icon, title, hint, tone = 'neutral' }) {
+export function HubTile({ href, icon, title, hint, tone = 'neutral', className = '' }) {
   const toneMap = {
     blue: { bg: 'bg-blue-50', text: 'text-blue-700', hover: 'hover:border-blue-300' },
     purple: { bg: 'bg-purple-50', text: 'text-purple-700', hover: 'hover:border-purple-300' },
@@ -205,7 +205,7 @@ export function HubTile({ href, icon, title, hint, tone = 'neutral' }) {
   const t = toneMap[tone] || toneMap.blue;
   return (
     <Link href={href}
-      className={`group block rounded-2xl border border-stone-200 bg-white p-5 transition ${t.hover} hover:shadow-md hover:-translate-y-0.5`}
+      className={`group flex flex-col rounded-2xl border border-stone-200 bg-white p-5 transition ${t.hover} hover:shadow-md hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${className}`}
     >
       <div className={`flex size-11 items-center justify-center rounded-xl ${t.bg} text-2xl mb-3`}>{icon}</div>
       <h2 className={`text-base font-semibold text-stone-900 group-hover:${t.text} transition`}>{title}</h2>

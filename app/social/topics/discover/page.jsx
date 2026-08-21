@@ -1,6 +1,6 @@
 'use client';
 
-// 主題發想 — 描述方向 + 選產品 → Claude 建議 10 個主題 → 勾選加入
+// 主題發想 · 描述方向 + 選產品 → Claude 建議 10 個主題 → 勾選加入
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

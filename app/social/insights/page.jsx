@@ -1,6 +1,6 @@
 'use client';
 
-// 發文成效 — 分平台 (Threads/IG/FB) + 按主題篩選
+// 發文成效 · 分平台 (Threads/IG/FB) + 按主題篩選
 // MVP: 顯示發文狀態 + 平台圖示 + permalink · 深指標之後補
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
