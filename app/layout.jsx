@@ -12,18 +12,18 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Montserrat:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-zinc-50 text-zinc-950 antialiased">
-        <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/85 backdrop-blur-md">
+      <body className="min-h-screen bg-bone text-ink antialiased font-sans">
+        <header className="sticky top-0 z-30 border-b border-divider bg-bone/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-            <a href="/" className="group flex items-baseline gap-2 hover:opacity-90 transition motion-reduce:transition-none">
-              <span className="font-serif text-xl font-semibold text-zinc-950 tracking-tight">Infuz</span>
-              <span className="hidden text-[10px] font-mono uppercase tracking-widest text-zinc-500 sm:inline">Content OS</span>
+            <a href="/" className="group flex items-baseline gap-2.5 hover:opacity-90 transition motion-reduce:transition-none">
+              <span className="font-display text-2xl font-medium text-ink tracking-tight leading-none">Infuz</span>
+              <span className="hidden text-[10px] font-mono uppercase tracking-[0.15em] text-muted sm:inline">Content OS</span>
             </a>
-            <nav className="flex flex-wrap items-center gap-1 text-sm sm:gap-2">
+            <nav className="flex flex-wrap items-center gap-4 text-sm">
               <NavLink href="/products" label="產品" />
               <NavLink href="/models" label="模特" />
               <NavLink href="/scenarios" label="情境" />
@@ -44,12 +44,12 @@ export default function RootLayout({ children }) {
 
 function NavLink({ href, label, primary }) {
   const cls = primary
-    ? 'text-zinc-950 font-medium hover:text-brand-600'
-    : 'text-zinc-500 hover:text-zinc-950';
+    ? 'text-ink font-medium underline underline-offset-[6px] decoration-gold decoration-2'
+    : 'text-muted hover:text-ink';
   return (
     <a
       href={href}
-      className={`rounded-md px-2.5 py-1.5 text-sm transition sm:px-3 motion-reduce:transition-none ${cls}`}
+      className={`text-sm transition duration-200 motion-reduce:transition-none ${cls}`}
     >
       {label}
     </a>
