@@ -1,13 +1,33 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HubTile, PageHeader } from './_components.jsx';
 import { BRAND_HERO, BRAND_DIVIDER } from './_brand-assets.js';
 
-// Editorial hub · serial 編號 + 大字, 排程/發想主, 產文/成效/氣候次
-// 拒絕 three-equal-column feature cards (taste-skill 明文禁)
+// Product-forward hub · Hero band + 5 卡 + Latest work grid (真產品照從 assets DB 抓)
 export default function SocialHub() {
+  const [assets, setAssets] = useState([]);
+  const [loadingAssets, setLoadingAssets] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/infuz/assets', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        const withImage = (d.items || [])
+          .filter((a) => a.imageUrl)
+          .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        setAssets(withImage);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingAssets(false));
+  }, []);
+
+  const latest = assets.slice(0, 8);
+
   return (
-    <main className="space-y-10 pb-12 max-w-6xl mx-auto">
-      {/* Hero band · Brand atmosphere image + 大字 title */}
+    <main className="space-y-12 pb-16 max-w-6xl mx-auto">
+      {/* Hero band · Brand atmosphere */}
       {BRAND_HERO ? (
         <section className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-100 aspect-[21/9] sm:aspect-[24/9]">
           <img src={BRAND_HERO} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -23,38 +43,68 @@ export default function SocialHub() {
           </div>
         </section>
       ) : (
-        <PageHeader
-          eyebrow="Content Ops"
-          title="社群發文"
-          description="從主題發想到排程發文的完整工作流。品牌設定在素材,產品清單在產品頁,發文帳號在系統設定。"
-        />
+        <PageHeader eyebrow="Content Ops" title="社群發文" description="完整內容工作流" />
       )}
 
-      {/* Asymmetric bento · 排程/發想為大卡, 其餘三個為次 */}
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <HubTile href="/social/schedule" index="01" size="lg" className="lg:col-span-3 lg:row-span-2"
-          title="排程管理"
-          hint="所有主題清單 + 週歷儀表板 + 排程時間與平台。點卡片進入看待發佇列與已發歷史,或直接在 card 上編輯時間。" />
-        <HubTile href="/social/topics/discover" index="02" size="lg" className="lg:col-span-3"
-          title="主題發想"
-          hint="描述方向 · AI 建議主題卡片 · 勾選加入清單。系統自動避開已有主題,每次可指定產出數量。" />
-        <HubTile href="/social/produce" index="03" className="lg:col-span-2"
-          title="主題產文"
-          hint="選主題與篇數,AI 產文,逐篇編輯後入佇列。" />
-        <HubTile href="/social/insights" index="04" className="lg:col-span-2"
-          title="發文成效"
-          hint="Threads / Instagram / Facebook 分開查看,依主題與日期篩選。" />
-        <HubTile href="/social/weather-post" index="05" className="lg:col-span-2"
-          title="氣候即時預約"
-          hint="接中央氣象署即時預報,條件觸發(下雨 / 寒流 / 酷熱)自動發。" />
-      </section>
+      {/* Latest work · 真產品/模特圖 gallery */}
+      {(loadingAssets || latest.length > 0) && (
+        <section>
+          <div className="flex items-end justify-between gap-4 mb-4">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Latest work</div>
+              <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-zinc-950 tracking-tight mt-0.5">最新產出</h2>
+            </div>
+            <Link href="/assets" className="text-xs text-zinc-500 hover:text-zinc-950 transition motion-reduce:transition-none">
+              前往素材庫 →
+            </Link>
+          </div>
+          {loadingAssets ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[0,1,2,3,4,5,6,7].map((i) => (
+                <div key={i} className="skeleton aspect-[4/5] rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {latest.map((a) => (
+                <AssetTile key={a.id} asset={a} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      {/* 品牌氛圍 divider band */}
+      {/* Divider band */}
       {BRAND_DIVIDER && (
         <div className="rounded-2xl overflow-hidden border border-zinc-200 aspect-[21/3] bg-zinc-100">
           <img src={BRAND_DIVIDER} alt="" className="w-full h-full object-cover" />
         </div>
       )}
+
+      {/* Hub tiles · Asymmetric bento */}
+      <section>
+        <div className="mb-4">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">Modules</div>
+          <h2 className="font-editorial text-xl sm:text-2xl font-semibold text-zinc-950 tracking-tight mt-0.5">五個入口</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <HubTile href="/social/schedule" index="01" size="lg" className="lg:col-span-3 lg:row-span-2"
+            title="排程管理"
+            hint="所有主題清單 + 週歷儀表板 + 排程時間與平台。點卡片進入看待發佇列與已發歷史,或直接在 card 上編輯時間。" />
+          <HubTile href="/social/topics/discover" index="02" size="lg" className="lg:col-span-3"
+            title="主題發想"
+            hint="描述方向 · AI 建議主題卡片 · 勾選加入清單。系統自動避開已有主題,每次可指定產出數量。" />
+          <HubTile href="/social/produce" index="03" className="lg:col-span-2"
+            title="主題產文"
+            hint="選主題與篇數,AI 產文,逐篇編輯後入佇列。" />
+          <HubTile href="/social/insights" index="04" className="lg:col-span-2"
+            title="發文成效"
+            hint="Threads / Instagram / Facebook 分開查看,依主題與日期篩選。" />
+          <HubTile href="/social/weather-post" index="05" className="lg:col-span-2"
+            title="氣候即時預約"
+            hint="接中央氣象署即時預報,條件觸發(下雨 / 寒流 / 酷熱)自動發。" />
+        </div>
+      </section>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6">
@@ -85,5 +135,34 @@ export default function SocialHub() {
         </div>
       </section>
     </main>
+  );
+}
+
+function AssetTile({ asset }) {
+  const productName = asset.products?.[0]?.name || '';
+  const scenarioName = asset.scenarioName || '';
+  return (
+    <Link
+      href="/assets"
+      className="group relative block overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 aspect-[4/5] transition motion-reduce:transition-none hover:border-zinc-900"
+      title={productName || scenarioName}
+    >
+      <img
+        src={asset.imageUrl}
+        alt={productName || ''}
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
+      />
+      {(productName || scenarioName) && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 opacity-0 group-hover:opacity-100 transition motion-reduce:transition-none">
+          {productName && (
+            <div className="text-[11px] font-medium text-white truncate leading-tight">{productName}</div>
+          )}
+          {scenarioName && (
+            <div className="text-[9px] font-mono uppercase tracking-widest text-white/70 mt-0.5">{scenarioName}</div>
+          )}
+        </div>
+      )}
+    </Link>
   );
 }
