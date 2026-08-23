@@ -160,7 +160,25 @@ export default function InsightsPage() {
           </div>
         )}
         {filtered.map((p) => (
-          <PostRow key={p.id} post={p} onZoom={(url) => setLightbox(url)} />
+          <PostRow key={p.id} post={p} onZoom={(url) => setLightbox(url)}
+            onRefresh={async () => {
+              if (p.source !== 'topic') { alert('氣候即時發文暫不支援深指標'); return; }
+              const r = await fetch('/api/infuz/insights/refresh', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ postId: p.id }),
+              });
+              const d = await r.json();
+              if (!r.ok) return alert('刷新失敗:' + d.error);
+              // reload data
+              const fresh = await fetch('/api/infuz/insights', { cache: 'no-store' }).then((r) => r.json());
+              setData(fresh);
+              if (d.errors) {
+                const msg = Object.entries(d.errors).map(([k, v]) => `${k}: ${v}`).join('\n');
+                alert('部分平台失敗:\n' + msg);
+              }
+            }}
+          />
         ))}
       </div>
 
@@ -173,9 +191,18 @@ export default function InsightsPage() {
   );
 }
 
-function PostRow({ post, onZoom }) {
+function PostRow({ post, onZoom, onRefresh }) {
+  const [refreshing, setRefreshing] = useState(false);
+  const insights = post.insightsByPlatform || {};
+  const hasAnyInsights = Object.keys(insights).length > 0;
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try { await onRefresh(); } finally { setRefreshing(false); }
+  }
+
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-3">
+    <div className="rounded-lg border border-divider bg-white p-4">
       <div className="flex items-start gap-3">
         {post.imageUrl && (
           <button onClick={() => onZoom(post.imageUrl)} className="shrink-0">
@@ -183,16 +210,28 @@ function PostRow({ post, onZoom }) {
           </button>
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] rounded bg-stone-100 px-1.5 py-0.5 text-stone-600 truncate max-w-[200px]">
-              {post.topicName || '(未分類)'}
-            </span>
-            <span className="text-[10px] text-stone-500">
-              {new Date(post.publishedAt).toLocaleString('zh-TW')}
-            </span>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="text-[10px] rounded bg-linen px-1.5 py-0.5 text-muted truncate max-w-[200px]">
+                {post.topicName || '(未分類)'}
+              </span>
+              <span className="text-[10px] font-mono tabular-nums text-muted">
+                {new Date(post.publishedAt).toLocaleString('zh-TW')}
+              </span>
+            </div>
+            {post.source === 'topic' && (
+              <button onClick={handleRefresh} disabled={refreshing}
+                className="text-[11px] text-muted hover:text-ink disabled:opacity-50 shrink-0"
+                title="從 Meta / Threads Graph 抓最新成效"
+              >
+                {refreshing ? '刷新中…' : hasAnyInsights ? '🔄 更新指標' : '📊 讀取指標'}
+              </button>
+            )}
           </div>
-          <pre className="mt-1 whitespace-pre-wrap text-xs text-stone-800 font-sans line-clamp-3">{post.text}</pre>
+          <pre className="mt-2 whitespace-pre-wrap text-xs text-ink font-sans line-clamp-3">{post.text}</pre>
           {post.hashtags && <div className="mt-0.5 text-[10px] text-emerald-700 line-clamp-1">{post.hashtags}</div>}
+
+          {/* 平台徽章 (published + permalink) */}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {Object.entries(post.results || {}).map(([k, r]) => {
               const meta = PLATFORM_META[k];
@@ -217,8 +256,41 @@ function PostRow({ post, onZoom }) {
               );
             })}
           </div>
+
+          {/* 深指標 (若有) */}
+          {hasAnyInsights && (
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {insights.threads && <InsightsBlock label="🧵 Threads" data={insights.threads} keys={['views', 'likes', 'replies', 'reposts']} />}
+              {insights.instagram && <InsightsBlock label="📷 IG" data={insights.instagram} keys={['impressions', 'reach', 'likes', 'comments', 'saved']} />}
+              {insights.facebook && <InsightsBlock label="👍 FB" data={insights.facebook} keys={['impressions', 'reach', 'reactions', 'clicks']} />}
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function InsightsBlock({ label, data, keys }) {
+  const labelMap = {
+    views: '瀏覽', impressions: '曝光', reach: '觸及',
+    likes: '讚', comments: '留言', replies: '回覆', reposts: '轉發',
+    saved: '收藏', reactions: '互動', clicks: '點擊',
+  };
+  return (
+    <div className="rounded-md border border-divider bg-linen/40 p-2">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-muted mb-1.5">{label}</div>
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+        {keys.map((k) => (
+          data[k] != null && (
+            <div key={k} className="flex items-baseline justify-between text-[11px]">
+              <span className="text-muted">{labelMap[k] || k}</span>
+              <span className="font-mono tabular-nums font-medium text-ink">{data[k].toLocaleString?.() ?? data[k]}</span>
+            </div>
+          )
+        ))}
+      </div>
+      {data.fetchedAt && <div className="mt-1 text-[9px] font-mono text-muted">{new Date(data.fetchedAt).toLocaleString('zh-TW')}</div>}
     </div>
   );
 }

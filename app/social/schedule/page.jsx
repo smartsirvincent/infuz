@@ -444,17 +444,19 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onD
   const boundProducts = (topic.productIds || []).map((id) => products.find((p) => p.id === id)).filter(Boolean);
 
   const typeInfo = {
-    text: { icon: '📝', label: '文字', tone: 'neutral' },
-    long: { icon: '📄', label: '長文', tone: 'emerald' },
-    image: { icon: '🖼️', label: '圖片', tone: 'accent' },
-  }[topic.type] || { icon: '·', label: topic.type, tone: 'neutral' };
+    text:  { icon: '📝', label: '文字', tone: 'neutral', stripe: 'bg-zinc-400' },
+    long:  { icon: '📄', label: '長文', tone: 'emerald', stripe: 'bg-emerald-500' },
+    image: { icon: '🖼️', label: '圖片', tone: 'accent',  stripe: 'bg-gold' },
+  }[topic.type] || { icon: '·', label: topic.type, tone: 'neutral', stripe: 'bg-zinc-300' };
 
   // 檢查是否會帶購買連結: topic.includePurchaseUrl 且至少 1 件綁定產品有 purchase_url
   const willIncludeLink = !!(topic.includePurchaseUrl && boundProducts.some((p) => p?.purchase_url));
 
   return (
     <Link href={`/social/schedule/${topic.id}`}
-      className={`group relative rounded-2xl border p-5 space-y-4 transition motion-reduce:transition-none hover:border-zinc-900 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.08)] ${scheduledEnabled ? 'border-zinc-200 bg-white' : 'border-zinc-200 bg-zinc-50/60 opacity-70'}`}>
+      className={`group relative overflow-hidden rounded-2xl border p-5 pl-6 space-y-4 transition motion-reduce:transition-none hover:border-zinc-900 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.08)] ${scheduledEnabled ? 'border-zinc-200 bg-white' : 'border-zinc-200 bg-zinc-50/60 opacity-70'}`}>
+      {/* 左側類型色塊 stripe · 跟週歷同色系 */}
+      <span className={`absolute inset-y-0 left-0 w-1.5 ${typeInfo.stripe}`} aria-hidden="true" />
       {/* 刪除按鈕 (hover 才顯示,右上角) */}
       <button onClick={onDelete}
         className="absolute top-3 right-3 z-10 rounded-full bg-white/95 border border-zinc-200 text-zinc-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 size-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all motion-reduce:transition-none"
