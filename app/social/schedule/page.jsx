@@ -390,30 +390,31 @@ function WeeklyCalendar({ topics, realtimeJobs = [], products = [] }) {
                         <div className="flex flex-col gap-1">
                           {items.length === 0 && <span className="text-zinc-300 text-[10px]">·</span>}
                           {items.map((it) => {
-                            const isRt = it.kind === 'realtime';
                             const typeInfo = {
-                              weather: { icon: '☀', label: '氣候' },
-                              long: { icon: '📄', label: '長文' },
-                              image: { icon: '🖼', label: '圖片' },
-                              text: { icon: '📝', label: '文字' },
-                            }[it.type] || { icon: '·', label: '' };
-                            const platformCode = Object.entries(it.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'TH', instagram: 'IG', facebook: 'FB' })[k]).join(' ');
-                            const titleParts = [it.name, typeInfo.label, it.hasLink ? '帶連結' : '', platformCode].filter(Boolean);
+                              weather: { label: '氣候', stripe: 'bg-sky-500',    chip: 'bg-sky-50 text-sky-700 border-sky-200' },
+                              long:    { label: '長文', stripe: 'bg-emerald-500', chip: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                              image:   { label: '圖片', stripe: 'bg-gold',        chip: 'bg-gold-soft text-gold border-gold/40' },
+                              text:    { label: '文字', stripe: 'bg-zinc-400',    chip: 'bg-zinc-100 text-zinc-700 border-zinc-200' },
+                            }[it.type] || { label: '', stripe: 'bg-zinc-300', chip: 'bg-zinc-50 text-zinc-500 border-zinc-200' };
+                            const titleParts = [it.name, typeInfo.label, it.hasLink ? '帶連結' : ''].filter(Boolean);
                             return (
                               <Link key={it.id} href={it.href}
-                                className={`group rounded-md border px-2 py-1.5 transition text-left motion-reduce:transition-none ${isRt ? 'border-zinc-300 bg-zinc-50 hover:border-zinc-900 hover:bg-white' : 'border-zinc-200 bg-white hover:border-zinc-900'}`}
+                                className="group flex items-stretch gap-0 rounded-md border border-zinc-200 bg-white overflow-hidden hover:border-zinc-900 transition motion-reduce:transition-none"
                                 title={titleParts.join(' · ')}
                               >
-                                <div className={`text-[11px] font-medium truncate ${isRt ? 'text-zinc-700 group-hover:text-zinc-950' : 'text-zinc-900 group-hover:text-zinc-950'}`}>{it.name}</div>
-                                <div className="mt-0.5 flex items-center gap-1.5 text-[9px] font-mono">
-                                  <span className="inline-flex items-center gap-0.5 text-zinc-600">
-                                    <span className="text-[10px]">{typeInfo.icon}</span>
-                                    <span>{typeInfo.label}</span>
-                                  </span>
-                                  {it.hasLink && (
-                                    <span className="text-emerald-700" title="帶購買連結">🔗</span>
-                                  )}
-                                  {platformCode && <span className="text-zinc-400 tracking-wider">{platformCode}</span>}
+                                <span className={`w-1 shrink-0 ${typeInfo.stripe}`} aria-hidden="true" />
+                                <div className="min-w-0 flex-1 px-2 py-1.5">
+                                  <div className="text-[11px] font-medium truncate text-zinc-900 group-hover:text-zinc-950">{it.name}</div>
+                                  <div className="mt-1 flex items-center gap-1">
+                                    <span className={`inline-flex items-center rounded px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider border ${typeInfo.chip}`}>
+                                      {typeInfo.label}
+                                    </span>
+                                    {it.hasLink && (
+                                      <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider border bg-emerald-50 text-emerald-700 border-emerald-200" title="帶購買連結">
+                                        link
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </Link>
                             );
