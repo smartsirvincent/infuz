@@ -1,7 +1,7 @@
 'use client';
 
 // 排程管理 (主題清單) · card grid, 每張 card 是一個主題摘要, 點進入 detail 看完整貼文
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PageHeader, StatCard, EmptyState, Chip, Button, SkeletonCard, Skeleton } from '../_components.jsx';
@@ -24,15 +24,22 @@ function SchedulePageInner() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // ref 追蹤「剛存過就別再開」 (避免 saveTopic 完 setEditing(null) 但 URL 還沒清時 useEffect 重開)
+  const justSavedRef = useRef(null);
+
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
     // ?edit=xxx 從 detail 頁跳回時自動開編輯
-    if (editParamId && topics.length && !editing) {
-      const t = topics.find((x) => x.id === editParamId);
-      if (t) setEditing(t);
+    // 依賴只用 editParamId + topics.length: setEditing(null) 不會觸發此 effect 重跑
+    if (!editParamId || topics.length === 0) return;
+    if (justSavedRef.current === editParamId) {
+      justSavedRef.current = null; // 一次性保護
+      return;
     }
-  }, [editParamId, topics, editing]);
+    const t = topics.find((x) => x.id === editParamId);
+    if (t) setEditing(t);
+  }, [editParamId, topics.length]);
 
   async function load() {
     setLoading(true);
@@ -92,18 +99,28 @@ function SchedulePageInner() {
         });
         if (!r.ok) throw new Error((await r.json()).error);
       } else {
+        // 排除 UI-only key (_isNew 之類的) 才 PATCH
+        const { _isNew, ...body } = editing;
         const r = await fetch(`${url}?id=${encodeURIComponent(editing.id)}`, {
           method: 'PATCH',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ...editing, updatedAt: new Date().toISOString() }),
+          body: JSON.stringify({ ...body, updatedAt: new Date().toISOString() }),
         });
         if (!r.ok) throw new Error((await r.json()).error);
       }
-      setEditing(null);
-      if (editParamId) router.replace('/social/schedule');
+      closeEditor(); // 統一 close (含清 URL param + ref 標記防 useEffect 重開)
       await load();
     } catch (e) { setError('儲存失敗:' + e.message); }
     finally { setSaving(false); }
+  }
+
+  // 統一 close: 存/取消/× 都走這個, 一律清 URL + 標記 ref 防 useEffect 重開
+  function closeEditor() {
+    if (editParamId) {
+      justSavedRef.current = editParamId;
+      router.replace('/social/schedule');
+    }
+    setEditing(null);
   }
 
   async function toggleSchedule(topic, e) {
@@ -247,14 +264,14 @@ function SchedulePageInner() {
               <h3 className="text-lg font-semibold text-stone-900">
                 {editing._isNew ? '➕ 新增主題' : '✏️ 編輯主題'}
               </h3>
-              <button onClick={() => { setEditing(null); if (editParamId) router.replace('/social/schedule'); }}
+              <button onClick={closeEditor}
                 className="text-stone-400 hover:text-stone-700">✕</button>
             </div>
             <TopicEditor editing={editing} setEditing={setEditing} products={products}
               canThreads={canThreads} canIg={canIg} canFb={canFb} />
             {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">⚠ {error}</div>}
             <div className="flex justify-end gap-2 border-t border-stone-200 pt-3">
-              <button onClick={() => { setEditing(null); if (editParamId) router.replace('/social/schedule'); }}
+              <button onClick={closeEditor}
                 className="rounded-md border border-stone-300 px-4 py-1.5 text-sm">取消</button>
               <button onClick={saveTopic} disabled={saving}
                 className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-50">
