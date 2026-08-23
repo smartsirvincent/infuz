@@ -133,6 +133,8 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
     maxTokens: wantLong ? 3000 : 2000,
     temperature: 0.85,
     endpoint: 'topic-produce',
+    // 長文用 haiku 省 3x cost, 短文/圖片保持 sonnet 保質感
+    model: wantLong ? 'claude-haiku-4-5' : undefined,
   });
 
   let imageUrl = null;
