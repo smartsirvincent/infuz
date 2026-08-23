@@ -220,7 +220,7 @@ function SchedulePageInner() {
       </section>
 
       {/* 週歷儀表板 */}
-      <WeeklyCalendar topics={topics} realtimeJobs={realtimeJobs} />
+      <WeeklyCalendar topics={topics} realtimeJobs={realtimeJobs} products={products} />
 
       {/* 搜尋列 */}
       <div className="relative">
@@ -296,15 +296,14 @@ function StatBox({ label, value, sub, color }) {
   );
 }
 
-function WeeklyCalendar({ topics, realtimeJobs = [] }) {
+function WeeklyCalendar({ topics, realtimeJobs = [], products = [] }) {
   const dayOrder = [1, 2, 3, 4, 5, 6, 0];
   const dayLabels = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
 
   const taipeiNow = new Date(Date.now() + 8 * 3600 * 1000);
   const todayDow = taipeiNow.getUTCDay();
 
-  // 收集所有 (item, day, time) 兩種 source: topics + realtime_jobs
-  const bySlot = {}; // { time: { day: [items] } }
+  const bySlot = {};
   const addToSlot = (time, days, item) => {
     if (!bySlot[time]) bySlot[time] = {};
     for (const d of days) {
@@ -316,11 +315,15 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
   for (const t of topics) {
     if (!t.schedule?.enabled || !t.schedule?.time) continue;
     const days = (t.schedule.days || []).length ? t.schedule.days : [0, 1, 2, 3, 4, 5, 6];
+    // 是否會帶連結: topic.includePurchaseUrl && 綁定產品至少 1 件有 purchase_url
+    const boundHasLink = (t.productIds || []).some((id) => products.find((p) => p.id === id)?.purchase_url);
+    const hasLink = !!(t.includePurchaseUrl && boundHasLink);
     addToSlot(t.schedule.time, days, {
       kind: 'topic',
       id: t.id,
       name: t.name,
       type: t.type,
+      hasLink,
       platforms: t.schedule.platforms,
       href: `/social/schedule/${t.id}`,
     });
@@ -334,6 +337,7 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
       id: j.id,
       name: j.name || '氣候即時',
       type: 'weather',
+      hasLink: false,
       platforms: j.platforms,
       href: `/social/weather-post`,
     });
@@ -387,16 +391,30 @@ function WeeklyCalendar({ topics, realtimeJobs = [] }) {
                           {items.length === 0 && <span className="text-zinc-300 text-[10px]">·</span>}
                           {items.map((it) => {
                             const isRt = it.kind === 'realtime';
+                            const typeInfo = {
+                              weather: { icon: '☀', label: '氣候' },
+                              long: { icon: '📄', label: '長文' },
+                              image: { icon: '🖼', label: '圖片' },
+                              text: { icon: '📝', label: '文字' },
+                            }[it.type] || { icon: '·', label: '' };
                             const platformCode = Object.entries(it.platforms || {}).filter(([_, v]) => v).map(([k]) => ({ threads: 'TH', instagram: 'IG', facebook: 'FB' })[k]).join(' ');
+                            const titleParts = [it.name, typeInfo.label, it.hasLink ? '帶連結' : '', platformCode].filter(Boolean);
                             return (
                               <Link key={it.id} href={it.href}
                                 className={`group rounded-md border px-2 py-1.5 transition text-left motion-reduce:transition-none ${isRt ? 'border-zinc-300 bg-zinc-50 hover:border-zinc-900 hover:bg-white' : 'border-zinc-200 bg-white hover:border-zinc-900'}`}
-                                title={it.name + (isRt ? ' (氣候即時)' : '')}
+                                title={titleParts.join(' · ')}
                               >
                                 <div className={`text-[11px] font-medium truncate ${isRt ? 'text-zinc-700 group-hover:text-zinc-950' : 'text-zinc-900 group-hover:text-zinc-950'}`}>{it.name}</div>
-                                {platformCode && (
-                                  <div className="text-[9px] font-mono tracking-wider text-zinc-400 mt-0.5">{platformCode}</div>
-                                )}
+                                <div className="mt-0.5 flex items-center gap-1.5 text-[9px] font-mono">
+                                  <span className="inline-flex items-center gap-0.5 text-zinc-600">
+                                    <span className="text-[10px]">{typeInfo.icon}</span>
+                                    <span>{typeInfo.label}</span>
+                                  </span>
+                                  {it.hasLink && (
+                                    <span className="text-emerald-700" title="帶購買連結">🔗</span>
+                                  )}
+                                  {platformCode && <span className="text-zinc-400 tracking-wider">{platformCode}</span>}
+                                </div>
                               </Link>
                             );
                           })}
