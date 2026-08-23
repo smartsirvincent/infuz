@@ -17,8 +17,25 @@ export default function InsightsPage() {
   const [loading, setLoading] = useState(true);
   const [platformFilter, setPlatformFilter] = useState('all');
   const [topicFilter, setTopicFilter] = useState('all');
-  const [dateRange, setDateRange] = useState('30d');
+  const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all' | 'custom'
+  const [fromDate, setFromDate] = useState(''); // YYYY-MM-DD
+  const [toDate, setToDate] = useState('');
   const [lightbox, setLightbox] = useState(null);
+
+  // 快捷 preset 按鈕: 選了就自動填 from/to
+  function applyPreset(preset) {
+    setDateRange(preset);
+    const today = new Date();
+    const to = today.toISOString().slice(0, 10);
+    if (preset === 'all') {
+      setFromDate(''); setToDate('');
+      return;
+    }
+    const days = Number(preset.replace('d', ''));
+    const from = new Date(today.getTime() - days * 86400000).toISOString().slice(0, 10);
+    setFromDate(from);
+    setToDate(to);
+  }
 
   useEffect(() => {
     fetch('/api/infuz/insights', { cache: 'no-store' })
@@ -30,14 +47,21 @@ export default function InsightsPage() {
 
   const filtered = useMemo(() => {
     if (!data?.posts) return [];
-    const cutoffMs = dateRange === 'all' ? 0 : Date.now() - Number(dateRange.replace('d', '')) * 86400000;
+    // 有 from/to 就用 range; from 到 to 各給日界 (00:00 / 23:59:59)
+    const fromMs = fromDate ? new Date(fromDate + 'T00:00:00').getTime() : 0;
+    const toMs = toDate ? new Date(toDate + 'T23:59:59.999').getTime() : Infinity;
     return data.posts.filter((p) => {
-      if (cutoffMs && new Date(p.publishedAt).getTime() < cutoffMs) return false;
+      const pubMs = p.publishedAt ? new Date(p.publishedAt).getTime() : 0;
+      if (fromMs && pubMs < fromMs) return false;
+      if (toMs !== Infinity && pubMs > toMs) return false;
       if (topicFilter !== 'all' && p.topicName !== topicFilter) return false;
       if (platformFilter !== 'all' && !p.results?.[platformFilter]?.ok) return false;
       return true;
     });
-  }, [data, platformFilter, topicFilter, dateRange]);
+  }, [data, platformFilter, topicFilter, fromDate, toDate]);
+
+  // 初始載入時套用預設 30d 讓 from/to 有值
+  useEffect(() => { if (data && !fromDate && !toDate) applyPreset('30d'); }, [data]);
 
   if (loading) return <main className="card">載入中…</main>;
   if (!data) return <main className="card">無法載入</main>;
@@ -61,8 +85,8 @@ export default function InsightsPage() {
       </section>
 
       {/* Filters */}
-      <div className="card space-y-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="rounded-2xl border border-divider bg-white p-5 space-y-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="label text-xs">平台</label>
             <select className="input text-sm" value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)}>
@@ -81,17 +105,51 @@ export default function InsightsPage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="label text-xs">時間</label>
-            <select className="input text-sm" value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
-              <option value="7d">近 7 天</option>
-              <option value="30d">近 30 天</option>
-              <option value="90d">近 90 天</option>
-              <option value="all">全部</option>
-            </select>
+        </div>
+
+        {/* Date range · from/to + preset 快捷 */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="label !mb-0 text-xs">日期範圍</label>
+            <div className="flex gap-1">
+              {[
+                { key: '7d', label: '近 7 天' },
+                { key: '30d', label: '近 30 天' },
+                { key: '90d', label: '近 90 天' },
+                { key: 'all', label: '全部' },
+              ].map((p) => (
+                <button key={p.key} type="button" onClick={() => applyPreset(p.key)}
+                  className="text-[10px] px-2 py-0.5 rounded border border-divider text-muted hover:border-ink hover:text-ink transition motion-reduce:transition-none"
+                >{p.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-muted mb-1">From</div>
+              <input type="date" className="input text-sm" value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setDateRange('custom'); }}
+                max={toDate || undefined}
+              />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-muted mb-1">To</div>
+              <input type="date" className="input text-sm" value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setDateRange('custom'); }}
+                min={fromDate || undefined}
+              />
+            </div>
           </div>
         </div>
-        <div className="text-[11px] text-stone-500">符合條件:{filtered.length} 篇</div>
+
+        <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-divider">
+          <span>符合條件 · <span className="font-mono tabular-nums text-ink font-medium">{filtered.length}</span> 篇</span>
+          {(fromDate || toDate) && (
+            <button onClick={() => { setFromDate(''); setToDate(''); setDateRange('all'); }}
+              className="text-xs text-muted hover:text-ink underline underline-offset-2"
+            >清除日期</button>
+          )}
+        </div>
       </div>
 
       {/* Posts list */}

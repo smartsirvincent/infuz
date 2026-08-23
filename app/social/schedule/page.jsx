@@ -425,10 +425,13 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onD
   const boundProducts = (topic.productIds || []).map((id) => products.find((p) => p.id === id)).filter(Boolean);
 
   const typeInfo = {
-    text: { label: '📝 文字', tone: 'blue' },
-    long: { label: '📄 長文', tone: 'emerald' },
-    image: { label: '🖼️ 圖片', tone: 'purple' },
-  }[topic.type] || { label: topic.type, tone: 'neutral' };
+    text: { icon: '📝', label: '文字', tone: 'neutral' },
+    long: { icon: '📄', label: '長文', tone: 'emerald' },
+    image: { icon: '🖼️', label: '圖片', tone: 'accent' },
+  }[topic.type] || { icon: '·', label: topic.type, tone: 'neutral' };
+
+  // 檢查是否會帶購買連結: topic.includePurchaseUrl 且至少 1 件綁定產品有 purchase_url
+  const willIncludeLink = !!(topic.includePurchaseUrl && boundProducts.some((p) => p?.purchase_url));
 
   return (
     <Link href={`/social/schedule/${topic.id}`}
@@ -441,11 +444,29 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onD
 
       {/* Top row */}
       <div className="pr-8 space-y-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Chip tone={typeInfo.tone} size="xs" variant="outline">{typeInfo.label}</Chip>
-          <span onClick={(e) => { e.preventDefault(); onToggleSchedule(e); }}
-            className={`inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 cursor-pointer transition font-mono uppercase tracking-wider ${scheduledEnabled ? 'bg-zinc-950 text-white hover:bg-zinc-800' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}`}
-          >{scheduledEnabled ? 'ON' : 'OFF'}</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* 類型 chip · icon 更醒目 */}
+          <Chip tone={typeInfo.tone} size="xs" variant="outline">
+            <span className="text-[10px]">{typeInfo.icon}</span>
+            <span>{typeInfo.label}</span>
+          </Chip>
+          {/* 帶連結 chip · 只有 topic 打開 includePurchaseUrl 才顯示 */}
+          {willIncludeLink && (
+            <Chip tone="emerald" size="xs" variant="outline" title="每篇會附上購買連結+UTM">
+              <span className="text-[10px]">🔗</span>
+              <span>帶連結</span>
+            </Chip>
+          )}
+          {/* ON/OFF 明顯 button, 可 click 切換 */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleSchedule(e); }}
+            title={scheduledEnabled ? '點擊停用排程' : '點擊啟用排程'}
+            className={`ml-auto inline-flex items-center gap-1 text-[10px] rounded-full px-2.5 py-0.5 cursor-pointer transition font-mono uppercase tracking-widest ${scheduledEnabled ? 'bg-zinc-950 text-white hover:bg-zinc-800' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-950 hover:text-white'}`}
+          >
+            <span className={`inline-block size-1.5 rounded-full ${scheduledEnabled ? 'bg-emerald-400' : 'bg-zinc-400'}`} />
+            {scheduledEnabled ? 'ON' : 'OFF'}
+          </button>
         </div>
         <h3 className="font-editorial font-semibold text-lg text-zinc-950 truncate group-hover:text-zinc-700 tracking-tight leading-snug">{topic.name}</h3>
         {topic.description && (
