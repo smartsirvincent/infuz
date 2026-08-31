@@ -603,13 +603,20 @@ function ModeRadio({ active, onClick, label, hint }) {
  * - 自動拉 settings 的預設 platforms
  * - 自動跑 suggest-copy 拿文案
  */
-export function DispatchPanel({ assetId, postNumber, mode, displayMode, products, scenario, slogan, promoInfo, initialCopy }) {
+export function DispatchPanel({ assetId, postNumber, mode, displayMode, products, scenario, slogan, promoInfo, initialCopy, initialMode = 'post' }) {
   const [platforms, setPlatforms] = useState({ fb: false, ig: true, threads: true });
   const [copy, setCopy] = useState(initialCopy || '');
   const [generatingCopy, setGeneratingCopy] = useState(!initialCopy);
   const [dispatching, setDispatching] = useState(null); // 'schedule' | 'post' | null
   const [status, setStatus] = useState('');
   const [done, setDone] = useState({ schedule: false, post: false });
+  const [uiMode, setUiMode] = useState(initialMode); // 'post' | 'schedule'
+  // 排程時間預設: 30 分鐘後 (YYYY-MM-DDTHH:mm)
+  const [scheduledAt, setScheduledAt] = useState(() => {
+    const d = new Date(Date.now() + 30 * 60 * 1000);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  });
 
   // 載 settings → defaultPlatforms
   useEffect(() => {
@@ -655,37 +662,44 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
     return () => { cancelled = true; };
   }, [assetId]);
 
-  // 直接系統發文 (取代 Make webhook) · 呼 /api/infuz/publish 走 Threads/IG/FB Graph API
+  // 系統直接發文 (取代 Make webhook) · 兩種 action:
+  //   'post'     → 呼 /api/infuz/publish 立刻發
+  //   'schedule' → 呼 /api/infuz/assets/schedule 加進「素材發文」主題佇列 + scheduledAt
   async function dispatch(action) {
     if (!assetId) { setStatus('沒有 assetId,無法發送'); return; }
-    if (action !== 'post') {
-      setStatus('⚠ 排程請去 主題排程 (/social/schedule) 走主題系統');
-      return;
-    }
     if (!platforms.threads && !platforms.ig && !platforms.fb) {
       setStatus('⚠ 至少要選 1 個平台'); return;
     }
     setDispatching(action);
     setStatus('');
     try {
-      const r = await fetch('/api/infuz/publish', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          assetId,           // publish route 會自動讀 asset.imageUrl + 更新 dispatched.direct
-          text: copy,
-          platforms,         // {fb, ig, threads} · publish route 內部 alias 到 {facebook, instagram, threads}
-        }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      const oks = Object.entries(d.results || {}).filter(([_, v]) => v?.ok).map(([k]) => k);
-      const fails = Object.entries(d.results || {}).filter(([_, v]) => v && !v.ok).map(([k, v]) => `${k}:${v.error?.slice(0, 40)}`);
-      if (oks.length) {
-        setStatus(`✓ 已發:${oks.join(', ')}${fails.length ? ` · ⚠ 失敗:${fails.join('; ')}` : ''}`);
-        setDone({ ...done, [action]: true });
+      if (action === 'schedule') {
+        if (!scheduledAt) throw new Error('請選排程時間');
+        const r = await fetch('/api/infuz/assets/schedule', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ assetId, copy, platforms, scheduledAt }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+        setStatus(`✓ 已加入「素材發文」佇列, ${new Date(d.scheduledAt).toLocaleString('zh-TW')} 自動發`);
+        setDone({ ...done, schedule: true });
       } else {
-        setStatus('⚠ 全部平台失敗:' + fails.join('; '));
+        const r = await fetch('/api/infuz/publish', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ assetId, text: copy, platforms }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+        const oks = Object.entries(d.results || {}).filter(([_, v]) => v?.ok).map(([k]) => k);
+        const fails = Object.entries(d.results || {}).filter(([_, v]) => v && !v.ok).map(([k, v]) => `${k}:${v.error?.slice(0, 40)}`);
+        if (oks.length) {
+          setStatus(`✓ 已發:${oks.join(', ')}${fails.length ? ` · ⚠ 失敗:${fails.join('; ')}` : ''}`);
+          setDone({ ...done, post: true });
+        } else {
+          setStatus('⚠ 全部平台失敗:' + fails.join('; '));
+        }
       }
     } catch (e) {
       setStatus('⚠ ' + e.message);
@@ -737,25 +751,56 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
         <div className={`text-xs ${status.startsWith('⚠') ? 'text-red-600' : 'text-emerald-700'}`}>{status}</div>
       )}
 
-      <div className="flex flex-wrap gap-2 items-center">
+      {/* Mode tab */}
+      <div className="flex gap-1 border-b border-stone-200 -mx-4 px-4">
+        <button type="button" onClick={() => setUiMode('post')}
+          className={`px-3 py-2 text-sm transition -mb-px ${uiMode === 'post' ? 'text-stone-900 font-medium border-b-2 border-stone-900' : 'text-stone-500 hover:text-stone-800'}`}
+        >📤 立即發佈</button>
+        <button type="button" onClick={() => setUiMode('schedule')}
+          className={`px-3 py-2 text-sm transition -mb-px ${uiMode === 'schedule' ? 'text-stone-900 font-medium border-b-2 border-stone-900' : 'text-stone-500 hover:text-stone-800'}`}
+        >📅 排程</button>
+      </div>
+
+      {uiMode === 'schedule' && (
+        <div>
+          <label className="label text-xs">排程時間 (預設 30 分鐘後)</label>
+          <input type="datetime-local" className="input text-sm"
+            value={scheduledAt}
+            min={(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })()}
+            onChange={(e) => setScheduledAt(e.target.value)}
+          />
+          <div className="mt-1 text-[10px] text-stone-500">
+            到期會自動發到選中平台。 排程主題預設 <strong>「素材發文」</strong> (可到 <a href="/social/schedule" className="underline text-stone-700">主題排程</a> 看待發佇列)
+          </div>
+        </div>
+      )}
+
+      {uiMode === 'post' && (
         <button
           type="button"
           onClick={() => dispatch('post')}
           disabled={dispatching !== null || done.post}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
         >
-          {dispatching === 'post' ? '發送中…' : done.post ? '✓ 已發文' : '🚀 直接發文 (系統 Graph API)'}
+          {dispatching === 'post' ? '發送中…' : done.post ? '✓ 已發文' : '🚀 立即發佈'}
         </button>
-        <a
-          href="/social/schedule"
-          className="text-xs text-stone-500 hover:text-stone-900 underline underline-offset-2"
-          title="排程請走主題系統"
+      )}
+
+      {uiMode === 'schedule' && (
+        <button
+          type="button"
+          onClick={() => dispatch('schedule')}
+          disabled={dispatching !== null || done.schedule}
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 ${done.schedule ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
         >
-          排程 →
-        </a>
-      </div>
+          {dispatching === 'schedule' ? '排程中…' : done.schedule ? '✓ 已加入排程' : '📅 加入排程'}
+        </button>
+      )}
+
       <div className="text-[10px] text-stone-500">
-        直接發文走系統本身的 Threads/IG/FB Graph API (不再走 Make webhook)。 排程請去 <a href="/social/schedule" className="underline text-stone-700">主題排程</a>。
+        {uiMode === 'post'
+          ? '走系統 Graph API 直接發, 不經 Make webhook'
+          : '加入「素材發文」主題佇列, cron 到時間自動發'}
       </div>
     </div>
   );

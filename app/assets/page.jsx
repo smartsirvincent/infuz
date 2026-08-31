@@ -19,6 +19,7 @@ export default function AssetsPage() {
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(null); // 點圖放大
   const [expandedId, setExpandedId] = useState(null); // 哪張展開 dispatch panel
+  const [expandedMode, setExpandedMode] = useState('post'); // 'post' | 'schedule' · 決定展開後 default tab
 
   async function refresh() {
     setLoading(true);
@@ -196,10 +197,23 @@ export default function AssetsPage() {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   <button
                     type="button"
-                    onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}
-                    className="rounded-md bg-blue-600 px-2 py-1 text-[11px] text-white hover:bg-blue-700"
+                    onClick={() => {
+                      if (expandedId === a.id && expandedMode === 'post') { setExpandedId(null); }
+                      else { setExpandedId(a.id); setExpandedMode('post'); }
+                    }}
+                    className={`rounded-md px-2 py-1 text-[11px] text-white ${expandedId === a.id && expandedMode === 'post' ? 'bg-stone-900 hover:bg-stone-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                   >
-                    {expandedId === a.id ? '收起 ▲' : '📤 發佈 / 重發'}
+                    {expandedId === a.id && expandedMode === 'post' ? '收起 ▲' : '📤 發佈'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (expandedId === a.id && expandedMode === 'schedule') { setExpandedId(null); }
+                      else { setExpandedId(a.id); setExpandedMode('schedule'); }
+                    }}
+                    className={`rounded-md px-2 py-1 text-[11px] text-white ${expandedId === a.id && expandedMode === 'schedule' ? 'bg-stone-900 hover:bg-stone-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                  >
+                    {expandedId === a.id && expandedMode === 'schedule' ? '收起 ▲' : '📅 排程'}
                   </button>
                   <a
                     href={a.imageUrl}
@@ -230,6 +244,7 @@ export default function AssetsPage() {
 
               {expandedId === a.id && (
                 <DispatchPanel
+                  key={`${a.id}-${expandedMode}`}
                   assetId={a.id}
                   postNumber={a.postNumber}
                   mode={a.mode}
@@ -239,6 +254,7 @@ export default function AssetsPage() {
                   slogan={a.slogan}
                   promoInfo={a.promoInfo}
                   initialCopy={a.copy}
+                  initialMode={expandedMode}
                 />
               )}
             </article>
