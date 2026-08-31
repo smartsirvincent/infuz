@@ -655,23 +655,38 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
     return () => { cancelled = true; };
   }, [assetId]);
 
+  // 直接系統發文 (取代 Make webhook) · 呼 /api/infuz/publish 走 Threads/IG/FB Graph API
   async function dispatch(action) {
-    if (!assetId) {
-      setStatus('沒有 assetId,無法發送');
+    if (!assetId) { setStatus('沒有 assetId,無法發送'); return; }
+    if (action !== 'post') {
+      setStatus('⚠ 排程請去 主題排程 (/social/schedule) 走主題系統');
       return;
+    }
+    if (!platforms.threads && !platforms.ig && !platforms.fb) {
+      setStatus('⚠ 至少要選 1 個平台'); return;
     }
     setDispatching(action);
     setStatus('');
     try {
-      const r = await fetch('/api/infuz/dispatch', {
+      const r = await fetch('/api/infuz/publish', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ assetId, action, platforms, copy }),
+        body: JSON.stringify({
+          assetId,           // publish route 會自動讀 asset.imageUrl + 更新 dispatched.direct
+          text: copy,
+          platforms,         // {fb, ig, threads} · publish route 內部 alias 到 {facebook, instagram, threads}
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      setStatus(`✓ ${action === 'schedule' ? '已傳到排程' : '已直接發文'}`);
-      setDone({ ...done, [action]: true });
+      const oks = Object.entries(d.results || {}).filter(([_, v]) => v?.ok).map(([k]) => k);
+      const fails = Object.entries(d.results || {}).filter(([_, v]) => v && !v.ok).map(([k, v]) => `${k}:${v.error?.slice(0, 40)}`);
+      if (oks.length) {
+        setStatus(`✓ 已發:${oks.join(', ')}${fails.length ? ` · ⚠ 失敗:${fails.join('; ')}` : ''}`);
+        setDone({ ...done, [action]: true });
+      } else {
+        setStatus('⚠ 全部平台失敗:' + fails.join('; '));
+      }
     } catch (e) {
       setStatus('⚠ ' + e.message);
     } finally { setDispatching(null); }
@@ -722,23 +737,25 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
         <div className={`text-xs ${status.startsWith('⚠') ? 'text-red-600' : 'text-emerald-700'}`}>{status}</div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => dispatch('schedule')}
-          disabled={dispatching !== null || done.schedule}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.schedule ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-        >
-          {dispatching === 'schedule' ? '送出中…' : done.schedule ? '✓ 已排程' : '📅 傳到排程'}
-        </button>
+      <div className="flex flex-wrap gap-2 items-center">
         <button
           type="button"
           onClick={() => dispatch('post')}
           disabled={dispatching !== null || done.post}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-600 text-white hover:bg-rose-700'}`}
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
         >
-          {dispatching === 'post' ? '送出中…' : done.post ? '✓ 已發文' : '🚀 直接發文'}
+          {dispatching === 'post' ? '發送中…' : done.post ? '✓ 已發文' : '🚀 直接發文 (系統 Graph API)'}
         </button>
+        <a
+          href="/social/schedule"
+          className="text-xs text-stone-500 hover:text-stone-900 underline underline-offset-2"
+          title="排程請走主題系統"
+        >
+          排程 →
+        </a>
+      </div>
+      <div className="text-[10px] text-stone-500">
+        直接發文走系統本身的 Threads/IG/FB Graph API (不再走 Make webhook)。 排程請去 <a href="/social/schedule" className="underline text-stone-700">主題排程</a>。
       </div>
     </div>
   );

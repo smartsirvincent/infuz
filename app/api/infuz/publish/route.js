@@ -11,13 +11,30 @@ export const maxDuration = 300;
 
 export async function POST(req) {
   try {
+    const body = await req.json();
     const {
-      assetId,               // 選填,若給則發完更新 asset.dispatched.direct
+      assetId,               // 選填,若給則發完更新 asset.dispatched.direct + 沒 imageUrl 時自動讀
       text,                  // 文案 (必填)
-      imageUrl,              // 圖片 URL (IG 必要)
       hashtags,              // IG 用,空白/逗號分隔
-      platforms = {},        // { threads: true, instagram: false, facebook: true }
-    } = await req.json();
+    } = body;
+    let imageUrl = body.imageUrl;
+
+    // Platform key alias: {fb, ig, threads} → {facebook, instagram, threads}
+    const rawPlatforms = body.platforms || {};
+    const platforms = {
+      threads: !!(rawPlatforms.threads),
+      instagram: !!(rawPlatforms.instagram || rawPlatforms.ig),
+      facebook: !!(rawPlatforms.facebook || rawPlatforms.fb),
+    };
+
+    // 若給 assetId 但沒給 imageUrl, 從 asset 讀
+    if (assetId && !imageUrl) {
+      try {
+        const assetsDb = await loadDb('assets');
+        const asset = (assetsDb.items || []).find((a) => a.id === assetId);
+        if (asset?.imageUrl) imageUrl = asset.imageUrl;
+      } catch (_) { /* 讀不到就繼續, 讓下面 preflight 擋 */ }
+    }
 
     if (!text?.trim() && !imageUrl) {
       return NextResponse.json({ error: '文字或圖片至少要一個' }, { status: 400 });
