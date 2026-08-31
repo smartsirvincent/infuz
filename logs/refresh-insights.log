@@ -2,3 +2,6 @@
 [2026-08-31 17:32:46] OK · total=5 refreshed=5 errorTotal=2
 [2026-08-31 17:32:46]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:(#100) Starting from version v22.0 and above, the impressions metric is no longer supported for the queried media. Please refer to the documentation at https://developers.facebook.com/docs/instagram-api/reference/ig-media/insights for a list of supported metrics.
 [2026-08-31 17:32:46]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:(#100) The value must be a valid insights metric
+[2026-08-31 17:36:00] === start ===
+[2026-08-31 17:36:00] OK · total=5 refreshed=5 errorTotal=1
+[2026-08-31 17:36:00]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:(#100) The value must be a valid insights metric
