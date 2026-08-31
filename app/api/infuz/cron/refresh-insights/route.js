@@ -2,9 +2,9 @@
 // 排程建議:cron-job.org 或 Windows Task Scheduler 打 GET /api/infuz/cron/refresh-insights
 // 台北 00:00 = UTC 16:00
 import { NextResponse } from 'next/server';
-import { loadDb, updateItem } from '@/lib/infuz-db.js';
-import { getInstagramInsights, getFacebookInsights } from '@/lib/infuz-meta.js';
-import { getThreadsInsights } from '@/lib/infuz-threads.js';
+import { loadDb, saveDb, updateItem } from '@/lib/infuz-db.js';
+import { getInstagramInsights, getFacebookInsights, getFacebookFollowers, getInstagramFollowers } from '@/lib/infuz-meta.js';
+import { getThreadsInsights, getThreadsFollowers } from '@/lib/infuz-threads.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -65,6 +65,40 @@ export async function GET(req) {
       }
     }
 
+    // 存 followers 每日快照 (upsert by date)
+    const snapshot = { threads: null, instagram: null, facebook: null };
+    if (conn.threads?.accessToken) {
+      try { snapshot.threads = await getThreadsFollowers(conn.threads); }
+      catch (e) { snapshot.threads = { error: e.message }; }
+    }
+    if (conn.facebook?.igUserId && conn.facebook?.pageAccessToken) {
+      try { snapshot.instagram = await getInstagramFollowers(conn.facebook); }
+      catch (e) { snapshot.instagram = { error: e.message }; }
+    }
+    if (conn.facebook?.pageId && conn.facebook?.pageAccessToken) {
+      try { snapshot.facebook = await getFacebookFollowers(conn.facebook); }
+      catch (e) { snapshot.facebook = { error: e.message }; }
+    }
+    // 台北日期
+    const taipeiDate = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+    try {
+      const histDb = await loadDb('followers_history');
+      const items = (histDb.items || []).filter((x) => x.date !== taipeiDate);
+      items.push({
+        date: taipeiDate,
+        threads: snapshot.threads,
+        instagram: snapshot.instagram,
+        facebook: snapshot.facebook,
+        savedAt: new Date().toISOString(),
+      });
+      // 只留最近 400 天
+      items.sort((a, b) => a.date.localeCompare(b.date));
+      const trimmed = items.slice(-400);
+      await saveDb('followers_history', { items: trimmed });
+    } catch (e) {
+      stats.errors.push(`followers_snapshot: ${e.message}`);
+    }
+
     return NextResponse.json({
       ok: true,
       ts: new Date().toISOString(),
@@ -72,6 +106,7 @@ export async function GET(req) {
       // 只回前 10 條錯誤避免爆量
       errors: stats.errors.slice(0, 10),
       errorTotal: stats.errors.length,
+      snapshotDate: taipeiDate,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e.message }, { status: 500 });

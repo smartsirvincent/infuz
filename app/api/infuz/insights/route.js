@@ -32,12 +32,16 @@ export async function GET() {
     // 統計 by platform
     const byPlatform = { threads: 0, instagram: 0, facebook: 0 };
     const all = [
-      ...posts.map((p) => ({
-        ...p,
-        topicName: topics.find((t) => t.id === p.topicId)?.name || '(主題已刪)',
-        source: 'topic',
-      })),
-      ...realtimePosts.map((p) => ({ ...p, source: 'realtime' })),
+      ...posts.map((p) => {
+        const t = topics.find((x) => x.id === p.topicId);
+        return {
+          ...p,
+          topicName: t?.name || '(主題已刪)',
+          topicType: t?.type || 'text', // text / image / long
+          source: 'topic',
+        };
+      }),
+      ...realtimePosts.map((p) => ({ ...p, topicType: 'image', source: 'realtime' })),
     ];
     for (const p of all) {
       for (const [k, v] of Object.entries(p.results || {})) {
