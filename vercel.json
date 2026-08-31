@@ -13,6 +13,9 @@
     "app/api/infuz/cron/tick/route.js": {
       "maxDuration": 300
     },
+    "app/api/infuz/cron/refresh-insights/route.js": {
+      "maxDuration": 300
+    },
     "app/api/infuz/publish/route.js": {
       "maxDuration": 300
     }
