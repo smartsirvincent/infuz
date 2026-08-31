@@ -20,8 +20,13 @@ export async function POST(req) {
     try {
       longLived = await exchangeLongLivedUserToken(userToken);
     } catch (e) {
+      const msg = e.message || '';
+      const isSecretErr = /client secret|invalid.*app|app.*credential|app.*invalid/i.test(msg);
+      const hint = isSecretErr
+        ? '·\n\n👉 修法: Vercel Env vars 的 FB_APP_SECRET 跟 App Dashboard → Settings → Basic 對不上。 重貼 App Secret (按 Show 才顯示原碼), 存檔後 redeploy 才會生效。'
+        : '';
       return NextResponse.json({
-        error: `Token 換長效失敗: ${e.message}`,
+        error: `Token 換長效失敗: ${msg}${hint}`,
         scopes,
       }, { status: 400 });
     }
