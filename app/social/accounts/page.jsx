@@ -189,8 +189,35 @@ function FacebookCard({ conn, onSaved }) {
         </div>
       )}
       {pages && pages.length === 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-          ⚠ 這個 token 沒管理任何粉專 (或 pages_show_list 權限沒開)
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+          <div className="font-semibold">⚠ 這個 token 抓不到任何粉專</div>
+          <div className="text-amber-800">/me/accounts 回空 array 通常是下面 3 個原因之一,對照上方「權限檢查」逐條查:</div>
+          <ol className="list-decimal ml-5 space-y-1.5 text-amber-900">
+            <li>
+              <strong>Token 缺 <code className="bg-white/60 px-1 rounded">pages_show_list</code> scope</strong>
+              <div className="text-[10px] text-amber-700 mt-0.5">
+                看上方「Granted」有沒有這行。沒有 → 重去 <a className="underline" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noreferrer">Graph API Explorer</a>,「Get Token → Get User Access Token」勾滿:
+                <code className="bg-white/60 px-1 rounded ml-1">pages_show_list · pages_manage_posts · pages_read_engagement · instagram_basic · instagram_content_publish · instagram_manage_insights</code>
+              </div>
+            </li>
+            <li>
+              <strong>你在 FB 不是任何粉專的 admin</strong>
+              <div className="text-[10px] text-amber-700 mt-0.5">
+                去 <a className="underline" href="https://business.facebook.com/settings/pages" target="_blank" rel="noreferrer">Business Settings → Pages</a> 確認你有 admin/editor role
+              </div>
+            </li>
+            <li>
+              <strong>App 是 Live mode 但沒通過 App Review</strong>
+              <div className="text-[10px] text-amber-700 mt-0.5">
+                去 <a className="underline" href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">App Dashboard</a> 檢查:
+                {' '}<strong>Development mode</strong> → 把自己加成 Tester/Developer 才能用;
+                {' '}<strong>Live mode</strong> → pages_show_list / pages_manage_posts / instagram_content_publish 都需 Advanced Access review
+              </div>
+            </li>
+          </ol>
+          <div className="pt-2 border-t border-amber-200 text-[10px] text-amber-700">
+            💡 最快解:App 切 Development mode + 把自己加進 Roles → Testers,可以立刻用不需 review
+          </div>
         </div>
       )}
     </div>
