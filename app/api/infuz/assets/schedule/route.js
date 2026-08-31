@@ -15,12 +15,13 @@ async function ensureDefaultTopic() {
   const items = db.items || [];
   let topic = items.find((t) => t.id === DEFAULT_TOPIC_ID);
   if (topic) return topic;
-  // 建立預設「素材發文」topic (不啟用固定排程 · 依 post.scheduledAt 觸發)
+  // 建立預設「素材發文」topic · 排程 enabled=true · 每天 10:00
+  // tickTopics 到點會從佇列 FIFO 取一篇發
   const now = new Date().toISOString();
   topic = {
     id: DEFAULT_TOPIC_ID,
     name: DEFAULT_TOPIC_NAME,
-    description: '從素材庫直接排程的貼文, 依各篇 scheduledAt 到期發出',
+    description: '素材庫排程貼文 · 依這個主題的時間到點自動發, 佇列 FIFO',
     type: 'image',
     productIds: [],
     brandOnly: true,
@@ -29,7 +30,7 @@ async function ensureDefaultTopic() {
     imageSource: 'product_photo',
     aspectRatio: '4:5',
     schedule: {
-      enabled: false, // 不用固定排程, 走 tickScheduledPosts
+      enabled: true,          // 走 tickTopics FIFO
       time: '10:00',
       days: [1, 2, 3, 4, 5],
       platforms: { threads: true, instagram: false, facebook: false },
@@ -45,15 +46,8 @@ async function ensureDefaultTopic() {
 
 export async function POST(req) {
   try {
-    const { assetId, copy, hashtags = '', platforms = {}, scheduledAt } = await req.json();
+    const { assetId, copy, hashtags = '', platforms = {} } = await req.json();
     if (!assetId) return NextResponse.json({ error: '缺 assetId' }, { status: 400 });
-    if (!scheduledAt) return NextResponse.json({ error: '缺 scheduledAt (YYYY-MM-DDTHH:mm)' }, { status: 400 });
-
-    const scheduledMs = new Date(scheduledAt).getTime();
-    if (isNaN(scheduledMs)) return NextResponse.json({ error: 'scheduledAt 格式無效' }, { status: 400 });
-    if (scheduledMs < Date.now() - 60 * 1000) {
-      return NextResponse.json({ error: '排程時間已過去' }, { status: 400 });
-    }
 
     // Platform key alias
     const platformsMapped = {
@@ -73,7 +67,7 @@ export async function POST(req) {
     // Ensure「素材發文」topic
     const topic = await ensureDefaultTopic();
 
-    // 建 topic_post
+    // 建 topic_post · 不帶 scheduledAt · 走 tickTopics 依 topic.schedule.time 到點 FIFO
     const postsDb = await loadDb('topic_posts');
     const now = new Date().toISOString();
     const post = {
@@ -86,8 +80,7 @@ export async function POST(req) {
       pickedProductId: asset.products?.[0]?.id || null,
       includePurchaseUrl: false,
       status: 'queued',
-      scheduledAt: new Date(scheduledMs).toISOString(),
-      platformsOverride: platformsMapped, // ← tickScheduledPosts 讀這個, 不用 topic.schedule.platforms
+      platformsOverride: platformsMapped, // tickTopics 若讀到會用這個, 否則用 topic.schedule.platforms
       sourceAssetId: assetId,
       createdAt: now,
       publishedAt: null,
@@ -99,13 +92,19 @@ export async function POST(req) {
     const dispatched = { ...(asset.dispatched || {}) };
     dispatched.schedule = {
       at: now,
-      scheduledAt: post.scheduledAt,
+      topicId: topic.id,
       topicPostId: post.id,
       platforms: platformsMapped,
     };
     await updateItem('assets', assetId, { dispatched, copy });
 
-    return NextResponse.json({ ok: true, postId: post.id, scheduledAt: post.scheduledAt, topicId: topic.id });
+    return NextResponse.json({
+      ok: true,
+      postId: post.id,
+      topicId: topic.id,
+      topicName: topic.name,
+      topicSchedule: topic.schedule,
+    });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

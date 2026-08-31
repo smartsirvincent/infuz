@@ -611,12 +611,22 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
   const [status, setStatus] = useState('');
   const [done, setDone] = useState({ schedule: false, post: false });
   const [uiMode, setUiMode] = useState(initialMode); // 'post' | 'schedule'
-  // 排程時間預設: 30 分鐘後 (YYYY-MM-DDTHH:mm)
-  const [scheduledAt, setScheduledAt] = useState(() => {
-    const d = new Date(Date.now() + 30 * 60 * 1000);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  });
+  // 「素材發文」topic 排程資訊 (加入佇列時從 API 回傳)
+  const [assetTopic, setAssetTopic] = useState(null); // {time, days, enabled}
+  const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
+
+  // 預覽「素材發文」主題目前排程 (讓用戶知道加進去後何時發)
+  useEffect(() => {
+    if (uiMode !== 'schedule' || assetTopic) return;
+    (async () => {
+      try {
+        const r = await fetch('/api/infuz/topics', { cache: 'no-store' });
+        const d = await r.json();
+        const t = (d.items || []).find((x) => x.id === 'topic_asset_default');
+        if (t) setAssetTopic(t.schedule || null);
+      } catch (_) {}
+    })();
+  }, [uiMode]);
 
   // 載 settings → defaultPlatforms
   useEffect(() => {
@@ -674,15 +684,15 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
     setStatus('');
     try {
       if (action === 'schedule') {
-        if (!scheduledAt) throw new Error('請選排程時間');
         const r = await fetch('/api/infuz/assets/schedule', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ assetId, copy, platforms, scheduledAt }),
+          body: JSON.stringify({ assetId, copy, platforms }),
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
-        setStatus(`✓ 已加入「素材發文」佇列, ${new Date(d.scheduledAt).toLocaleString('zh-TW')} 自動發`);
+        const t = d.topicSchedule?.time || '10:00';
+        setStatus(`✓ 已加入「${d.topicName || '素材發文'}」主題佇列 · 下次 ${t} 排程到點會發`);
         setDone({ ...done, schedule: true });
       } else {
         const r = await fetch('/api/infuz/publish', {
@@ -762,16 +772,20 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
       </div>
 
       {uiMode === 'schedule' && (
-        <div>
-          <label className="label text-xs">排程時間 (預設 30 分鐘後)</label>
-          <input type="datetime-local" className="input text-sm"
-            value={scheduledAt}
-            min={(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })()}
-            onChange={(e) => setScheduledAt(e.target.value)}
-          />
-          <div className="mt-1 text-[10px] text-stone-500">
-            到期會自動發到選中平台。 排程主題預設 <strong>「素材發文」</strong> (可到 <a href="/social/schedule" className="underline text-stone-700">主題排程</a> 看待發佇列)
-          </div>
+        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs space-y-2">
+          <div className="font-semibold text-blue-900">📌 加入「素材發文」主題佇列</div>
+          {assetTopic ? (
+            <div className="text-stone-700 leading-relaxed">
+              下次發文時間 <span className="font-mono font-medium text-blue-900">{assetTopic.time || '10:00'}</span>
+              {assetTopic.days?.length ? ' · ' : ''}
+              {assetTopic.days?.length === 7 ? '每天' : (assetTopic.days || []).map((d) => DAY_NAMES[d]).join('、')}
+              <div className="mt-1 text-[10px] text-stone-500">
+                依「素材發文」主題排程時間到點發, FIFO 取一篇。 想改時間去 <a href="/social/schedule" className="underline text-blue-700">主題排程</a> 找「素材發文」編輯。
+              </div>
+            </div>
+          ) : (
+            <div className="text-stone-500 text-[10px]">首次加入會自動建立「素材發文」主題 (預設每平日 10:00)</div>
+          )}
         </div>
       )}
 
