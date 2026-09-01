@@ -109,12 +109,12 @@ export default function InsightsPage() {
 
   const uniqueTopics = Array.from(new Set((data?.posts || []).map((p) => p.topicName).filter(Boolean)));
 
-  // 流量趨勢 · 依 publishedAt 分日 sum(views/impressions across platforms)
-  const trafficSeries = useMemo(() => computeTrafficSeries(filtered, fromDate, toDate), [filtered, fromDate, toDate]);
-  // 粉絲成長趨勢 · 依 history + platform
-  const followersSeries = useMemo(() => computeFollowersSeries(history), [history]);
-  // 貼文類型比較 · 依 topicType 分組 · 平均 views/likes/replies
-  const typeStats = useMemo(() => computeTypeStats(filtered), [filtered]);
+  // 流量趨勢 · 依 publishedAt 分日 sum(該平台 views)
+  const trafficSeries = useMemo(() => computeTrafficSeries(filtered, fromDate, toDate, platformFilter), [filtered, fromDate, toDate, platformFilter]);
+  // 粉絲成長趨勢 · 依 history + platform (單一平台只 1 條線)
+  const followersSeries = useMemo(() => computeFollowersSeries(history, platformFilter), [history, platformFilter]);
+  // 貼文類型比較 · 依 topicType 分組 · 平均 views/likes/replies (該平台)
+  const typeStats = useMemo(() => computeTypeStats(filtered, platformFilter), [filtered, platformFilter]);
 
   const lastSnapshot = history[history.length - 1]?.savedAt;
 
@@ -135,47 +135,80 @@ export default function InsightsPage() {
         }
       />
 
-      {/* Date range · 4 preset + from/to */}
-      <section className="rounded-2xl border border-divider bg-white p-5 space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          {[
-            { key: 'yesterday', label: '昨天' },
-            { key: '7d', label: '近 7 天' },
-            { key: '30d', label: '近 30 天' },
-            { key: 'all', label: '全部' },
-          ].map((p) => (
-            <button key={p.key} type="button" onClick={() => applyPreset(p.key)}
-              className={`text-xs px-3 py-1.5 rounded-md border transition ${
-                dateRange === p.key
-                  ? 'bg-ink text-white border-ink'
-                  : 'border-divider text-muted hover:border-ink hover:text-ink'
-              }`}
-            >{p.label}</button>
-          ))}
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-[11px] text-muted">從</span>
-            <input type="date" className="input text-sm w-auto" value={fromDate}
-              onChange={(e) => { setFromDate(e.target.value); setDateRange('custom'); }}
-              max={toDate || undefined}
-            />
-            <span className="text-[11px] text-muted">到</span>
-            <input type="date" className="input text-sm w-auto" value={toDate}
-              onChange={(e) => { setToDate(e.target.value); setDateRange('custom'); }}
-              min={fromDate || undefined}
-            />
+      {/* 全域 Filter · 平台 tab + Date range + topic dropdown */}
+      <section className="rounded-2xl border border-divider bg-white p-5 space-y-4">
+        {/* 平台 tab (4 顆) — 全域影響所有下方 chart / table */}
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-muted mb-2">Platform</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { key: 'all', label: '全部平台' },
+              { key: 'threads', label: '🧵 Threads' },
+              { key: 'instagram', label: '📷 Instagram' },
+              { key: 'facebook', label: '👍 Facebook' },
+            ].map((p) => (
+              <button key={p.key} type="button" onClick={() => setPlatformFilter(p.key)}
+                className={`text-xs px-3 py-1.5 rounded-md border transition ${
+                  platformFilter === p.key
+                    ? 'bg-ink text-white border-ink'
+                    : 'border-divider text-muted hover:border-ink hover:text-ink'
+                }`}
+              >{p.label}</button>
+            ))}
           </div>
         </div>
-        <div className="text-[11px] text-muted">
-          期間內共 <span className="font-mono tabular-nums text-ink font-medium">{filtered.length}</span> 篇已發佈貼文有成效數據。
-          {lastSnapshot && <>上次每日快照:{new Date(lastSnapshot).toLocaleString('zh-TW')}</>}
+
+        {/* Date range · 4 preset + from/to */}
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-muted mb-2">Date range</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { key: 'yesterday', label: '昨天' },
+              { key: '7d', label: '近 7 天' },
+              { key: '30d', label: '近 30 天' },
+              { key: 'all', label: '全部' },
+            ].map((p) => (
+              <button key={p.key} type="button" onClick={() => applyPreset(p.key)}
+                className={`text-xs px-3 py-1.5 rounded-md border transition ${
+                  dateRange === p.key
+                    ? 'bg-ink text-white border-ink'
+                    : 'border-divider text-muted hover:border-ink hover:text-ink'
+                }`}
+              >{p.label}</button>
+            ))}
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-[11px] text-muted">從</span>
+              <input type="date" className="input text-sm w-auto" value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setDateRange('custom'); }}
+                max={toDate || undefined}
+              />
+              <span className="text-[11px] text-muted">到</span>
+              <input type="date" className="input text-sm w-auto" value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setDateRange('custom'); }}
+                min={fromDate || undefined}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="text-[11px] text-muted pt-1 border-t border-divider">
+          期間內共 <span className="font-mono tabular-nums text-ink font-medium">{filtered.length}</span> 篇已發佈貼文有成效數據
+          {platformFilter !== 'all' && <> · 平台:<span className="text-ink">{PLATFORM_META[platformFilter]?.label}</span></>}
+          {lastSnapshot && <> · 上次每日快照:{new Date(lastSnapshot).toLocaleString('zh-TW')}</>}
         </div>
       </section>
 
-      {/* Followers 卡 · 3 平台 · 大字 stat */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <BigFollowerCard label="🧵 Threads" data={followers?.threads} error={followers?.errors?.threads} loading={loadingFollowers} />
-        <BigFollowerCard label="📷 Instagram" data={followers?.instagram} error={followers?.errors?.instagram} loading={loadingFollowers} />
-        <BigFollowerCard label="👍 Facebook" data={followers?.facebook} error={followers?.errors?.facebook} loading={loadingFollowers} />
+      {/* Followers 卡 · 依 platformFilter 顯示 1 or 3 個 */}
+      <section className={platformFilter === 'all' ? 'grid grid-cols-1 sm:grid-cols-3 gap-3' : 'grid grid-cols-1 gap-3'}>
+        {(platformFilter === 'all' || platformFilter === 'threads') && (
+          <BigFollowerCard label="🧵 Threads" data={followers?.threads} error={followers?.errors?.threads} loading={loadingFollowers} large={platformFilter === 'threads'} />
+        )}
+        {(platformFilter === 'all' || platformFilter === 'instagram') && (
+          <BigFollowerCard label="📷 Instagram" data={followers?.instagram} error={followers?.errors?.instagram} loading={loadingFollowers} large={platformFilter === 'instagram'} />
+        )}
+        {(platformFilter === 'all' || platformFilter === 'facebook') && (
+          <BigFollowerCard label="👍 Facebook" data={followers?.facebook} error={followers?.errors?.facebook} loading={loadingFollowers} large={platformFilter === 'facebook'} />
+        )}
       </section>
 
       {/* 粉絲成長趨勢 · MultiLineChart */}
@@ -226,14 +259,8 @@ export default function InsightsPage() {
           <h2 className="text-sm font-semibold text-ink">近期發文成效</h2>
         </div>
 
-        {/* filter row */}
+        {/* 主題 filter (平台已在頂部全域) */}
         <div className="flex items-center gap-3 mb-3 text-xs">
-          <select className="input text-xs w-auto" value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)}>
-            <option value="all">全部平台</option>
-            <option value="threads">🧵 Threads</option>
-            <option value="instagram">📷 IG</option>
-            <option value="facebook">👍 FB</option>
-          </select>
           <select className="input text-xs w-auto" value={topicFilter} onChange={(e) => setTopicFilter(e.target.value)}>
             <option value="all">全部主題</option>
             {uniqueTopics.map((t) => (
@@ -265,6 +292,7 @@ export default function InsightsPage() {
               <tbody>
                 {filtered.map((p) => (
                   <PostTableRow key={p.id} post={p}
+                    platformFilter={platformFilter}
                     expanded={expandedPostId === p.id}
                     onToggle={() => setExpandedPostId(expandedPostId === p.id ? null : p.id)}
                     onZoom={(url) => setLightbox(url)}
@@ -300,24 +328,27 @@ export default function InsightsPage() {
 // ==================================================================
 // BigFollowerCard · 大字粉絲數
 // ==================================================================
-function BigFollowerCard({ label, data, error, loading }) {
+function BigFollowerCard({ label, data, error, loading, large = false }) {
+  const numSize = large ? 'text-5xl sm:text-6xl' : 'text-3xl sm:text-4xl';
   return (
-    <div className="rounded-xl border border-divider bg-white p-5">
+    <div className={`rounded-xl border border-divider bg-white ${large ? 'p-7' : 'p-5'}`}>
       <div className="text-[10px] font-mono uppercase tracking-widest text-muted">{label}</div>
       {loading ? (
-        <div className="h-9 w-20 skeleton rounded mt-2" />
+        <div className={`${large ? 'h-14' : 'h-9'} w-24 skeleton rounded mt-2`} />
       ) : error ? (
         <>
           <div className="mt-2 text-2xl font-semibold text-muted">—</div>
           <div className="text-[10px] text-amber-700 mt-1 leading-tight">{error}</div>
         </>
       ) : data ? (
-        <div className="mt-2 flex items-baseline gap-2 flex-wrap">
-          {data.username && <span className="text-xs text-muted font-mono truncate max-w-[130px]">@{data.username}</span>}
-          <span className="text-3xl sm:text-4xl font-display font-semibold tabular-nums text-blue-600">
+        <div className={`mt-2 flex items-baseline gap-2 flex-wrap ${large ? 'gap-3' : ''}`}>
+          {data.username && <span className={`${large ? 'text-sm' : 'text-xs'} text-muted font-mono truncate max-w-[240px]`}>@{data.username}</span>}
+          <span className={`${numSize} font-display font-semibold tabular-nums text-blue-600`}>
             {data.followers?.toLocaleString?.() ?? data.followers ?? '—'}
           </span>
-          <span className="text-xs text-muted">粉絲</span>
+          <span className={`${large ? 'text-sm' : 'text-xs'} text-muted`}>粉絲</span>
+          {large && data.mediaCount != null && <span className="text-xs text-muted">· 發文 {data.mediaCount}</span>}
+          {large && data.following != null && <span className="text-xs text-muted">· 追蹤 {data.following}</span>}
         </div>
       ) : (
         <div className="mt-2 text-2xl text-muted">—</div>
@@ -330,15 +361,17 @@ function BigFollowerCard({ label, data, error, loading }) {
 // ==================================================================
 // PostTableRow · 表格行 · 可展開看留言/深指標
 // ==================================================================
-function PostTableRow({ post, expanded, onToggle, onZoom, onRefresh }) {
+function PostTableRow({ post, expanded, onToggle, onZoom, onRefresh, platformFilter = 'all' }) {
   const [refreshing, setRefreshing] = useState(false);
   const ins = post.insightsByPlatform || {};
-  // 選一個主要平台的指標 (Threads 優先, 再 IG, 再 FB)
-  const primary = ins.threads || ins.instagram || ins.facebook || {};
-  const views = primary.views ?? primary.impressions ?? null;
-  const likes = primary.likes ?? primary.reactions ?? null;
-  const replies = primary.replies ?? primary.comments ?? null;
-  const shares = primary.reposts ?? primary.shares ?? null;
+  // 依 platformFilter pick: 'all' 走 primary (Threads>IG>FB), 否則單一平台
+  const selected = platformFilter === 'all'
+    ? (ins.threads || ins.instagram || ins.facebook || {})
+    : (ins[platformFilter] || {});
+  const views = selected.views ?? selected.impressions ?? null;
+  const likes = selected.likes ?? selected.reactions ?? null;
+  const replies = selected.replies ?? selected.comments ?? null;
+  const shares = selected.reposts ?? selected.shares ?? null;
   const engRate = views && (likes + replies + shares) > 0
     ? `${(((likes || 0) + (replies || 0) + (shares || 0)) / views * 100).toFixed(1)}%`
     : (views ? '0%' : '—');
@@ -570,15 +603,19 @@ function TypeAvgChart({ title, metric, stats, color }) {
 // ==================================================================
 // helpers
 // ==================================================================
-function computeTrafficSeries(posts, fromDate, toDate) {
-  // 依 publishedAt (日期) 分組, sum 每篇 primary views
+function pickPlatformIns(post, platformFilter) {
+  const ins = post.insightsByPlatform || {};
+  if (platformFilter === 'all') return ins.threads || ins.instagram || ins.facebook || {};
+  return ins[platformFilter] || {};
+}
+
+function computeTrafficSeries(posts, fromDate, toDate, platformFilter = 'all') {
   const byDate = {};
   for (const p of posts) {
     if (!p.publishedAt) continue;
     const d = p.publishedAt.slice(0, 10);
-    const ins = p.insightsByPlatform || {};
-    const primary = ins.threads || ins.instagram || ins.facebook || {};
-    const v = primary.views ?? primary.impressions ?? 0;
+    const sel = pickPlatformIns(p, platformFilter);
+    const v = sel.views ?? sel.impressions ?? 0;
     byDate[d] = (byDate[d] || 0) + v;
   }
   // 填補 fromDate → toDate 每日
@@ -596,22 +633,25 @@ function computeTrafficSeries(posts, fromDate, toDate) {
   return { points, hasData: points.some((p) => p.value > 0) };
 }
 
-function computeFollowersSeries(history) {
-  const series = [
-    { name: 'Threads', color: PLATFORM_META.threads.line, points: [] },
-    { name: 'Instagram', color: PLATFORM_META.instagram.line, points: [] },
-    { name: 'Facebook', color: PLATFORM_META.facebook.line, points: [] },
+function computeFollowersSeries(history, platformFilter = 'all') {
+  const all = [
+    { key: 'threads', name: 'Threads', color: PLATFORM_META.threads.line, points: [] },
+    { key: 'instagram', name: 'Instagram', color: PLATFORM_META.instagram.line, points: [] },
+    { key: 'facebook', name: 'Facebook', color: PLATFORM_META.facebook.line, points: [] },
   ];
   for (const h of history) {
-    if (h.threads?.followers != null) series[0].points.push({ date: h.date, value: h.threads.followers });
-    if (h.instagram?.followers != null) series[1].points.push({ date: h.date, value: h.instagram.followers });
-    if (h.facebook?.followers != null) series[2].points.push({ date: h.date, value: h.facebook.followers });
+    if (h.threads?.followers != null) all[0].points.push({ date: h.date, value: h.threads.followers });
+    if (h.instagram?.followers != null) all[1].points.push({ date: h.date, value: h.instagram.followers });
+    if (h.facebook?.followers != null) all[2].points.push({ date: h.date, value: h.facebook.followers });
   }
-  const nonEmpty = series.filter((s) => s.points.length > 0);
+  const filtered = platformFilter === 'all' ? all : all.filter((s) => s.key === platformFilter);
+  // 單一平台時填 fill=true (更好看)
+  if (platformFilter !== 'all') filtered.forEach((s) => { s.fill = true; });
+  const nonEmpty = filtered.filter((s) => s.points.length > 0);
   return { series: nonEmpty, hasData: nonEmpty.some((s) => s.points.length > 0) };
 }
 
-function computeTypeStats(posts) {
+function computeTypeStats(posts, platformFilter = 'all') {
   const buckets = {
     text: { count: 0, views: 0, likes: 0, replies: 0 },
     long: { count: 0, views: 0, likes: 0, replies: 0 },
@@ -622,11 +662,10 @@ function computeTypeStats(posts) {
     if (!buckets[t]) continue;
     const b = buckets[t];
     b.count++;
-    const ins = p.insightsByPlatform || {};
-    const primary = ins.threads || ins.instagram || ins.facebook || {};
-    b.views += (primary.views ?? primary.impressions ?? 0);
-    b.likes += (primary.likes ?? primary.reactions ?? 0);
-    b.replies += (primary.replies ?? primary.comments ?? 0);
+    const sel = pickPlatformIns(p, platformFilter);
+    b.views += (sel.views ?? sel.impressions ?? 0);
+    b.likes += (sel.likes ?? sel.reactions ?? 0);
+    b.replies += (sel.replies ?? sel.comments ?? 0);
   }
   const result = {};
   for (const [k, b] of Object.entries(buckets)) {
