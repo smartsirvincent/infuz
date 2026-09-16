@@ -51,12 +51,37 @@ export default function TopicDetailPage() {
   }
 
   async function retryPost(post) {
-    await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(post.id)}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ status: 'queued', error: null }),
-    });
-    load();
+    // 先把 status reset · 再直接呼叫 publish-now 立刻重發 (不等 cron)
+    setPublishingId(post.id); setError('');
+    try {
+      await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(post.id)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'queued', error: null, results: null }),
+      });
+      const r = await fetch('/api/infuz/topic_posts/publish-now', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          // 帶 platformsOverride (素材發文時用戶勾的 3 平台) · 若沒有就給 undefined 讓後端走 topic.schedule
+          platforms: post.platformsOverride || undefined,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) {
+        // 失敗就把 status 標回 failed (讓下次還能點重試)
+        const failedPlatforms = Object.entries(d.results || {}).filter(([, v]) => !v.ok).map(([k]) => k).join('/');
+        throw new Error(d.error || (failedPlatforms ? `${failedPlatforms} 失敗` : `HTTP ${r.status}`));
+      }
+      alert('✓ 重試成功 · 已發到「已發」tab');
+      setTab('published');
+    } catch (e) {
+      setError('重試失敗:' + e.message);
+    } finally {
+      setPublishingId(null);
+      await load();
+    }
   }
 
   async function toggleIncludeLink(post, checked) {

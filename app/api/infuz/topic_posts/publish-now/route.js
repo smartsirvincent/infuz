@@ -24,7 +24,8 @@ export async function POST(req) {
       loadDb('settings'),
     ]);
     const topic = (topicsDb.items || []).find((t) => t.id === post.topicId);
-    const platforms = overridePlatforms || topic?.schedule?.platforms || { threads: true };
+    // 平台優先序: 前端傳的 override > post.platformsOverride (素材發文用) > topic.schedule.platforms > 預設 threads
+    const platforms = overridePlatforms || post.platformsOverride || topic?.schedule?.platforms || { threads: true };
 
     const settings = (settingsDb.items || []).find((s) => s.id === 'main') || {};
     const utmCfg = settings.utm || null;
