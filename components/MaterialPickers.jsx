@@ -794,9 +794,11 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
           type="button"
           onClick={() => dispatch('post')}
           disabled={dispatching !== null || done.post}
-          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
+          aria-busy={dispatching === 'post' || undefined}
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 ${done.post ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
         >
-          {dispatching === 'post' ? '發送中…' : done.post ? '✓ 已發文' : '🚀 立即發佈'}
+          {dispatching === 'post' && <MiniSpinner />}
+          {dispatching === 'post' ? '發送中… 請勿重按' : done.post ? '✓ 已發文' : '🚀 立即發佈'}
         </button>
       )}
 
@@ -805,9 +807,11 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
           type="button"
           onClick={() => dispatch('schedule')}
           disabled={dispatching !== null || done.schedule}
-          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50 ${done.schedule ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+          aria-busy={dispatching === 'schedule' || undefined}
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 ${done.schedule ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
         >
-          {dispatching === 'schedule' ? '排程中…' : done.schedule ? '✓ 已加入排程' : '📅 加入排程'}
+          {dispatching === 'schedule' && <MiniSpinner />}
+          {dispatching === 'schedule' ? '排程中… 請勿重按' : done.schedule ? '✓ 已加入排程' : '📅 加入排程'}
         </button>
       )}
 
@@ -817,6 +821,16 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
           : '加入「素材發文」主題佇列, cron 到時間自動發'}
       </div>
     </div>
+  );
+}
+
+// 小 spinner (SVG) · 給沒 import Spinner 的元件用
+function MiniSpinner({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+    </svg>
   );
 }
 

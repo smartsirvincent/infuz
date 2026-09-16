@@ -130,8 +130,17 @@ export default function InsightsPage() {
         description="粉絲趨勢 · 流量趨勢 · 貼文類型比較 · 每天 00:00 台北時間自動刷新"
         actions={
           <button onClick={refreshAllInsights} disabled={refreshingAll}
-            className="text-xs px-3 py-1.5 rounded-md border border-divider text-ink hover:bg-linen disabled:opacity-50"
-          >{refreshingAll ? '更新中…' : '🔄 立即更新全部數據'}</button>
+            aria-busy={refreshingAll || undefined}
+            className="text-xs px-3 py-1.5 rounded-md border border-divider text-ink hover:bg-linen disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+          >
+            {refreshingAll && (
+              <svg width="12" height="12" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+              </svg>
+            )}
+            {refreshingAll ? '更新中… 請勿重按' : '🔄 立即更新全部數據'}
+          </button>
         }
       />
 

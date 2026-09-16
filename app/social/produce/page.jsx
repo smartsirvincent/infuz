@@ -490,8 +490,15 @@ function ProducePageInner() {
         {error && <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">⚠ {error}</div>}
 
         <button onClick={produce} disabled={generating || !topicId}
-          className="w-full rounded-lg bg-fuchsia-600 px-5 py-3 text-base font-medium text-white hover:bg-fuchsia-700 disabled:opacity-50">
-          {generating ? (isImage ? `⏳ 產文+生圖中(約 ${count * 45}s)…` : '⏳ 產文中…') : `🚀 開始產 ${count} 篇`}
+          aria-busy={generating || undefined}
+          className="w-full rounded-lg bg-fuchsia-600 px-5 py-3 text-base font-medium text-white hover:bg-fuchsia-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
+          {generating && (
+            <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+          )}
+          {generating ? (isImage ? `產文+生圖中 · 約 ${count * 45}s · 請勿關閉` : '產文中… 請勿關閉頁面') : `🚀 開始產 ${count} 篇`}
         </button>
       </div>
 
@@ -556,8 +563,15 @@ function ProducePageInner() {
 
           <div className="flex justify-end border-t border-stone-200 pt-3">
             <button onClick={saveToQueue} disabled={saving || selected.size === 0}
-              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-50">
-              {saving ? '存中…' : `✓ 加入 ${selected.size} 篇到待發佇列`}
+              aria-busy={saving || undefined}
+              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2">
+              {saving && (
+                <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                </svg>
+              )}
+              {saving ? '儲存中… 請勿重按' : `✓ 加入 ${selected.size} 篇到待發佇列`}
             </button>
           </div>
         </div>

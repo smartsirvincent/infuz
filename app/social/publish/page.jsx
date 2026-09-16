@@ -243,9 +243,16 @@ export default function SocialPublishPage() {
           type="button"
           onClick={handlePublish}
           disabled={publishing || (!text.trim() && !imageUrl.trim())}
-          className="rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          aria-busy={publishing || undefined}
+          className="rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
         >
-          {publishing ? '🚀 發送中… (可能 30-90 秒)' : '🚀 一鍵發文'}
+          {publishing && (
+            <svg width="16" height="16" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+          )}
+          {publishing ? '發送中… (可能 30-90 秒) · 請勿關閉頁面' : '🚀 一鍵發文'}
         </button>
       </div>
 

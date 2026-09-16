@@ -392,12 +392,26 @@ export default function WeatherPostPage() {
             <button onClick={() => { setEditing(null); setPreview(null); }} className="text-xs text-stone-500 hover:underline">取消</button>
             <div className="flex gap-2">
               <button onClick={tryPreview} disabled={previewing || !weatherReady}
-                className="rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 disabled:opacity-50">
-                {previewing ? (editing.withImage ? '產文+生圖中(約 60-90s)…' : '產文生成中…') : '🔎 試發預覽(不真發)'}
+                aria-busy={previewing || undefined}
+                className="rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                {previewing && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                  </svg>
+                )}
+                {previewing ? (editing.withImage ? '產文+生圖中 · 約 60-90s' : '產文生成中…') : '🔎 試發預覽(不真發)'}
               </button>
               <button onClick={trySave} disabled={saving}
-                className="rounded-md bg-emerald-600 px-4 py-1.5 text-xs text-white hover:bg-emerald-700 disabled:opacity-50">
-                {saving ? '存中…' : '💾 儲存'}
+                aria-busy={saving || undefined}
+                className="rounded-md bg-emerald-600 px-4 py-1.5 text-xs text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                {saving && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                  </svg>
+                )}
+                {saving ? '儲存中…' : '💾 儲存'}
               </button>
             </div>
           </div>

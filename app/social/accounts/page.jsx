@@ -141,9 +141,16 @@ function FacebookCard({ conn, onSaved }) {
           type="button"
           onClick={handleLink}
           disabled={busy || !userToken.trim()}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          aria-busy={busy || undefined}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
         >
-          {busy ? '處理中…' : '🔗 檢查 + 列出粉專'}
+          {busy && (
+            <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+          )}
+          {busy ? '處理中… 請勿重按' : '🔗 檢查 + 列出粉專'}
         </button>
       </div>
 
@@ -285,9 +292,16 @@ function ThreadsCard({ conn, onSaved }) {
           type="button"
           onClick={handleSave}
           disabled={busy || !accessToken.trim()}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          aria-busy={busy || undefined}
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
         >
-          {busy ? '驗證中…' : '💾 驗證 + 儲存'}
+          {busy && (
+            <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+          )}
+          {busy ? '驗證中… 請勿重按' : '💾 驗證 + 儲存'}
         </button>
       </div>
 

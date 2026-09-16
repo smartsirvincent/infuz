@@ -186,8 +186,15 @@ export default function DiscoverPage() {
 
         <div className="flex justify-end">
           <button onClick={askAI} disabled={suggesting}
-            className="rounded-lg bg-purple-600 px-5 py-2.5 text-sm text-white hover:bg-purple-700 disabled:opacity-50">
-            {suggesting ? '💭 AI 發想中…' : `💡 AI 建議 ${count} 個新主題`}
+            aria-busy={suggesting || undefined}
+            className="rounded-lg bg-purple-600 px-5 py-2.5 text-sm text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2">
+            {suggesting && (
+              <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+              </svg>
+            )}
+            {suggesting ? 'AI 發想中… 請勿重按' : `💡 AI 建議 ${count} 個新主題`}
           </button>
         </div>
       </div>
@@ -239,8 +246,15 @@ export default function DiscoverPage() {
           </div>
           <div className="flex justify-end border-t border-stone-200 pt-3">
             <button onClick={saveSelected} disabled={saving || selected.size === 0}
-              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-50">
-              {saving ? '存中…' : `✓ 加入 ${selected.size} 個到主題清單`}
+              aria-busy={saving || undefined}
+              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2">
+              {saving && (
+                <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                </svg>
+              )}
+              {saving ? '儲存中… 請勿重按' : `✓ 加入 ${selected.size} 個到主題清單`}
             </button>
           </div>
         </div>

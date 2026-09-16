@@ -252,9 +252,16 @@ export default function MaterialCompositionPage() {
               type="button"
               onClick={handleGenerate}
               disabled={generating || !productCountOk || !modelsOk || (!scenarioId && !compositionRefUrl)}
-              className="btn-primary disabled:opacity-50"
+              aria-busy={generating || undefined}
+              className="btn-primary disabled:opacity-60 inline-flex items-center gap-2"
             >
-              {generating ? '生成中…' : `🎨 開始生圖 (${productIds.length} 件, 1:1)`}
+              {generating && (
+                <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                </svg>
+              )}
+              {generating ? 'AI 生圖中… 通常 30-90 秒' : `🎨 開始生圖 (${productIds.length} 件, 1:1)`}
             </button>
           </div>
 
