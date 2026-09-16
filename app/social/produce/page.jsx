@@ -623,6 +623,35 @@ function DraftCard({ draft, on, onToggle, onChange, onRemove, onRegenImage, onSa
               value={draft.text} onChange={(e) => onChange({ text: e.target.value })} />
             <div className="mt-0.5 text-[10px] text-stone-500">字數:{(draft.text || '').length}</div>
           </div>
+
+          {/* 投票選項 (只有 poll type 才有) */}
+          {Array.isArray(draft.pollOptions) && draft.pollOptions.length > 0 && (
+            <div className="rounded-lg border border-purple-200 bg-purple-50/40 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-semibold text-purple-800">🗳️ 投票選項 (Threads · 最多 4 個 · 每個 ≤ 25 字)</div>
+                <span className="text-[10px] text-purple-600">發布後不能改</span>
+              </div>
+              {draft.pollOptions.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-purple-500 w-4">#{i + 1}</span>
+                  <input
+                    type="text"
+                    className="input text-xs flex-1"
+                    value={opt}
+                    maxLength={25}
+                    placeholder={`選項 ${i + 1}`}
+                    onChange={(e) => {
+                      const next = [...draft.pollOptions];
+                      next[i] = e.target.value.slice(0, 25);
+                      onChange({ pollOptions: next });
+                    }}
+                  />
+                  <span className="text-[10px] font-mono text-stone-400 w-8 text-right">{opt.length}/25</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div>
             <label className="label text-[10px]">Hashtags</label>
             <input className="input text-xs" value={draft.hashtags} onChange={(e) => onChange({ hashtags: e.target.value })} />

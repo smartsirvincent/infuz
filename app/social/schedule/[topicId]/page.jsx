@@ -344,6 +344,19 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
           {/* 完整發文預覽 (含 hashtags + 帶連結時的 URL) */}
           <pre className="mt-2 whitespace-pre-wrap text-sm text-stone-900 font-sans leading-relaxed">{previewText}</pre>
 
+          {/* Poll (投票) 預覽 · 只有 poll type 才有 */}
+          {Array.isArray(post.pollOptions) && post.pollOptions.length > 0 && (
+            <div className="mt-2 rounded-lg border border-purple-200 bg-purple-50/40 p-2 space-y-1">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-purple-700 mb-1">🗳️ Threads 投票</div>
+              {post.pollOptions.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2 rounded bg-white px-2 py-1 text-xs border border-purple-100">
+                  <span className="font-mono text-purple-500">#{i + 1}</span>
+                  <span className="text-stone-900">{opt}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* 參考產品照 (可點放大, 對比生成圖) */}
           {picked?.image_front && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 p-2">

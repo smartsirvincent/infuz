@@ -17,6 +17,7 @@ export async function POST(req) {
       assetId,               // 選填,若給則發完更新 asset.dispatched.direct + 沒 imageUrl 時自動讀
       text,                  // 文案 (必填)
       hashtags,              // IG 用,空白/逗號分隔
+      pollOptions,           // 選填,Threads 投票文用 (2-4 個字串)
     } = body;
     let imageUrl = body.imageUrl;
 
@@ -84,7 +85,7 @@ export async function POST(req) {
         const t0 = Date.now();
         const adapted = adapt(text, platformId, { hashtags });
         if (platformId === 'threads') {
-          const r = await publishThread(conn.threads, adapted.chunks, imageUrl || null);
+          const r = await publishThread(conn.threads, adapted.chunks, imageUrl || null, pollOptions || null);
           results.threads = { ok: true, ids: r.ids, permalink: r.firstPermalink, ms: Date.now() - t0 };
         } else if (platformId === 'instagram') {
           const r = await publishInstagram(conn.facebook, { caption: adapted.caption, imageUrl });

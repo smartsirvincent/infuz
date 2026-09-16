@@ -41,6 +41,8 @@ export async function POST(req) {
 
     const wantImages = topic.type === 'image';
     const wantLong = topic.type === 'long';
+    const wantEngagement = topic.type === 'engagement';
+    const wantPoll = topic.type === 'poll';
     const useProductPhoto = wantImages && effective.imageSource === 'product_photo';
 
     // 產 count 篇 draft
@@ -51,7 +53,8 @@ export async function POST(req) {
     for (let i = 0; i < count; i += CHUNK) {
       const chunkSize = Math.min(CHUNK, count - i);
       const chunk = Array.from({ length: chunkSize }, (_, k) => produceOne({
-        topic: effective, boundProducts, index: startIndex + i + k, wantImages, wantLong, useProductPhoto,
+        topic: effective, boundProducts, index: startIndex + i + k,
+        wantImages, wantLong, wantEngagement, wantPoll, useProductPhoto,
       }));
       const chunkResults = await Promise.all(chunk);
       results.push(...chunkResults);
@@ -75,8 +78,10 @@ export async function POST(req) {
   }
 }
 
-async function produceOne({ topic, boundProducts, index, wantImages, wantLong, useProductPhoto }) {
-  const picked = boundProducts.length ? boundProducts[index % boundProducts.length] : null;
+async function produceOne({ topic, boundProducts, index, wantImages, wantLong, wantEngagement, wantPoll, useProductPhoto }) {
+  const picked = (wantEngagement || boundProducts.length === 0)
+    ? null // engagement 不綁品牌產品
+    : (boundProducts.length ? boundProducts[index % boundProducts.length] : null);
   const brand = INFUZ_BRAND;
 
   const productHint = picked
@@ -87,11 +92,36 @@ async function produceOne({ topic, boundProducts, index, wantImages, wantLong, u
 - 特色: ${picked.features || '(無)'}
 - 產品照: ${picked.image_front || ''}
 文案裡自然帶到這件單品(不要生硬)。`
-    : '\n\n(本篇不綁定產品 · 只依品牌人格發文)';
+    : (wantEngagement
+        ? '\n\n(本篇故意「不」提品牌與產品 · 純粹一則有趣觀察 / 冷知識 / 反直覺洞見, 為的是引流互動)'
+        : '\n\n(本篇不綁定產品 · 只依品牌人格發文)');
 
-  const length = wantLong ? '300-600 字' : '100-200 字';
+  const length = wantLong ? '300-600 字' : wantEngagement ? '100-180 字' : wantPoll ? '60-120 字前言' : '100-200 字';
   // useProductPhoto 時不需要 imagePrompt (直接用產品照)
   const needAiImagePrompt = wantImages && !useProductPhoto;
+
+  const engagementDirective = wantEngagement ? `
+
+【高互動貼文專屬要求 · 極重要】
+這個主題目標是 Threads 高互動 · 不是品牌宣傳。
+- 完全不要提到品牌名、產品、購買、折扣等商業元素
+- 內容選材優先:反直覺冷知識 / 生活小發現 / 有共鳴的觀察 / 令人震驚的統計 / 大家都誤解的事實
+- 語氣要口語 · 像朋友在講:「你知道嗎...」「今天才發現...」「原來...」
+- 結尾常留鉤子讓人想回:「你也這樣覺得嗎?」「大家覺得呢?」或直接留空讓人自然回覆
+- 目標是讓人「想按讚 / 想留言 / 想轉」, 不是「想買」
+- 避免陳腔濫調的雞湯:別寫「人生就像...」「時間會告訴你...」
+` : '';
+
+  const pollDirective = wantPoll ? `
+
+【投票貼文專屬要求 · 極重要】
+這個主題會發成 Threads 投票文。
+- 前言 60-120 字, 拋出一個「兩難 / 對比 / 二選一」的情境, 讓人想投票
+- 4 個選項每個 ≤ 15 字, 要具體不能太籠統
+- 選項要平衡 (不能一看就知道正確答案), 至少 2 個很難選
+- 可以與品牌/穿搭/生活風格相關
+- 前言結尾自然銜接「你會選...」或「大家都怎麼選?」
+` : '';
 
   const system = `你是 ${brand.brand} 的社群小編。
 品牌介紹:${brand.brand_summary}
@@ -101,8 +131,8 @@ async function produceOne({ topic, boundProducts, index, wantImages, wantLong, u
 【當前主題】${topic.name}
 ${topic.description || ''}
 ${topic.systemPrompt ? `\n寫作方向: ${topic.systemPrompt}` : ''}
-${topic.promoInfo ? `\n【本次促銷訊息 (必須自然帶入文案)】\n${topic.promoInfo}\n(語氣不要像廣告 slogan, 要融入敘事)` : ''}
-
+${topic.promoInfo && !wantEngagement ? `\n【本次促銷訊息 (必須自然帶入文案)】\n${topic.promoInfo}\n(語氣不要像廣告 slogan, 要融入敘事)` : ''}
+${engagementDirective}${pollDirective}
 必須遵守:
 - 用繁體中文寫作
 - 台灣用語(不用「视频」「网站」等對岸詞)
@@ -124,7 +154,8 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
 {
   "text": "貼文文字(繁體中文,${length},含換行)",
   ${needAiImagePrompt ? '"imagePrompt": "英文 image-to-image prompt (見上方指示)",' : ''}
-  "hashtags": "3-6 個相關 hashtag (#開頭,空白分隔)"
+  ${wantPoll ? '"pollOptions": ["選項1(≤15字)", "選項2(≤15字)", "選項3(≤15字)", "選項4(≤15字)"],' : ''}
+  "hashtags": "${wantEngagement ? '3-5 個 · 不要品牌 hashtag, 選熱門通用 tag 拉聲量' : wantPoll ? '2-4 個 · 可含品牌 tag' : '3-6 個相關 hashtag'} (#開頭,空白分隔)"
 }`;
 
   const draft = await callJSON({
@@ -168,6 +199,13 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
     }
   }
 
+  // Poll options 清理 (保證 4 個 · 每個 ≤ 25 字避免 Threads API 拒)
+  let pollOptions = null;
+  if (wantPoll && Array.isArray(draft.pollOptions)) {
+    pollOptions = draft.pollOptions.slice(0, 4).map((s) => String(s || '').trim().slice(0, 25)).filter(Boolean);
+    while (pollOptions.length < 4) pollOptions.push(`選項 ${pollOptions.length + 1}`);
+  }
+
   return {
     _localId: `draft_${Date.now()}_${index}`,
     topicId: topic.id,
@@ -177,6 +215,7 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
     imageUrl,
     imageError,
     imageSource: usedImageSource,
+    pollOptions,
     pickedProductId: picked?.id || null,
     pickedProductName: picked?.name || null,
     pickedProductImage: picked?.image_front || null,

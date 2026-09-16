@@ -220,6 +220,21 @@ export default function InsightsPage() {
         )}
       </section>
 
+      {/* FB 專屬提示 · Meta 對本 App 不開放單篇/Page 深指標 · 需申請 Advanced Access */}
+      {platformFilter === 'facebook' && (
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 space-y-1.5">
+          <div className="font-semibold text-sm">⚠ Facebook 單篇貼文成效目前拿不到數據</div>
+          <p className="leading-relaxed">
+            Meta Graph API 對開發者 App 預設關閉單篇貼文的 <code className="font-mono">impressions / reach / clicks</code> 等 metric,
+            需要在 Meta App Review 申請 <strong>Advanced Access</strong> 才會回值。 目前這個 App 是 dev tier,只能拿到粉專粉絲總數 + 貼文本身 permalink。
+          </p>
+          <p className="leading-relaxed">
+            要看單篇 FB 成效,現在得直接去 <a target="_blank" rel="noreferrer" href="https://business.facebook.com/latest/insights" className="underline">Meta Business Suite Insights</a>
+            或每篇貼文 permalink 底下的 Meta 原生分析工具。
+          </p>
+        </section>
+      )}
+
       {/* 粉絲成長趨勢 · MultiLineChart */}
       <section className="rounded-2xl border border-divider bg-white p-5">
         <div className="flex items-center gap-2 mb-4">

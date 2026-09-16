@@ -46,6 +46,7 @@ export async function POST(req) {
         imageUrl: post.imageUrl || null,
         hashtags: '',
         platforms,
+        pollOptions: post.pollOptions || null,
       }),
     });
     const publishResult = await res.json();

@@ -14,13 +14,15 @@ const TYPE_HINT = {
   text: '短文 100-200 字, 適合 Threads 快讀',
   long: '長文 300-600 字, 適合 FB 長貼文/深度觀點',
   image: '圖文並茂, 100-200 字 + AI 生一張搭配圖',
+  engagement: 'Threads 高互動短文, 冷知識/生活觀察/反直覺洞見, 不與品牌綁定, 100-180 字',
+  poll: 'Threads 投票文, 主題敘述 + 4 個選項, 可與品牌相關, 60-120 字前言',
 };
 
 export async function POST(req) {
   try {
     const { direction = '', defaultType = 'text', productIds = [], count = 5 } = await req.json();
     const N = [1, 3, 5, 7].includes(count) ? count : 5;
-    const type = ['text', 'long', 'image'].includes(defaultType) ? defaultType : 'text';
+    const type = ['text', 'long', 'image', 'engagement', 'poll'].includes(defaultType) ? defaultType : 'text';
 
     // 讀已有 topics, 提供給 Claude 排除清單
     const topicsDb = await loadDb('topics');

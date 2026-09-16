@@ -96,6 +96,8 @@ export default function DiscoverPage() {
                 { key: 'text', label: '📝 文字' },
                 { key: 'long', label: '📄 長文' },
                 { key: 'image', label: '🖼️ 圖片' },
+                { key: 'engagement', label: '🔥 高互動' },
+                { key: 'poll', label: '🗳️ 投票' },
               ].map((o) => (
                 <button
                   key={o.key}
@@ -109,6 +111,8 @@ export default function DiscoverPage() {
               {defaultType === 'text' && '短文 100-200 字 · 適合 Threads 快讀'}
               {defaultType === 'long' && '長文 300-600 字 · 適合 FB 深度觀點'}
               {defaultType === 'image' && '圖文 100-200 字 + AI 生一張搭配圖'}
+              {defaultType === 'engagement' && '⚡ Threads 高互動短文 · 冷知識/生活觀察/反直覺洞見 · 不與品牌綁定'}
+              {defaultType === 'poll' && '🗳️ Threads 投票文 · 主題文 + 4 選項 · 可與品牌相關'}
             </div>
           </div>
           <div>
