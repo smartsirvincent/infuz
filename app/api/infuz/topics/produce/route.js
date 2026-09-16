@@ -8,6 +8,7 @@ import { loadDb, saveDb } from '@/lib/infuz-db.js';
 import { submitAndPollV2WithRetry } from '@/lib/kie-image.js';
 import { uploadToCloudinary } from '@/lib/cloudinary.js';
 import { FIDELITY_INSTRUCTION_FOR_CLAUDE, enforceFidelityPrompt, productReferenceUrls } from '@/lib/infuz-image-rules.js';
+import { pickArchetype, inferArchetype, ENGAGEMENT_HARD_RULES } from '@/lib/infuz-engagement-archetypes.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -96,20 +97,25 @@ async function produceOne({ topic, boundProducts, index, wantImages, wantLong, w
         ? '\n\n(本篇故意「不」提品牌與產品 · 純粹一則有趣觀察 / 冷知識 / 反直覺洞見, 為的是引流互動)'
         : '\n\n(本篇不綁定產品 · 只依品牌人格發文)');
 
-  const length = wantLong ? '300-600 字' : wantEngagement ? '100-180 字' : wantPoll ? '60-120 字前言' : '100-200 字';
+  const length = wantLong ? '300-600 字' : wantEngagement ? '60-180 字' : wantPoll ? '60-120 字前言' : '100-200 字';
+
+  // 高互動貼文: 隨機挑一個 archetype (優先看 topic 名稱有沒有 hint · 沒有就依 index 輪流)
+  const archetype = wantEngagement ? (inferArchetype(topic.name) || pickArchetype(index)) : null;
   // useProductPhoto 時不需要 imagePrompt (直接用產品照)
   const needAiImagePrompt = wantImages && !useProductPhoto;
 
   const engagementDirective = wantEngagement ? `
+${ENGAGEMENT_HARD_RULES}
 
-【高互動貼文專屬要求 · 極重要】
-這個主題目標是 Threads 高互動 · 不是品牌宣傳。
-- 完全不要提到品牌名、產品、購買、折扣等商業元素
-- 內容選材優先:反直覺冷知識 / 生活小發現 / 有共鳴的觀察 / 令人震驚的統計 / 大家都誤解的事實
-- 語氣要口語 · 像朋友在講:「你知道嗎...」「今天才發現...」「原來...」
-- 結尾常留鉤子讓人想回:「你也這樣覺得嗎?」「大家覺得呢?」或直接留空讓人自然回覆
-- 目標是讓人「想按讚 / 想留言 / 想轉」, 不是「想買」
-- 避免陳腔濫調的雞湯:別寫「人生就像...」「時間會告訴你...」
+【本篇 archetype 指引 · 用這個手法寫】
+類型: ${archetype.name}
+說明: ${archetype.hint}
+Hook 常見句型: ${archetype.hookPattern}
+真實爆文例子(僅參考句型 · 不可直接抄):
+  ${archetype.example}
+
+⚠ 一定要遵守上方硬規則 · 特別是: 完全不能碰品牌/產品/購物/hashtag/外部連結/政治/健康爭議/性別對立。
+⚠ 這是連續發文的第 ${index + 1} 篇, 主題「${topic.name}」下有 20-30 篇, 這篇的角度必須跟其他篇有明顯差異。
 ` : '';
 
   const pollDirective = wantPoll ? `
@@ -210,7 +216,10 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
     _localId: `draft_${Date.now()}_${index}`,
     topicId: topic.id,
     text: (draft.text || '').trim(),
-    hashtags: draft.hashtags || '',
+    // 高互動貼文強制清空 hashtags (研究顯示 hashtag 反而壓觸及)
+    hashtags: wantEngagement ? '' : (draft.hashtags || ''),
+    // 高互動貼文標註 archetype 讓 UI 顯示
+    engagementArchetype: wantEngagement ? archetype.key : null,
     imagePrompt: draft.imagePrompt || '',
     imageUrl,
     imageError,
