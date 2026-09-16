@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { loadDb, updateItem } from '@/lib/infuz-db.js';
 import { buildTextWithLink } from '@/lib/topic-publish-helper.js';
+import { notifyPublishFailure } from '@/lib/infuz-notify.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -54,6 +55,10 @@ export async function POST(req) {
       results: publishResult.results || null,
       error: publishResult.ok ? null : publishResult.error || 'publish failed',
     });
+
+    // 發文失敗 · 額外送 email (publish endpoint 也會送, 這裡多送一次備援)
+    // 若 publish endpoint 已經送過, 這裡因為主題名 + postId 資訊更全, 值得再送 · 但為避免重複只在 publish endpoint 那層送
+    // 所以這裡不重送
 
     return NextResponse.json({
       ok: publishResult.ok,

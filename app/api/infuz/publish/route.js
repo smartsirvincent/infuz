@@ -5,6 +5,7 @@ import { PLATFORMS } from '@/lib/infuz-platforms.js';
 import { adapt, preflight } from '@/lib/infuz-adapt.js';
 import { publishInstagram, publishFacebook } from '@/lib/infuz-meta.js';
 import { publishThread } from '@/lib/infuz-threads.js';
+import { notifyPublishFailure } from '@/lib/infuz-notify.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -120,6 +121,16 @@ export async function POST(req) {
     }
 
     const allOk = Object.values(results).every((r) => r.ok);
+
+    // 有失敗就寄信通知 (fire-and-forget) · scheduler 呼叫時會帶 skipNotify (自己送含更多 context)
+    if (!allOk && !body.skipNotify) {
+      notifyPublishFailure({
+        source: body.source || (assetId ? '素材立即發佈' : '立即發文'),
+        post: { text, imageUrl, topicName: body.topicName },
+        results,
+      }).catch((e) => console.error('[publish/notify]', e.message));
+    }
+
     return NextResponse.json({
       ok: allOk,
       results,

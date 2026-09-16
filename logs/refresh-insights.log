@@ -11,3 +11,26 @@
 [2026-08-31 21:27:36] OK · total=5 refreshed=5 errorTotal=0
 [2026-09-01 00:00:02] === start ===
 [2026-09-01 00:00:02] OK · total=5 refreshed=5 errorTotal=0
+[2026-09-02 00:00:02] === start ===
+[2026-09-02 00:00:02] OK · total=8 refreshed=8 errorTotal=0
+[2026-09-03 02:17:12] === start ===
+[2026-09-03 02:17:12] FAIL · 無法連接至遠端伺服器
+[2026-09-03 23:00:04] === start ===
+[2026-09-03 23:00:04] OK · total=10 refreshed=10 errorTotal=0
+[2026-09-04 23:00:03] === start ===
+[2026-09-04 23:00:03] OK · total=13 refreshed=13 errorTotal=0
+[2026-09-06 00:00:04] === start ===
+[2026-09-06 00:00:04] OK · total=14 refreshed=14 errorTotal=0
+[2026-09-07 00:00:03] === start ===
+[2026-09-07 00:00:03] OK · total=14 refreshed=14 errorTotal=0
+[2026-09-08 00:00:03] === start ===
+[2026-09-08 00:00:03] OK · total=18 refreshed=18 errorTotal=0
+[2026-09-09 00:00:04] === start ===
+[2026-09-09 00:00:04] OK · total=21 refreshed=21 errorTotal=0
+[2026-09-15 08:17:32] === start ===
+[2026-09-16 00:00:01] === start ===
+[2026-09-16 00:00:01] OK · total=27 refreshed=27 errorTotal=4
+[2026-09-16 00:00:01]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-16 00:00:01]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-16 00:00:01]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-16 00:00:01]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
