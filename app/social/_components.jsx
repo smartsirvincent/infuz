@@ -6,6 +6,35 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useCallback } from 'react';
+
+// ============================================================
+// useAsyncClick · 包裝 async handler · 自動管理 loading state
+// 用法: const [pending, onClick] = useAsyncClick(async () => { await fetch(...) })
+// ============================================================
+export function useAsyncClick(fn, { rethrow = false } = {}) {
+  const [pending, setPending] = useState(false);
+  const wrapped = useCallback(async (...args) => {
+    if (pending) return; // 防連按
+    setPending(true);
+    try { return await fn(...args); }
+    catch (e) { if (rethrow) throw e; console.error('[useAsyncClick]', e); }
+    finally { setPending(false); }
+  }, [fn, pending, rethrow]);
+  return [pending, wrapped];
+}
+
+// ============================================================
+// Spinner · 內嵌 SVG · 跟 currentColor 走
+// ============================================================
+export function Spinner({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className="animate-spin motion-reduce:animate-none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 // ============================================================
 // PageHeader · editorial · 大字 heading + 麵包屑 + 右邊 actions
@@ -172,20 +201,14 @@ export function TabBar({ tabs, value, onChange }) {
 // ============================================================
 // Button · Vercel dashboard 風
 // ============================================================
-export function Button({ children, tone = 'primary', size = 'md', disabled, onClick, href, type = 'button', className = '', title }) {
+export function Button({ children, tone = 'primary', size = 'md', disabled, loading = false, loadingText, onClick, href, type = 'button', className = '', title }) {
   const tones = {
-    // 主要動作用黑底白字 (Vercel/Linear 風)
-    primary: 'bg-zinc-950 text-white hover:bg-zinc-800 disabled:bg-zinc-300',
-    // 品牌強調用 accent (只用於重要「產文/發文」)
-    accent: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300',
-    // 次要, 白底邊框
-    secondary: 'border border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 disabled:opacity-50',
-    // 透明, 只有 hover
-    ghost: 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
-    // 破壞性
-    danger: 'border border-red-200 text-red-700 bg-white hover:bg-red-50 hover:border-red-300',
-    // 正向
-    positive: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300',
+    primary: 'bg-zinc-950 text-white hover:bg-zinc-800 disabled:bg-zinc-500 disabled:text-zinc-200',
+    accent: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-400 disabled:text-white/80',
+    secondary: 'border border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 disabled:opacity-60 disabled:hover:bg-white',
+    ghost: 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-60',
+    danger: 'border border-red-200 text-red-700 bg-white hover:bg-red-50 hover:border-red-300 disabled:opacity-60',
+    positive: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-400 disabled:text-white/80',
   };
   const sizes = {
     xs: 'text-xs px-2 py-1 rounded-md',
@@ -193,9 +216,17 @@ export function Button({ children, tone = 'primary', size = 'md', disabled, onCl
     md: 'text-sm px-4 py-2 rounded-md',
     lg: 'text-sm px-5 py-2.5 rounded-md font-medium',
   };
-  const cls = `inline-flex items-center justify-center gap-1.5 font-medium transition disabled:cursor-not-allowed motion-reduce:transition-none ${tones[tone]} ${sizes[size]} ${className}`;
-  if (href) return <Link href={href} className={cls} title={title}>{children}</Link>;
-  return <button type={type} onClick={onClick} disabled={disabled} className={cls} title={title}>{children}</button>;
+  const spinSize = { xs: 12, sm: 12, md: 14, lg: 14 }[size];
+  const isDisabled = disabled || loading;
+  const cls = `inline-flex items-center justify-center gap-1.5 font-medium transition disabled:cursor-not-allowed active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 ${tones[tone]} ${sizes[size]} ${className}`;
+  const inner = loading ? (
+    <>
+      <Spinner size={spinSize} />
+      <span>{loadingText || '處理中…'}</span>
+    </>
+  ) : children;
+  if (href && !isDisabled) return <Link href={href} className={cls} title={title}>{inner}</Link>;
+  return <button type={type} onClick={onClick} disabled={isDisabled} aria-busy={loading || undefined} className={cls} title={title}>{inner}</button>;
 }
 
 // ============================================================

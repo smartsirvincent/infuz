@@ -57,6 +57,28 @@ html, body {
   color: #09090b;
 }
 
+/* 全域 button 按下反饋 + loading state · 避免用戶重按 */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled):active {
+  transform: scale(0.98);
+  transition-duration: 60ms;
+}
+button:disabled,
+button[aria-busy="true"] {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active { transform: none; }
+}
+
+/* Cursor progress on loading buttons */
+button[aria-busy="true"] {
+  cursor: progress;
+}
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition motion-reduce:transition-none;

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { buildTextWithLink } from '@/lib/topic-publish-helper.js';
-import { PageHeader, TabBar, Chip, Button, EmptyState, Skeleton, SkeletonCard } from '../../_components.jsx';
+import { PageHeader, TabBar, Chip, Button, EmptyState, Skeleton, SkeletonCard, Spinner } from '../../_components.jsx';
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const TAB = { queued: '📥 待發', published: '✓ 已發', failed: '✗ 失敗' };
@@ -416,12 +416,19 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
         <div className="flex flex-col gap-1.5 shrink-0">
           {onPublishNow && (
             <button onClick={onPublishNow} disabled={publishing}
-              className="rounded-md bg-fuchsia-600 px-2.5 py-1.5 text-[11px] text-white hover:bg-fuchsia-700 disabled:opacity-50 whitespace-nowrap font-medium">
-              {publishing ? '⏳ 發送…' : '🚀 立即發文'}
+              aria-busy={publishing || undefined}
+              className="rounded-md bg-fuchsia-600 px-2.5 py-1.5 text-[11px] text-white hover:bg-fuchsia-700 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap font-medium inline-flex items-center gap-1 justify-center">
+              {publishing && <Spinner size={11} />}
+              {publishing ? '發送中…' : '🚀 立即發文'}
             </button>
           )}
           {onRetry && (
-            <button onClick={onRetry} className="text-[11px] text-blue-700 hover:underline">🔄 重試</button>
+            <button onClick={onRetry} disabled={publishing}
+              aria-busy={publishing || undefined}
+              className="text-[11px] text-blue-700 hover:underline disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1 justify-center">
+              {publishing && <Spinner size={11} />}
+              {publishing ? '重試中…請勿重按' : '🔄 重試'}
+            </button>
           )}
           {post.imageUrl && onSaveToAssets && (
             <button onClick={onSaveToAssets}
