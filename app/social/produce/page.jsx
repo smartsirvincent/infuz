@@ -320,6 +320,34 @@ function ProducePageInner() {
               )}
             </div>
 
+            {/* 圖片來源 · type=image 時提到主 UI · 讓用戶一眼看到並可切換 */}
+            {isImage && (
+              <div className="rounded-lg border border-stone-200 bg-white p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-stone-800">🖼️ 圖片來源</label>
+                  {ov.imageSource !== (topic.imageSource || 'ai_generated') && (
+                    <span className="text-[10px] text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">本次已改</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button"
+                    onClick={() => setOv({ ...ov, imageSource: 'product_photo' })}
+                    className={`rounded-md border p-2.5 text-left text-xs transition ${ov.imageSource === 'product_photo' ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+                  >
+                    <div className="font-semibold text-stone-900">📸 原本產品圖</div>
+                    <div className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">直接用產品照 · 秒回 · 免費</div>
+                  </button>
+                  <button type="button"
+                    onClick={() => setOv({ ...ov, imageSource: 'ai_generated' })}
+                    className={`rounded-md border p-2.5 text-left text-xs transition ${ov.imageSource === 'ai_generated' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+                  >
+                    <div className="font-semibold text-stone-900">🎨 AI 生圖</div>
+                    <div className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">KIE image-to-image · 每篇 30-60 秒</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 本次覆寫展開區 */}
             <details className="rounded-lg border border-stone-200" open={showOverrides} onToggle={(e) => setShowOverrides(e.currentTarget.open)}>
               <summary className="cursor-pointer px-3 py-2 text-xs text-stone-700 hover:bg-stone-50 flex items-center justify-between">
@@ -498,7 +526,13 @@ function ProducePageInner() {
               <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
             </svg>
           )}
-          {generating ? (isImage ? `產文+生圖中 · 約 ${count * 45}s · 請勿關閉` : '產文中… 請勿關閉頁面') : `🚀 開始產 ${count} 篇`}
+          {generating
+            ? (isImage && ov.imageSource === 'ai_generated'
+                ? `產文+AI生圖中 · 約 ${count * 45}s · 請勿關閉`
+                : isImage && ov.imageSource === 'product_photo'
+                  ? '產文中(用原本產品圖 · 秒回)…'
+                  : '產文中… 請勿關閉頁面')
+            : `🚀 開始產 ${count} 篇`}
         </button>
       </div>
 
@@ -513,7 +547,7 @@ function ProducePageInner() {
             <div className="h-full bg-zinc-950 transition-all duration-300 motion-reduce:transition-none" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
           </div>
           <div className="mt-2 text-[10px] text-zinc-500">
-            每篇獨立呼叫 API · {isImage && ov.imageSource === 'ai_generated' ? '3 個並發' : '5 個並發'} · 一好一顯示,不用等全部
+            每篇獨立呼叫 API · {isImage && ov.imageSource === 'ai_generated' ? '3 個並發 · 走 KIE 生圖' : '5 個並發 · 直接用產品照或純文字'} · 一好一顯示,不用等全部
           </div>
         </div>
       )}
