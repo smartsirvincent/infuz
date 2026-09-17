@@ -12,7 +12,7 @@ export default function DiscoverPage() {
   const [existingTopics, setExistingTopics] = useState([]);
   const [direction, setDirection] = useState('');
   const [defaultType, setDefaultType] = useState('text');
-  const [imageSource, setImageSource] = useState('ai_generated'); // 'product_photo' | 'ai_generated' · 只 type=image 用
+  const [imageSource, setImageSource] = useState('product_photo'); // 預設用原本產品照 · 秒回免費 · 避免 KIE 超時
   const [productIds, setProductIds] = useState([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productFilter, setProductFilter] = useState('');
