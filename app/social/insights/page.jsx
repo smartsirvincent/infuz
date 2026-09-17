@@ -493,7 +493,6 @@ function PostTableRow({ post, expanded, onToggle, onZoom, onRefresh, platformFil
                     >📊 Meta 看成效 ↗</a>
                   )}
                 </div>
-                </div>
                 {/* 各平台深指標分別列 */}
                 {Object.keys(ins).length > 0 && (
                   <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
