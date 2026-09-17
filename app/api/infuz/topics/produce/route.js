@@ -9,7 +9,7 @@ import { submitAndPollV2WithRetry } from '@/lib/kie-image.js';
 import { uploadToCloudinary } from '@/lib/cloudinary.js';
 import { FIDELITY_INSTRUCTION_FOR_CLAUDE, enforceFidelityPrompt, productReferenceUrls } from '@/lib/infuz-image-rules.js';
 import { pickArchetype, inferArchetype, ENGAGEMENT_HARD_RULES } from '@/lib/infuz-engagement-archetypes.js';
-import { stripMarkdown, NO_MARKDOWN_RULE } from '@/lib/infuz-sanitize.js';
+import { stripMarkdown, stripBareImageUrls, NO_MARKDOWN_RULE } from '@/lib/infuz-sanitize.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -216,9 +216,9 @@ ${topic.imagePrompt ? `參考風格: ${topic.imagePrompt}` : ''}
   return {
     _localId: `draft_${Date.now()}_${index}`,
     topicId: topic.id,
-    text: stripMarkdown((draft.text || '').trim()),
+    text: stripBareImageUrls(stripMarkdown((draft.text || '').trim())),
     // 高互動貼文強制清空 hashtags (研究顯示 hashtag 反而壓觸及)
-    hashtags: wantEngagement ? '' : stripMarkdown(draft.hashtags || ''),
+    hashtags: wantEngagement ? '' : stripBareImageUrls(stripMarkdown(draft.hashtags || '')),
     // 高互動貼文標註 archetype 讓 UI 顯示
     engagementArchetype: wantEngagement ? archetype.key : null,
     imagePrompt: draft.imagePrompt || '',

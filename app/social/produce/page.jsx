@@ -528,7 +528,15 @@ function ProducePageInner() {
             </h2>
             <div className="flex gap-2 text-xs">
               <button onClick={() => setSelected(new Set(drafts.map((d) => d._localId)))} className="text-stone-600 hover:underline">全選</button>
-              <button onClick={() => setSelected(new Set())} className="text-stone-600 hover:underline">全清</button>
+              <button
+                onClick={() => {
+                  if (drafts.length === 0) return;
+                  if (!confirm(`確定要刪除全部 ${drafts.length} 篇 draft?已加入待發佇列的貼文不受影響。`)) return;
+                  setDrafts([]);
+                  setSelected(new Set());
+                }}
+                className="text-red-600 hover:underline"
+              >🗑 全清</button>
             </div>
           </div>
 
