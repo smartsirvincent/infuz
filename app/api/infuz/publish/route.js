@@ -23,11 +23,16 @@ export async function POST(req) {
 
     // Platform key alias: {fb, ig, threads} → {facebook, instagram, threads}
     const rawPlatforms = body.platforms || {};
-    const platforms = {
+    let platforms = {
       threads: !!(rawPlatforms.threads),
       instagram: !!(rawPlatforms.instagram || rawPlatforms.ig),
       facebook: !!(rawPlatforms.facebook || rawPlatforms.fb),
     };
+    // 投票文只支援 Threads (IG/FB 沒有原生 poll UI, 發過去只會變沒選項的純文字)
+    const isPoll = Array.isArray(pollOptions) && pollOptions.length >= 2;
+    if (isPoll) {
+      platforms = { threads: true, instagram: false, facebook: false };
+    }
 
     // 若給 assetId 但沒給 imageUrl, 從 asset 讀
     if (assetId && !imageUrl) {

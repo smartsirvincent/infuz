@@ -682,10 +682,21 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label text-xs">類型</label>
-          <select className="input" value={editing.type} onChange={(e) => setEditing({ ...editing, type: e.target.value })}>
+          <select className="input" value={editing.type}
+            onChange={(e) => {
+              const newType = e.target.value;
+              // poll 只支援 Threads · 自動 clean 掉 IG/FB
+              const patch = { type: newType };
+              if (newType === 'poll') {
+                patch.schedule = { ...editing.schedule, platforms: { threads: true, instagram: false, facebook: false } };
+              }
+              setEditing({ ...editing, ...patch });
+            }}>
             <option value="text">📝 文字 (100-200 字)</option>
             <option value="long">📄 長文 (300-600 字)</option>
             <option value="image">🖼️ 圖片 (AI 生圖)</option>
+            <option value="engagement">🔥 高互動 (Threads 冷知識/溫馨)</option>
+            <option value="poll">🗳️ 投票 (僅 Threads · 4 選項)</option>
           </select>
         </div>
         <div>
@@ -871,8 +882,8 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
           <div className="grid grid-cols-3 gap-1">
             {[
               { k: 'threads', label: '🧵 Threads', enabled: canThreads },
-              { k: 'instagram', label: '📷 IG', enabled: canIg && editing.type === 'image' },
-              { k: 'facebook', label: '👍 FB', enabled: canFb },
+              { k: 'instagram', label: '📷 IG', enabled: canIg && editing.type === 'image' && editing.type !== 'poll' },
+              { k: 'facebook', label: '👍 FB', enabled: canFb && editing.type !== 'poll' },
             ].map((p) => {
               const on = editing.schedule?.platforms?.[p.k];
               return (
@@ -885,7 +896,8 @@ function TopicEditor({ editing, setEditing, products, canThreads, canIg, canFb }
               );
             })}
           </div>
-          {editing.type !== 'image' && <div className="text-[10px] text-stone-500 mt-1">IG 需 type=image 才能發</div>}
+          {editing.type === 'poll' && <div className="text-[10px] text-purple-700 mt-1">🗳️ 投票文只支援 Threads · IG/FB 沒有原生 poll UI, 硬發過去會變沒選項的純文字</div>}
+          {editing.type !== 'image' && editing.type !== 'poll' && <div className="text-[10px] text-stone-500 mt-1">IG 需 type=image 才能發</div>}
         </div>
       </div>
     </div>
