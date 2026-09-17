@@ -434,9 +434,18 @@ function WeeklyCalendar({ topics, realtimeJobs = [], products = [] }) {
 }
 
 function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onDelete }) {
-  const queued = posts.filter((p) => p.status === 'queued').length;
-  const published = posts.filter((p) => p.status === 'published').length;
-  const failed = posts.filter((p) => p.status === 'failed').length;
+  const [expandedTab, setExpandedTab] = useState(null); // 'queued' / 'published' / 'failed' / null
+  const queuedPosts = posts.filter((p) => p.status === 'queued');
+  const publishedPosts = posts.filter((p) => p.status === 'published');
+  const failedPosts = posts.filter((p) => p.status === 'failed');
+  const queued = queuedPosts.length;
+  const published = publishedPosts.length;
+  const failed = failedPosts.length;
+
+  const visiblePosts = expandedTab === 'queued' ? queuedPosts
+    : expandedTab === 'published' ? publishedPosts
+    : expandedTab === 'failed' ? failedPosts
+    : [];
 
   const scheduledEnabled = topic.schedule?.enabled;
   const days = topic.schedule?.days?.length === 7 ? '每天' : (topic.schedule?.days || []).map((d) => DAY_NAMES[d]).join('');
@@ -512,18 +521,142 @@ function TopicCard({ topic, posts, products, onToggleSchedule, onChangeTime, onD
         </div>
       </div>
 
-      {/* 產品 + 貼文計數 */}
+      {/* 產品 + 貼文計數 (點 tab 就地展開清單) */}
       <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-100">
         <span className="text-zinc-500">
           {boundProducts.length > 0 ? `${boundProducts.length} 件產品` : '不帶產品'}
         </span>
-        <div className="flex gap-3 font-mono tabular-nums text-[11px]">
-          <span className="text-zinc-500" title="待發"><span className="text-zinc-950 font-medium">{queued}</span> queued</span>
-          <span className="text-zinc-500" title="已發"><span className="text-zinc-950 font-medium">{published}</span> sent</span>
-          {failed > 0 && <span className="text-red-600" title="失敗"><span className="font-medium">{failed}</span> fail</span>}
+        <div className="flex gap-1 font-mono tabular-nums text-[11px]">
+          <TabPill
+            active={expandedTab === 'queued'}
+            onClick={(e) => {
+              e.preventDefault(); e.stopPropagation();
+              setExpandedTab(expandedTab === 'queued' ? null : 'queued');
+            }}
+            count={queued}
+            label="待發"
+            tone="neutral"
+          />
+          <TabPill
+            active={expandedTab === 'published'}
+            onClick={(e) => {
+              e.preventDefault(); e.stopPropagation();
+              setExpandedTab(expandedTab === 'published' ? null : 'published');
+            }}
+            count={published}
+            label="已發"
+            tone="positive"
+          />
+          <TabPill
+            active={expandedTab === 'failed'}
+            onClick={(e) => {
+              e.preventDefault(); e.stopPropagation();
+              setExpandedTab(expandedTab === 'failed' ? null : 'failed');
+            }}
+            count={failed}
+            label="失敗"
+            tone={failed > 0 ? 'danger' : 'muted'}
+          />
         </div>
       </div>
+
+      {/* 展開的貼文清單 · 點 tab 觸發 */}
+      {expandedTab && (
+        <div className="mt-2 -mx-1 space-y-1.5 rounded-lg bg-zinc-50/70 border border-zinc-200 p-2 max-h-[300px] overflow-y-auto">
+          {visiblePosts.length === 0 ? (
+            <div className="text-center text-[11px] text-zinc-400 py-3">
+              {expandedTab === 'queued' ? '佇列是空的' : expandedTab === 'published' ? '還沒發過任何一篇' : '沒有失敗的文章'}
+            </div>
+          ) : (
+            visiblePosts.slice().reverse().slice(0, 20).map((p) => (
+              <PostMiniRow key={p.id} post={p} tab={expandedTab}
+                onOpen={(e) => { e.stopPropagation(); /* Link 已包 card, 讓它自己走 */ }}
+              />
+            ))
+          )}
+          {visiblePosts.length > 20 && (
+            <div className="text-center text-[10px] text-zinc-500 pt-1">
+              顯示最新 20 篇 · <span className="underline">點卡片進主題頁看全部</span>
+            </div>
+          )}
+        </div>
+      )}
     </Link>
+  );
+}
+
+function TabPill({ active, onClick, count, label, tone = 'neutral' }) {
+  const toneCls = active
+    ? {
+        neutral: 'bg-zinc-950 text-white border-zinc-950',
+        positive: 'bg-emerald-600 text-white border-emerald-600',
+        danger: 'bg-red-600 text-white border-red-600',
+        muted: 'bg-zinc-300 text-white border-zinc-300',
+      }[tone]
+    : {
+        neutral: 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400',
+        positive: 'bg-white text-emerald-700 border-emerald-200 hover:border-emerald-400',
+        danger: 'bg-white text-red-700 border-red-200 hover:border-red-400',
+        muted: 'bg-white text-zinc-400 border-zinc-200 hover:border-zinc-300',
+      }[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition motion-reduce:transition-none ${toneCls}`}
+      title={active ? `收起「${label}」清單` : `展開「${label}」清單`}
+    >
+      <span className="font-semibold tabular-nums">{count}</span>
+      <span>{label}</span>
+      <span className="text-[9px] opacity-70">{active ? '▲' : '▼'}</span>
+    </button>
+  );
+}
+
+function PostMiniRow({ post, tab }) {
+  const firstLine = (post.text || '').split('\n')[0].trim().slice(0, 60);
+  const dateStr = post.publishedAt
+    ? `${new Date(post.publishedAt).getMonth() + 1}/${new Date(post.publishedAt).getDate()}`
+    : post.createdAt
+      ? `${new Date(post.createdAt).getMonth() + 1}/${new Date(post.createdAt).getDate()}`
+      : '';
+
+  return (
+    <div className="flex items-start gap-2 rounded-md bg-white border border-zinc-100 px-2 py-1.5 text-[11px]">
+      <span className="font-mono tabular-nums text-zinc-500 shrink-0 w-9">{dateStr}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-zinc-900 truncate">{firstLine || '(無內容)'}</div>
+        {/* 已發:顯示每個平台的直達連結 */}
+        {tab === 'published' && post.results && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {Object.entries(post.results).map(([k, r]) => {
+              if (!r?.ok || !r.permalink) return null;
+              const meta = { threads: { label: '🧵', bg: 'bg-black text-white' },
+                             instagram: { label: '📷', bg: 'bg-pink-600 text-white' },
+                             facebook: { label: '👍', bg: 'bg-blue-600 text-white' } }[k];
+              if (!meta) return null;
+              return (
+                <a
+                  key={k}
+                  href={r.permalink}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] hover:opacity-80 ${meta.bg}`}
+                  title={`開 ${k} 原文`}
+                >
+                  {meta.label} 開原文 ↗
+                </a>
+              );
+            })}
+          </div>
+        )}
+        {/* 失敗:顯示錯誤訊息 */}
+        {tab === 'failed' && post.error && (
+          <div className="mt-1 text-[10px] text-red-600 truncate" title={post.error}>⚠ {post.error}</div>
+        )}
+      </div>
+    </div>
   );
 }
 

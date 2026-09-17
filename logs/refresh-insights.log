@@ -34,3 +34,7 @@
 [2026-09-16 00:00:01]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
 [2026-09-16 00:00:01]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
 [2026-09-16 00:00:01]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-17 00:00:02] === start ===
+[2026-09-17 00:00:02] OK · total=31 refreshed=31 errorTotal=2
+[2026-09-17 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-17 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
