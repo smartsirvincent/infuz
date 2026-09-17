@@ -7,22 +7,27 @@ export const maxDuration = 30;
 
 export async function POST(req) {
   try {
-    const { topics = [], productIds = [] } = await req.json();
+    const { topics = [], productIds = [], imageSource } = await req.json();
+    const applyImageSource = imageSource === 'product_photo' || imageSource === 'ai_generated' ? imageSource : null;
     if (!Array.isArray(topics) || topics.length === 0) {
       return NextResponse.json({ error: '至少要 1 個主題' }, { status: 400 });
     }
     const db = await loadDb('topics');
     const now = new Date().toISOString();
-    const withIds = topics.map((t, i) => ({
+    const withIds = topics.map((t, i) => {
+      const type = t.suggestedType || t.type || 'text';
+      return {
       id: 't_' + Date.now().toString(36) + '_' + i,
       name: t.name || `主題 ${i + 1}`,
       description: t.description || '',
-      type: t.suggestedType || t.type || 'text',
+      type,
       productIds: t.productIds || productIds || [],
       brandOnly: !(t.productIds?.length || productIds.length),
       systemPrompt: t.postingAngle || '',
       imagePrompt: t.imagePrompt || '',
       aspectRatio: '4:5',
+      // 只有 type=image 才記 imageSource · 預設 ai_generated (若 discover 沒帶就 null 讓 produce 走預設)
+      ...(type === 'image' && applyImageSource ? { imageSource: applyImageSource } : {}),
       schedule: {
         enabled: false,
         time: '10:00',
@@ -32,7 +37,8 @@ export async function POST(req) {
       },
       createdAt: now,
       updatedAt: now,
-    }));
+      };
+    });
     const nextItems = [...(db.items || []), ...withIds];
     await saveDb('topics', { items: nextItems });
     return NextResponse.json({ ok: true, added: withIds.length, ids: withIds.map((x) => x.id) });

@@ -12,6 +12,7 @@ export default function DiscoverPage() {
   const [existingTopics, setExistingTopics] = useState([]);
   const [direction, setDirection] = useState('');
   const [defaultType, setDefaultType] = useState('text');
+  const [imageSource, setImageSource] = useState('ai_generated'); // 'product_photo' | 'ai_generated' · 只 type=image 用
   const [productIds, setProductIds] = useState([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productFilter, setProductFilter] = useState('');
@@ -58,7 +59,8 @@ export default function DiscoverPage() {
       const r = await fetch('/api/infuz/topics/bulk-add', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topics, productIds }),
+        // defaultType=image 時把 imageSource 一起帶進去, 讓每個新主題預設用這個圖片來源
+        body: JSON.stringify({ topics, productIds, imageSource: defaultType === 'image' ? imageSource : undefined }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
@@ -130,6 +132,29 @@ export default function DiscoverPage() {
             <div className="mt-1 text-[10px] text-stone-500">先小量試, 覺得對味再多要幾個</div>
           </div>
         </div>
+
+        {/* 圖片來源 · 只在 type=image 顯示 */}
+        {defaultType === 'image' && (
+          <div>
+            <label className="label text-xs">🖼️ 圖片來源 (預設,產文時仍可覆寫)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button"
+                onClick={() => setImageSource('product_photo')}
+                className={`rounded-md border p-2.5 text-left text-xs transition ${imageSource === 'product_photo' ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+              >
+                <div className="font-semibold text-stone-900">📸 原本產品照</div>
+                <div className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">直接用產品照 · 100% 保真 · 免費秒回</div>
+              </button>
+              <button type="button"
+                onClick={() => setImageSource('ai_generated')}
+                className={`rounded-md border p-2.5 text-left text-xs transition ${imageSource === 'ai_generated' ? 'border-purple-500 bg-purple-50' : 'border-stone-200 bg-white hover:bg-stone-50'}`}
+              >
+                <div className="font-semibold text-stone-900">🎨 AI 生圖</div>
+                <div className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">KIE image-to-image · 模特兒穿搭 · 30-60s/篇</div>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <div className="flex items-center justify-between mb-1">
