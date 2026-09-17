@@ -757,8 +757,33 @@ export function DispatchPanel({ assetId, postNumber, mode, displayMode, products
         </div>
       </div>
 
-      {status && (
-        <div className={`text-xs ${status.startsWith('⚠') ? 'text-red-600' : 'text-emerald-700'}`}>{status}</div>
+      {/* 大字 banner: 發送中/已發佈/失敗 三種明確狀態 */}
+      {dispatching === 'post' && (
+        <div className="rounded-lg border border-blue-300 bg-blue-50 p-3 flex items-center gap-3">
+          <MiniSpinner size={18} />
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-blue-900">⏳ 發文中… 請勿關閉頁面</div>
+            <div className="text-[11px] text-blue-700 mt-0.5">呼叫 Meta / Threads Graph API · 可能 30-90 秒</div>
+          </div>
+        </div>
+      )}
+      {dispatching === 'schedule' && (
+        <div className="rounded-lg border border-blue-300 bg-blue-50 p-3 flex items-center gap-3">
+          <MiniSpinner size={18} />
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-blue-900">⏳ 加入排程中…</div>
+          </div>
+        </div>
+      )}
+      {status && !dispatching && (
+        <div className={`rounded-lg border p-3 text-sm ${status.startsWith('⚠')
+          ? 'border-red-300 bg-red-50 text-red-800'
+          : 'border-emerald-300 bg-emerald-50 text-emerald-800'}`}>
+          <div className="font-semibold">
+            {status.startsWith('⚠') ? '❌ 發文失敗' : '✅ 已發佈'}
+          </div>
+          <div className="text-[11px] mt-0.5 break-words">{status.replace(/^[⚠✓]\s*/, '')}</div>
+        </div>
       )}
 
       {/* Mode tab */}

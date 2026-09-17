@@ -23,7 +23,19 @@ export default function TopicDetailPage() {
   const [tab, setTab] = useState('queued');
   const [lightbox, setLightbox] = useState(null);
   const [publishingId, setPublishingId] = useState(null);
+  const [publishResults, setPublishResults] = useState({}); // { [postId]: {status:'publishing'|'published'|'failed', results?, message?, at} }
   const [error, setError] = useState('');
+
+  function setPostState(postId, patch) {
+    setPublishResults((prev) => ({ ...prev, [postId]: { ...(prev[postId] || {}), ...patch, at: Date.now() } }));
+  }
+  function clearPostState(postId, afterMs = 8000) {
+    setTimeout(() => {
+      setPublishResults((prev) => {
+        const next = { ...prev }; delete next[postId]; return next;
+      });
+    }, afterMs);
+  }
 
   useEffect(() => { load(); }, [topicId]);
 
@@ -51,8 +63,8 @@ export default function TopicDetailPage() {
   }
 
   async function retryPost(post) {
-    // 先把 status reset · 再直接呼叫 publish-now 立刻重發 (不等 cron)
     setPublishingId(post.id); setError('');
+    setPostState(post.id, { status: 'publishing', message: '重試中… 呼叫 Meta / Threads Graph API' });
     try {
       await fetch(`/api/infuz/topic_posts?id=${encodeURIComponent(post.id)}`, {
         method: 'PATCH',
@@ -64,20 +76,21 @@ export default function TopicDetailPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           postId: post.id,
-          // 帶 platformsOverride (素材發文時用戶勾的 3 平台) · 若沒有就給 undefined 讓後端走 topic.schedule
           platforms: post.platformsOverride || undefined,
         }),
       });
       const d = await r.json();
       if (!r.ok || !d.ok) {
-        // 失敗就把 status 標回 failed (讓下次還能點重試)
         const failedPlatforms = Object.entries(d.results || {}).filter(([, v]) => !v.ok).map(([k]) => k).join('/');
-        throw new Error(d.error || (failedPlatforms ? `${failedPlatforms} 失敗` : `HTTP ${r.status}`));
+        setPostState(post.id, { status: 'failed', results: d.results, message: d.error || (failedPlatforms ? `${failedPlatforms} 失敗` : `HTTP ${r.status}`) });
+        // 失敗 banner 不自動 clear · 讓用戶決定要不要再試
+      } else {
+        setPostState(post.id, { status: 'published', results: d.results, message: '重試成功' });
+        setTab('published');
+        clearPostState(post.id, 10000);
       }
-      alert('✓ 重試成功 · 已發到「已發」tab');
-      setTab('published');
     } catch (e) {
-      setError('重試失敗:' + e.message);
+      setPostState(post.id, { status: 'failed', message: e.message });
     } finally {
       setPublishingId(null);
       await load();
@@ -95,8 +108,9 @@ export default function TopicDetailPage() {
   }
 
   async function publishNow(post) {
-    if (!confirm(`立即發這篇到 ${describePlatforms(topic?.schedule?.platforms)}?`)) return;
+    // 不再彈 confirm · 依 inline banner 顯示狀態
     setPublishingId(post.id); setError('');
+    setPostState(post.id, { status: 'publishing', message: `發文中… 呼叫 ${describePlatforms(topic?.schedule?.platforms)} API (可能 30-90 秒)` });
     try {
       const r = await fetch('/api/infuz/topic_posts/publish-now', {
         method: 'POST',
@@ -104,12 +118,17 @@ export default function TopicDetailPage() {
         body: JSON.stringify({ postId: post.id }),
       });
       const d = await r.json();
-      if (!r.ok || !d.ok) throw new Error(d.error || `HTTP ${r.status}`);
-      alert('✓ 已發文!到「已發」tab 看結果');
+      if (!r.ok || !d.ok) {
+        const failedPlatforms = Object.entries(d.results || {}).filter(([, v]) => !v.ok).map(([k]) => k).join('/');
+        setPostState(post.id, { status: 'failed', results: d.results, message: d.error || (failedPlatforms ? `${failedPlatforms} 失敗` : `HTTP ${r.status}`) });
+      } else {
+        setPostState(post.id, { status: 'published', results: d.results, message: '已發佈' });
+        setTab('published');
+        clearPostState(post.id, 10000);
+      }
       await load();
-      setTab('published');
     } catch (e) {
-      setError('發文失敗:' + e.message);
+      setPostState(post.id, { status: 'failed', message: e.message });
     } finally { setPublishingId(null); }
   }
 
@@ -292,6 +311,7 @@ export default function TopicDetailPage() {
               alert(d.alreadyExists ? '這張圖已在素材庫' : `✓ 已存到素材庫 (${d.assetId})`);
             }}
             publishing={publishingId === post.id}
+            publishState={publishResults[post.id]}
           />
         ))}
       </div>
@@ -307,7 +327,7 @@ export default function TopicDetailPage() {
   );
 }
 
-function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onPublishNow, onToggleLink, onSaveToAssets, publishing }) {
+function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onPublishNow, onToggleLink, onSaveToAssets, publishing, publishState }) {
   const picked = post.pickedProductId ? products.find((p) => p.id === post.pickedProductId) : null;
   const hasLink = picked?.purchase_url;
   const utm = settings?.utm;
@@ -319,7 +339,14 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
   });
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
+    <div className={`rounded-lg border bg-white p-4 transition ${
+      publishState?.status === 'publishing' ? 'border-blue-300 ring-2 ring-blue-100' :
+      publishState?.status === 'published' ? 'border-emerald-300 ring-2 ring-emerald-100' :
+      publishState?.status === 'failed' ? 'border-red-300 ring-2 ring-red-100' :
+      'border-stone-200'
+    }`}>
+      {/* 即時發文狀態 banner · 蓋在最上方 · 明確顯示發文中/已發佈/失敗 */}
+      {publishState && <PublishStatusBanner state={publishState} onRetry={onRetry} />}
       <div className="flex items-start gap-3">
         {post.imageUrl && (
           <button onClick={() => onZoom(post.imageUrl)} className="shrink-0 group relative">
@@ -457,6 +484,89 @@ function FullPostCard({ post, products, settings, onZoom, onDelete, onRetry, onP
 }
 
 // UI 預覽 UTM URL (跟後端 withUtm 邏輯一致, threads 平台為預覽)
+// ============================================================
+// PublishStatusBanner · 大字明確顯示 發文中/已發佈/失敗
+// ============================================================
+function PublishStatusBanner({ state, onRetry }) {
+  if (!state) return null;
+  const { status, message, results } = state;
+
+  if (status === 'publishing') {
+    return (
+      <div className="mb-3 rounded-lg border border-blue-300 bg-blue-50 p-3 flex items-center gap-3">
+        <Spinner size={20} />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-blue-900">⏳ 發文中… 請勿關閉頁面</div>
+          <div className="text-[11px] text-blue-700 mt-0.5">{message || '呼叫 Meta / Threads Graph API'}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'published') {
+    const oks = Object.entries(results || {}).filter(([, r]) => r?.ok);
+    return (
+      <div className="mb-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✅</span>
+          <div className="text-sm font-semibold text-emerald-900">已發佈</div>
+          <span className="ml-auto text-[10px] text-emerald-600 font-mono">10 秒後自動收起</span>
+        </div>
+        {oks.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {oks.map(([k, r]) => {
+              const meta = {
+                threads: { label: '🧵 Threads', bg: 'bg-black text-white' },
+                instagram: { label: '📷 IG', bg: 'bg-pink-600 text-white' },
+                facebook: { label: '👍 FB', bg: 'bg-blue-600 text-white' },
+              }[k] || { label: k, bg: 'bg-zinc-500 text-white' };
+              return r.permalink ? (
+                <a key={k} href={r.permalink} target="_blank" rel="noreferrer"
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] hover:opacity-80 ${meta.bg}`}
+                >{meta.label} · 開原文 ↗</a>
+              ) : (
+                <span key={k} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${meta.bg}`}>
+                  {meta.label} ✓
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    const fails = Object.entries(results || {}).filter(([, r]) => r && !r.ok);
+    return (
+      <div className="mb-3 rounded-lg border border-red-300 bg-red-50 p-3">
+        <div className="flex items-start gap-2">
+          <span className="text-lg leading-none">❌</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-red-900">發文失敗</div>
+            <div className="text-[11px] text-red-700 mt-0.5 break-words">{message}</div>
+            {fails.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {fails.map(([k, r]) => (
+                  <div key={k} className="text-[10px] text-red-700 font-mono">
+                    <span className="font-semibold">{k}:</span> {r.error}
+                  </div>
+                ))}
+              </div>
+            )}
+            {onRetry && (
+              <button onClick={onRetry}
+                className="mt-2 text-[11px] px-2.5 py-1 rounded border border-red-300 text-red-700 hover:bg-red-100"
+              >🔄 再試一次</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
 function withUtmPreview(url, utmCfg, platformId = 'threads') {
   if (!utmCfg || !url) return url;
   try {
