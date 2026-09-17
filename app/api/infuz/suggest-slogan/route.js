@@ -1,6 +1,7 @@
 // AI 標語建議
 import { NextResponse } from 'next/server';
 import { callJSON } from '@/lib/llm.js';
+import { stripMarkdown } from '@/lib/infuz-sanitize.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -34,7 +35,7 @@ ${productSummary || '(未提供,請走通用 Infuz 風格)'}
     if (!Array.isArray(parsed.slogans)) {
       return NextResponse.json({ slogans: [] });
     }
-    return NextResponse.json({ slogans: parsed.slogans.slice(0, 5) });
+    return NextResponse.json({ slogans: parsed.slogans.slice(0, 5).map((s) => stripMarkdown(String(s || ''))) });
   } catch (e) {
     return NextResponse.json({ error: e.message, slogans: [] }, { status: 500 });
   }

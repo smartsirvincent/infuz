@@ -7,6 +7,7 @@ import { callJSON } from '@/lib/llm.js';
 import { INFUZ_BRAND } from '@/lib/infuz-brand.js';
 import { loadDb } from '@/lib/infuz-db.js';
 import { ENGAGEMENT_ARCHETYPES } from '@/lib/infuz-engagement-archetypes.js';
+import { stripMarkdown, NO_MARKDOWN_RULE } from '@/lib/infuz-sanitize.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -148,8 +149,15 @@ ${productHint}${avoidBlock}
       endpoint: 'topics-discover',
     });
 
-    // 強制填入 suggestedType (保持相容 bulk-add)
-    const topics = (result.topics || []).slice(0, N).map((t) => ({ ...t, suggestedType: type }));
+    // 強制填入 suggestedType (保持相容 bulk-add) · 順便 strip markdown 避免 sampleHook 出現 **
+    const topics = (result.topics || []).slice(0, N).map((t) => ({
+      ...t,
+      name: stripMarkdown(t.name || ''),
+      description: stripMarkdown(t.description || ''),
+      postingAngle: stripMarkdown(t.postingAngle || ''),
+      sampleHook: stripMarkdown(t.sampleHook || ''),
+      suggestedType: type,
+    }));
 
     return NextResponse.json({
       topics,

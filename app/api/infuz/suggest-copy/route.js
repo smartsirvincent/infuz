@@ -1,6 +1,7 @@
 // 給生成的圖片配 Threads/IG/FB 貼文文案
 import { NextResponse } from 'next/server';
 import { callJSON } from '@/lib/llm.js';
+import { stripMarkdown, NO_MARKDOWN_RULE } from '@/lib/infuz-sanitize.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -20,7 +21,7 @@ const SYS = `你是 Infuz (台灣服飾 + 珠寶品牌) 的社群貼文文案寫
 - 「最」「第一」「保證」這類誇大字
 - 罐頭口號 (「美麗自信」「優雅出眾」)
 - AI 味的對稱句
-
+${NO_MARKDOWN_RULE}
 輸出 JSON 格式:
 {
   "copy": "完整的繁體中文貼文文案"
@@ -54,7 +55,7 @@ ${productLines || '(無)'}
 請寫一段 80-160 字的 Threads/IG/FB 貼文。直接回 JSON,不要任何前後說明。`;
 
     const parsed = await callJSON({ system: SYS, user, maxTokens: 800, temperature: 0.85 });
-    return NextResponse.json({ copy: parsed.copy || '' });
+    return NextResponse.json({ copy: stripMarkdown(parsed.copy || '') });
   } catch (e) {
     return NextResponse.json({ error: e.message, copy: '' }, { status: 500 });
   }
