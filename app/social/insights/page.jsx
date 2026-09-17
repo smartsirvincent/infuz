@@ -220,18 +220,39 @@ export default function InsightsPage() {
         )}
       </section>
 
-      {/* FB 專屬提示 · Meta 對本 App 不開放單篇/Page 深指標 · 需申請 Advanced Access */}
+      {/* FB 專屬提示 · Meta 對本 App 不開放單篇/Page 深指標 · 提供 Business Suite 直達 CTA */}
       {platformFilter === 'facebook' && (
-        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 space-y-1.5">
-          <div className="font-semibold text-sm">⚠ Facebook 單篇貼文成效目前拿不到數據</div>
-          <p className="leading-relaxed">
-            Meta Graph API 對開發者 App 預設關閉單篇貼文的 <code className="font-mono">impressions / reach / clicks</code> 等 metric,
-            需要在 Meta App Review 申請 <strong>Advanced Access</strong> 才會回值。 目前這個 App 是 dev tier,只能拿到粉專粉絲總數 + 貼文本身 permalink。
-          </p>
-          <p className="leading-relaxed">
-            要看單篇 FB 成效,現在得直接去 <a target="_blank" rel="noreferrer" href="https://business.facebook.com/latest/insights" className="underline">Meta Business Suite Insights</a>
-            或每篇貼文 permalink 底下的 Meta 原生分析工具。
-          </p>
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-3">
+          <div>
+            <div className="font-semibold text-sm text-amber-900">⚠ Facebook 成效改看 Meta 官方後台</div>
+            <p className="text-xs text-amber-800 leading-relaxed mt-1.5">
+              Meta 從 Graph v25 起,對未通過 App Review 的 App 全面關閉單篇 <code className="font-mono text-[10px] bg-amber-100 px-1 rounded">impressions / reach / clicks</code> metric。
+              系統這邊只能拿到粉專粉絲數 + 每篇 permalink,深指標請直接開 Meta 官方後台看,一鍵直達 ↓
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a target="_blank" rel="noreferrer"
+              href="https://business.facebook.com/latest/insights?asset_id=101313802154510"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 text-xs font-medium transition"
+            >📊 Meta Business Suite Insights ↗</a>
+            <a target="_blank" rel="noreferrer"
+              href="https://business.facebook.com/latest/posts/published_posts?asset_id=101313802154510"
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 px-3.5 py-2 text-xs font-medium transition"
+            >📄 已發貼文清單 (逐篇看成效) ↗</a>
+            <a target="_blank" rel="noreferrer"
+              href="https://www.facebook.com/Infuz/posts"
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 px-3.5 py-2 text-xs font-medium transition"
+            >👍 Infuz 粉專原文 ↗</a>
+          </div>
+          <details className="text-[11px] text-amber-800">
+            <summary className="cursor-pointer font-medium hover:text-amber-900">想解決 · 點看送 App Review 流程</summary>
+            <div className="mt-2 space-y-1 leading-relaxed pl-2 border-l-2 border-amber-300">
+              <div>1. 進 <a target="_blank" rel="noreferrer" href="https://developers.facebook.com/apps/1170054682031375/dashboard" className="underline">App Dashboard</a> 完成 Business Verification</div>
+              <div>2. 送出 <code className="font-mono text-[10px] bg-amber-100 px-1 rounded">pages_read_engagement</code> Advanced Access 申請</div>
+              <div>3. 錄用途影片 + 隱私政策 URL</div>
+              <div>4. Meta 審 3-14 天,通過就能 API 拿數據 (前端這頁的 chart 就會自動長出來)</div>
+            </div>
+          </details>
         </section>
       )}
 
@@ -447,7 +468,7 @@ function PostTableRow({ post, expanded, onToggle, onZoom, onRefresh, platformFil
                 </div>
                 <pre className="text-xs text-ink font-sans whitespace-pre-wrap max-h-48 overflow-y-auto">{post.text}</pre>
                 {post.hashtags && <div className="mt-1 text-[10px] text-emerald-700">{post.hashtags}</div>}
-                {/* 平台徽章 + permalink */}
+                {/* 平台徽章 + permalink · FB 額外加「Business Suite 看成效」外部連結 */}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {Object.entries(post.results || {}).map(([k, r]) => {
                     if (!r?.ok) return null;
@@ -461,6 +482,17 @@ function PostTableRow({ post, expanded, onToggle, onZoom, onRefresh, platformFil
                       <a key={k} href={r.permalink} target="_blank" rel="noreferrer" className="hover:opacity-80">{el}</a>
                     ) : <span key={k}>{el}</span>;
                   })}
+                  {/* FB 若有發成功, 加「Meta 官方看成效」按鈕 · 因 API 拿不到指標, 帶用戶去官方後台 */}
+                  {post.results?.facebook?.ok && (
+                    <a
+                      href={post.results.facebook.permalink || 'https://business.facebook.com/latest/posts/published_posts?asset_id=101313802154510'}
+                      target="_blank" rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 px-2 py-0.5 text-[10px] transition"
+                      title="Meta API 對 dev App 不給 metric · 點這裡去官方後台看單篇成效"
+                    >📊 Meta 看成效 ↗</a>
+                  )}
+                </div>
                 </div>
                 {/* 各平台深指標分別列 */}
                 {Object.keys(ins).length > 0 && (
