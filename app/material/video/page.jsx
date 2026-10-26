@@ -12,6 +12,7 @@ export default function MaterialVideoPage() {
   const [activeTemplateKey, setActiveTemplateKey] = useState('');
 
   const [sourceMode, setSourceMode] = useState('asset'); // 'asset' | 'url'
+  const [categoryFilter, setCategoryFilter] = useState('all'); // all | 上衣 | 下身 | combo
   const [selectedAssetId, setSelectedAssetId] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
 
@@ -40,6 +41,36 @@ export default function MaterialVideoPage() {
   const effectiveImageUrl = sourceMode === 'asset'
     ? (selectedAsset?.imageUrl || '')
     : customImageUrl.trim();
+
+  // 依分類篩素材 (上衣 / 下身 / 組合 / 全部)
+  function matchCategory(a) {
+    if (categoryFilter === 'all') return true;
+    if (categoryFilter === 'combo') return a.mode === 'combo' || a.mode === 'composition';
+    const cats = (a.products || []).map((p) => p.category);
+    return cats.includes(categoryFilter);
+  }
+  const filteredAssets = assets.filter((a) => a.imageUrl && a.mode !== 'video' && matchCategory(a));
+
+  // 依選的 model 動態列秒數選項 (union; 若兩 model 都支援才列, 避免 fallback 混淆)
+  const availableSecs = (() => {
+    if (selectedModels.length === 0) return [5];
+    const sets = selectedModels.map((k) => {
+      const spec = modelCatalog.models.find((m) => m.key === k);
+      return new Set(spec?.secs || [5]);
+    });
+    // 聯集 (任一支援就列; UI 用 badge 標誰支援)
+    const u = new Set();
+    for (const s of sets) for (const v of s) u.add(v);
+    return [...u].sort((a, b) => a - b);
+  })();
+
+  // 標某秒哪些 model 支援
+  function secsSupportedBy(sec) {
+    return selectedModels.filter((k) => {
+      const spec = modelCatalog.models.find((m) => m.key === k);
+      return (spec?.secs || []).includes(sec);
+    });
+  }
 
   function toggleModel(key) {
     setSelectedModels((prev) => {
@@ -104,9 +135,10 @@ export default function MaterialVideoPage() {
         </p>
       </div>
 
-      {/* Step 1: 選 input 圖 */}
+      {/* Step 1: 挑 input 圖 (依分類篩選) */}
       <section className="card space-y-3">
-        <h2 className="text-sm font-semibold text-stone-900">1. 選 input 圖</h2>
+        <h2 className="text-sm font-semibold text-stone-900">1. 挑一張素材 (或貼 URL)</h2>
+
         <div className="flex gap-2 text-xs">
           {['asset', 'url'].map((m) => (
             <button key={m} type="button"
@@ -117,23 +149,51 @@ export default function MaterialVideoPage() {
         </div>
 
         {sourceMode === 'asset' && (
-          loadingAssets ? (
-            <div className="text-xs text-stone-500">載入素材庫…</div>
-          ) : assets.length === 0 ? (
-            <div className="text-xs text-amber-700">素材庫空的 · 先去 <Link className="underline" href="/material">產一張</Link> 再回來</div>
-          ) : (
-            <div className="grid grid-cols-4 gap-2 max-h-[320px] overflow-y-auto sm:grid-cols-6">
-              {assets.filter((a) => a.imageUrl).slice(0, 50).map((a) => (
-                <button key={a.id} type="button"
-                  onClick={() => setSelectedAssetId(a.id)}
-                  className={`relative aspect-[4/5] overflow-hidden rounded-md border-2 transition ${selectedAssetId === a.id ? 'border-rose-500 ring-2 ring-rose-200' : 'border-stone-200 hover:border-stone-400'}`}
-                >
-                  <img src={a.imageUrl} alt="" className="h-full w-full object-cover" />
-                  {selectedAssetId === a.id && <div className="absolute top-1 right-1 size-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px]">✓</div>}
-                </button>
-              ))}
+          <>
+            {/* 分類 tab · 上衣 / 下身 / 組合 */}
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-stone-500 text-[11px]">分類:</span>
+              {[
+                { key: 'all',   label: '全部',   emoji: '🗂️' },
+                { key: '上衣', label: '上衣',   emoji: '👕' },
+                { key: '下身', label: '褲子/裙', emoji: '👖' },
+                { key: 'combo', label: '組合',  emoji: '👯' },
+              ].map((c) => {
+                const n = assets.filter((a) => a.imageUrl && a.mode !== 'video' && (c.key === 'all' ? true : c.key === 'combo' ? (a.mode === 'combo' || a.mode === 'composition') : (a.products || []).some((p) => p.category === c.key))).length;
+                const on = categoryFilter === c.key;
+                return (
+                  <button key={c.key} type="button"
+                    onClick={() => setCategoryFilter(c.key)}
+                    className={`rounded-full border px-3 py-1 text-xs transition ${on ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'}`}
+                  >{c.emoji} {c.label} <span className="font-mono tabular-nums text-[10px] opacity-60">({n})</span></button>
+                );
+              })}
             </div>
-          )
+
+            {loadingAssets ? (
+              <div className="text-xs text-stone-500">載入素材庫…</div>
+            ) : filteredAssets.length === 0 ? (
+              <div className="text-xs text-amber-700">此分類無素材 · 先去 <Link className="underline" href="/material">產一張</Link> 再回來</div>
+            ) : (
+              <div className="grid grid-cols-4 gap-2 max-h-[320px] overflow-y-auto sm:grid-cols-6">
+                {filteredAssets.slice(0, 60).map((a) => (
+                  <button key={a.id} type="button"
+                    onClick={() => setSelectedAssetId(a.id)}
+                    className={`relative aspect-[4/5] overflow-hidden rounded-md border-2 transition ${selectedAssetId === a.id ? 'border-rose-500 ring-2 ring-rose-200' : 'border-stone-200 hover:border-stone-400'}`}
+                  >
+                    <img src={a.imageUrl} alt="" className="h-full w-full object-cover" />
+                    {selectedAssetId === a.id && <div className="absolute top-1 right-1 size-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px]">✓</div>}
+                    {/* category badge */}
+                    {(a.products || [])[0]?.category && (
+                      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 py-0.5 text-[9px] text-white">
+                        {(a.products || [])[0].category}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
         {sourceMode === 'url' && (
           <input
@@ -220,6 +280,36 @@ export default function MaterialVideoPage() {
           })}
         </div>
       </section>
+
+      {/* Step 4: 秒數 (比例由 input 圖決定) */}
+      {selectedModels.length > 0 && (
+        <section className="card space-y-3">
+          <h2 className="text-sm font-semibold text-stone-900">
+            4. 秒數 <span className="text-stone-500 text-xs font-normal">(選完 model 動態列出可選秒數)</span>
+          </h2>
+          <div className="flex items-center gap-2 flex-wrap text-xs">
+            {availableSecs.map((s) => {
+              const supported = secsSupportedBy(s);
+              const allSupport = supported.length === selectedModels.length;
+              return (
+                <button key={s} type="button"
+                  onClick={() => setDuration(s)}
+                  title={allSupport ? '所選 model 都支援' : `只有 ${supported.length}/${selectedModels.length} 個 model 支援 · 不支援的會 fallback 到該 model 最短秒數`}
+                  className={`rounded-md px-3 py-1.5 text-xs transition ${duration === s ? 'bg-rose-600 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'} ${!allSupport ? 'ring-1 ring-amber-400' : ''}`}
+                >
+                  {s}s
+                  {!allSupport && <span className="ml-1 text-[9px]">⚠</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="rounded-md bg-stone-50 border border-stone-200 px-3 py-2 text-[11px] text-stone-600">
+            🎞️ <strong>比例:</strong> KIE image-to-video 沒有 aspect_ratio 參數 · <strong>輸出比例跟 input 圖一樣</strong>。
+            想要 9:16 直式 (Reels / Shorts) 就挑直式素材 · 想要 1:1 方框就挑方形素材。
+          </div>
+        </section>
+      )}
 
       {error && <div className="card border-red-200 bg-red-50 text-sm text-red-700">⚠ {error}</div>}
 
