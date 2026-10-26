@@ -8,7 +8,8 @@ import Link from 'next/link';
 export default function MaterialVideoPage() {
   const [assets, setAssets] = useState([]);
   const [loadingAssets, setLoadingAssets] = useState(true);
-  const [modelCatalog, setModelCatalog] = useState({ models: [], defaults: [], maxAtOnce: 2 });
+  const [modelCatalog, setModelCatalog] = useState({ models: [], defaults: [], maxAtOnce: 2, templates: [] });
+  const [activeTemplateKey, setActiveTemplateKey] = useState('');
 
   const [sourceMode, setSourceMode] = useState('asset'); // 'asset' | 'url'
   const [selectedAssetId, setSelectedAssetId] = useState('');
@@ -154,21 +155,44 @@ export default function MaterialVideoPage() {
       {/* Step 2: Prompt + 秒數 */}
       <section className="card space-y-3">
         <h2 className="text-sm font-semibold text-stone-900">2. 動作指示 (prompt · 英文效果較好)</h2>
+
+        {/* 10 個影音模板 · 點 chip 套用 */}
+        {modelCatalog.templates.length > 0 && (
+          <div>
+            <div className="text-[11px] text-stone-500 mb-1.5">💡 快速模板 (點套用 prompt)</div>
+            <div className="flex flex-wrap gap-1.5">
+              {modelCatalog.templates.map((t) => {
+                const on = activeTemplateKey === t.key;
+                return (
+                  <button key={t.key} type="button"
+                    onClick={() => {
+                      setPrompt(t.prompt);
+                      setActiveTemplateKey(t.key);
+                    }}
+                    title={t.use + ' · ' + t.prompt}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] transition ${on ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50'}`}
+                  >{t.label}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <textarea
-          className="input min-h-[80px] text-xs leading-relaxed"
+          className="input min-h-[80px] text-xs leading-relaxed font-mono"
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => { setPrompt(e.target.value); setActiveTemplateKey(''); }}
           placeholder="例: Full-body fashion walk, model turns 180 degrees, soft daylight, natural fabric drape, cinematic"
         />
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-xs flex-wrap">
           <span className="text-stone-600">秒數:</span>
-          {[5, 8, 10].map((s) => (
+          {[4, 5, 6, 8, 10].map((s) => (
             <button key={s} type="button"
               onClick={() => setDuration(s)}
               className={`rounded-md px-2.5 py-1 text-xs ${duration === s ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
             >{s}s</button>
           ))}
-          <span className="text-[10px] text-stone-500 ml-2">(不同 model 支援秒數不同 · 不支援會自動 fallback)</span>
+          <span className="text-[10px] text-stone-500 ml-2">(不同 model 支援不同 · 不支援會 fallback 到該 model 的最短)</span>
         </div>
       </section>
 
