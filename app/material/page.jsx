@@ -52,6 +52,20 @@ export default function MaterialChooser() {
             </div>
           </div>
         </Link>
+
+        <Link
+          href="/material/video"
+          className="group card hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-lg transition sm:col-span-3"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-rose-100 text-2xl">🎬</div>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-stone-900 group-hover:text-rose-700">短影音 (NEW)</h2>
+              <p className="mt-1 text-[11px] text-stone-600">從素材庫一張圖 → KIE image-to-video · 可挑 2 個 model 同時產做 A/B</p>
+              <p className="mt-2 text-[11px] text-stone-500">5-10 秒 · 9:16 直式 · 給 Threads / Reels / Shorts 用</p>
+            </div>
+          </div>
+        </Link>
       </section>
 
       <div className="card border-stone-100 bg-stone-50 text-xs text-stone-600">

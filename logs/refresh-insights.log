@@ -38,3 +38,391 @@
 [2026-09-17 00:00:02] OK · total=31 refreshed=31 errorTotal=2
 [2026-09-17 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
 [2026-09-17 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-18 00:00:03] === start ===
+[2026-09-18 00:00:03] OK · total=31 refreshed=29 errorTotal=4
+[2026-09-18 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-18 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-18 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-18 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-19 00:00:03] === start ===
+[2026-09-19 00:00:03] OK · total=32 refreshed=30 errorTotal=4
+[2026-09-19 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-19 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-19 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-19 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-20 00:00:03] === start ===
+[2026-09-20 00:00:03] OK · total=32 refreshed=30 errorTotal=4
+[2026-09-20 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-20 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-20 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-20 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-21 00:00:02] === start ===
+[2026-09-21 00:00:02] OK · total=33 refreshed=31 errorTotal=4
+[2026-09-21 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-21 00:00:02]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-21 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-09-21 00:00:02]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-22 00:00:02] === start ===
+[2026-09-22 00:00:02] OK · total=34 refreshed=32 errorTotal=9
+[2026-09-22 00:00:02]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-22 00:00:02]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-22 00:00:02]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-22 00:00:02]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03] === start ===
+[2026-09-23 00:00:03] OK · total=34 refreshed=32 errorTotal=9
+[2026-09-23 00:00:03]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-23 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-23 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-23 00:00:03]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03] === start ===
+[2026-09-24 00:00:03] OK · total=35 refreshed=33 errorTotal=9
+[2026-09-24 00:00:03]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-24 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-24 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-24 00:00:03]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03] === start ===
+[2026-09-25 00:00:03] OK · total=35 refreshed=33 errorTotal=9
+[2026-09-25 00:00:03]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-25 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-25 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-25 00:00:03]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04] === start ===
+[2026-09-26 00:00:04] OK · total=36 refreshed=34 errorTotal=9
+[2026-09-26 00:00:04]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-26 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-26 00:00:04]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-26 00:00:04]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04] === start ===
+[2026-09-27 00:00:04] OK · total=37 refreshed=35 errorTotal=9
+[2026-09-27 00:00:04]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-27 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-27 00:00:04]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-27 00:00:04]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03] === start ===
+[2026-09-28 00:00:03] OK · total=37 refreshed=35 errorTotal=9
+[2026-09-28 00:00:03]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-28 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-28 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-28 00:00:03]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02] === start ===
+[2026-09-29 00:00:02] OK · total=39 refreshed=37 errorTotal=9
+[2026-09-29 00:00:02]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-29 00:00:02]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-29 00:00:02]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-29 00:00:02]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04] === start ===
+[2026-09-30 00:00:04] OK · total=39 refreshed=37 errorTotal=9
+[2026-09-30 00:00:04]   err: tp_mtguxc463ym2/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mtguxc463ym2/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-30 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-09-30 00:00:04]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-09-30 00:00:04]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-01 00:00:04] === start ===
+[2026-10-01 00:00:04] OK · total=34 refreshed=32 errorTotal=7
+[2026-10-01 00:00:04]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-01 00:00:04]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-01 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-01 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-01 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-01 00:00:04]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-01 00:00:04]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-02 00:00:03] === start ===
+[2026-10-02 00:00:03] OK · total=31 refreshed=29 errorTotal=7
+[2026-10-02 00:00:03]   err: tp_mtrduc28igzb/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-02 00:00:03]   err: tp_mtrduc28igzb/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-02 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-02 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-02 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-02 00:00:03]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-02 00:00:03]   err: tp_mu5m96cs_0/fb: Facebook API é¯èª¤:Error validating access token: The session has been invalidated because the user changed their password or Facebook has changed the session for security reasons.(token å¤±ææéæ,è«éæ°é£æ¥)
+[2026-10-03 00:00:04] === start ===
+[2026-10-03 00:00:04] OK · total=32 refreshed=30 errorTotal=4
+[2026-10-03 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Unsupported get request. Object with ID '18108919331128358' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-03 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-03 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-03 00:00:04]   err: tp_mu4tdde7_0/threads: Unsupported get request. Object with ID '17903443599586684' does not exist, cannot be loaded due to missing permissions, or does not support this operation
+[2026-10-04 00:00:03] === start ===
+[2026-10-04 00:00:03] OK · total=31 refreshed=2 errorTotal=33
+[2026-10-04 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt08r7e0_11/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt08r7e0_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt0ajfe2_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt0ajfe2_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:03 PDT.
+[2026-10-04 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:04 PDT.
+[2026-10-04 00:00:03]   err: tp_mt1h1eby_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:04 PDT.
+[2026-10-04 00:00:03]   err: tp_mt2k01uv_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 03-Oct-26 09:00:04 PDT.
+[2026-10-05 00:00:03] === start ===
+[2026-10-05 00:00:03] OK · total=28 refreshed=2 errorTotal=30
+[2026-10-05 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt08r7e0_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt0ajfe2_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt2k01uv_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt2k01uv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt33dzb9_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-05 00:00:03]   err: tp_mt33dzb9_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 04-Oct-26 09:00:03 PDT.
+[2026-10-06 00:00:03] === start ===
+[2026-10-06 00:00:03] OK · total=27 refreshed=2 errorTotal=29
+[2026-10-06 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt08r7e0_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt0ajfe2_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:04 PDT.
+[2026-10-06 00:00:03]   err: tp_mt2k01uv_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:05 PDT.
+[2026-10-06 00:00:03]   err: tp_mt2k01uv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:05 PDT.
+[2026-10-06 00:00:03]   err: tp_mt33dzb9_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:05 PDT.
+[2026-10-06 00:00:03]   err: tp_mt33dzb9_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 05-Oct-26 09:00:05 PDT.
+[2026-10-07 00:00:04] === start ===
+[2026-10-07 00:00:04] OK · total=27 refreshed=2 errorTotal=29
+[2026-10-07 00:00:04]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt08r7e0_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt0ajfe2_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt2k01uv_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt2k01uv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt33dzb9_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-07 00:00:04]   err: tp_mt33dzb9_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 06-Oct-26 09:00:04 PDT.
+[2026-10-08 00:00:04] === start ===
+[2026-10-08 00:00:04] OK · total=23 refreshed=2 errorTotal=25
+[2026-10-08 00:00:04]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt2k01uv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt33dzb9_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-08 00:00:04]   err: tp_mt5czp3m_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 07-Oct-26 09:00:06 PDT.
+[2026-10-09 00:00:03] === start ===
+[2026-10-09 00:00:03] OK · total=21 refreshed=1 errorTotal=23
+[2026-10-09 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:03 PDT.
+[2026-10-09 00:00:03]   err: tp_mt0ajfe2_12/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:03 PDT.
+[2026-10-09 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:03 PDT.
+[2026-10-09 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:03 PDT.
+[2026-10-09 00:00:03]   err: tp_mt2k01uv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:03 PDT.
+[2026-10-09 00:00:03]   err: tp_mt33dzb9_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:04 PDT.
+[2026-10-09 00:00:03]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:04 PDT.
+[2026-10-09 00:00:03]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:04 PDT.
+[2026-10-09 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:04 PDT.
+[2026-10-09 00:00:03]   err: tp_mt5czp3m_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 08-Oct-26 09:00:04 PDT.
+[2026-10-10 00:00:03] === start ===
+[2026-10-10 00:00:03] OK · total=18 refreshed=1 errorTotal=20
+[2026-10-10 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt5czp3m_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 09-Oct-26 09:00:03 PDT.
+[2026-10-10 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-11 00:00:03] === start ===
+[2026-10-11 00:00:03] OK · total=18 refreshed=1 errorTotal=20
+[2026-10-11 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:01 PDT.
+[2026-10-11 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt5czp3m_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 10-Oct-26 09:00:02 PDT.
+[2026-10-11 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-12 00:00:03] === start ===
+[2026-10-12 00:00:03] OK · total=18 refreshed=1 errorTotal=20
+[2026-10-12 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt5czp3m_5/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 11-Oct-26 09:00:03 PDT.
+[2026-10-12 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-13 00:00:02] === start ===
+[2026-10-13 00:00:02] OK · total=17 refreshed=1 errorTotal=19
+[2026-10-13 00:00:02]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:01 PDT.
+[2026-10-13 00:00:02]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:01 PDT.
+[2026-10-13 00:00:02]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 12-Oct-26 09:00:02 PDT.
+[2026-10-13 00:00:02]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-13 00:00:02]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-14 00:00:04] === start ===
+[2026-10-14 00:00:04] OK · total=17 refreshed=1 errorTotal=19
+[2026-10-14 00:00:04]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:00 PDT.
+[2026-10-14 00:00:04]   err: tp_mt0ajfe2_15/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:00 PDT.
+[2026-10-14 00:00:04]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:00 PDT.
+[2026-10-14 00:00:04]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:01 PDT.
+[2026-10-14 00:00:04]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:01 PDT.
+[2026-10-14 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:01 PDT.
+[2026-10-14 00:00:04]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:01 PDT.
+[2026-10-14 00:00:04]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 13-Oct-26 09:00:01 PDT.
+[2026-10-14 00:00:04]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-14 00:00:04]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-15 00:00:05] === start ===
+[2026-10-15 00:00:05] OK · total=16 refreshed=1 errorTotal=18
+[2026-10-15 00:00:05]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mt5czp3m_6/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:04 PDT.
+[2026-10-15 00:00:05]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-15 00:00:05]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-15 00:00:05]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 14-Oct-26 09:00:05 PDT.
+[2026-10-16 00:00:03] === start ===
+[2026-10-16 00:00:03] OK · total=15 refreshed=1 errorTotal=17
+[2026-10-16 00:00:03]   err: tp_mt08r7e0_9/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mt0ajfe2_18/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mt33dzb9_7/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mu3lxn5sz2fl/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:04 PDT.
+[2026-10-16 00:00:03]   err: tp_mu3lxn5sz2fl/ig: Facebook API é¯èª¤:Unsupported get request. Object with ID '18222470716327304' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-16 00:00:03]   err: tp_mu3lxn5sz2fl/fb: Facebook API é¯èª¤:Unsupported get request. Object with ID '101313802154510_1392002493084036' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api
+[2026-10-16 00:00:03]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:05 PDT.
+[2026-10-16 00:00:03]   err: tp_mu4tdde7_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 15-Oct-26 09:00:05 PDT.
+[2026-10-17 00:00:04] === start ===
+[2026-10-17 00:00:04] OK · total=11 refreshed=1 errorTotal=11
+[2026-10-17 00:00:04]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mu4tdde7_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mu5m96cs_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:06 PDT.
+[2026-10-17 00:00:04]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:08 PDT.
+[2026-10-17 00:00:04]   err: tp_mu5mnr6r_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:08 PDT.
+[2026-10-17 00:00:04]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:08 PDT.
+[2026-10-17 00:00:04]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 16-Oct-26 09:00:08 PDT.
+[2026-10-19 00:00:04] === start ===
+[2026-10-19 00:00:04] OK · total=9 refreshed=1 errorTotal=9
+[2026-10-19 00:00:04]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:03 PDT.
+[2026-10-19 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:03 PDT.
+[2026-10-19 00:00:04]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:03 PDT.
+[2026-10-19 00:00:04]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:03 PDT.
+[2026-10-19 00:00:04]   err: tp_mu5m96cs_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:03 PDT.
+[2026-10-19 00:00:04]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:05 PDT.
+[2026-10-19 00:00:04]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:05 PDT.
+[2026-10-19 00:00:04]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:05 PDT.
+[2026-10-19 00:00:04]   err: tp_mu5n2d33_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 18-Oct-26 09:00:05 PDT.
+[2026-10-20 00:00:02] === start ===
+[2026-10-20 00:00:02] OK · total=9 refreshed=1 errorTotal=9
+[2026-10-20 00:00:02]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 08:59:58 PDT.
+[2026-10-20 00:00:02]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 08:59:58 PDT.
+[2026-10-20 00:00:02]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 08:59:58 PDT.
+[2026-10-20 00:00:02]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 08:59:58 PDT.
+[2026-10-20 00:00:02]   err: tp_mu5m96cs_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 08:59:58 PDT.
+[2026-10-20 00:00:02]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 09:00:00 PDT.
+[2026-10-20 00:00:02]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 09:00:00 PDT.
+[2026-10-20 00:00:02]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 09:00:00 PDT.
+[2026-10-20 00:00:02]   err: tp_mu5n2d33_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Monday, 19-Oct-26 09:00:00 PDT.
+[2026-10-21 00:00:04] === start ===
+[2026-10-21 00:00:04] OK · total=8 refreshed=0 errorTotal=8
+[2026-10-21 00:00:04]   err: tp_mt33dzb9_8/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-21 00:00:04]   err: tp_mu5n2d33_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Tuesday, 20-Oct-26 09:00:02 PDT.
+[2026-10-22 00:00:03] === start ===
+[2026-10-22 00:00:03] OK · total=7 refreshed=0 errorTotal=7
+[2026-10-22 00:00:03]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-22 00:00:03]   err: tp_mu5n2d33_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Wednesday, 21-Oct-26 08:59:58 PDT.
+[2026-10-23 00:00:07] === start ===
+[2026-10-23 00:00:07] OK · total=7 refreshed=0 errorTotal=7
+[2026-10-23 00:00:07]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-23 00:00:07]   err: tp_mu5n2d33_0/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Thursday, 22-Oct-26 09:00:08 PDT.
+[2026-10-24 00:00:05] === start ===
+[2026-10-24 00:00:05] OK · total=6 refreshed=0 errorTotal=6
+[2026-10-24 00:00:05]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:05 PDT.
+[2026-10-24 00:00:05]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:05 PDT.
+[2026-10-24 00:00:05]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:05 PDT.
+[2026-10-24 00:00:05]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:06 PDT.
+[2026-10-24 00:00:05]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:06 PDT.
+[2026-10-24 00:00:05]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Friday, 23-Oct-26 09:00:06 PDT.
+[2026-10-25 00:00:04] === start ===
+[2026-10-25 00:00:04] OK · total=6 refreshed=0 errorTotal=6
+[2026-10-25 00:00:04]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-25 00:00:04]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-25 00:00:04]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-25 00:00:04]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-25 00:00:04]   err: tp_mu5mnr6r_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-25 00:00:04]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Saturday, 24-Oct-26 09:00:02 PDT.
+[2026-10-26 00:00:02] === start ===
+[2026-10-26 00:00:02] OK · total=5 refreshed=0 errorTotal=5
+[2026-10-26 00:00:02]   err: tp_mt33dzb9_10/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 25-Oct-26 09:00:03 PDT.
+[2026-10-26 00:00:02]   err: tp_mu48fnj5_1/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 25-Oct-26 09:00:03 PDT.
+[2026-10-26 00:00:02]   err: tp_mu4tdde7_3/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 25-Oct-26 09:00:03 PDT.
+[2026-10-26 00:00:02]   err: tp_mu5mjwvv_2/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 25-Oct-26 09:00:04 PDT.
+[2026-10-26 00:00:02]   err: tp_mu5mnr6r_4/threads: Error validating access token: Session has expired on Saturday, 03-Oct-26 00:30:43 PDT. The current time is Sunday, 25-Oct-26 09:00:04 PDT.
