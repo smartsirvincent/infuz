@@ -32,16 +32,14 @@ export async function GET() {
       });
       existing = new Set((r.resources || []).map((x) => x.public_id));
     } catch (e) {
-      // Admin API fail (未設 secret) · catalog 全標 unknown
-      return NextResponse.json({
-        catalog: BGM_LIBRARY.map((b) => ({ ...b, available: null, note: 'Admin API 無法檢查 · 預設顯示' })),
-        hint: 'CLOUDINARY_API_SECRET 未設, 無法檢查上傳狀態',
-      });
+      console.error('[bgm/list] admin api fail:', e.message);
     }
 
+    // 若 Admin API 沒抓到 (Vercel serverless 偶爾 fail), 樂觀標 available=true 讓 UI 可選
+    // Enhance API 真正跑時若 BGM 不存在 Cloudinary 會回 404, UI 收到會顯示錯
     const catalog = BGM_LIBRARY.map((b) => ({
       ...b,
-      available: existing.has(b.publicId),
+      available: existing.size > 0 ? existing.has(b.publicId) : true,
     }));
     const availableCount = catalog.filter((b) => b.available).length;
 
