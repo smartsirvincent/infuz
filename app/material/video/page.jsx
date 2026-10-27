@@ -372,6 +372,50 @@ function VideoResultCard({ result }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [showFx, setShowFx] = useState(false);
+  const [bgmCatalog, setBgmCatalog] = useState({ catalog: [], availableCount: 0, hint: '' });
+  const [bgmKey, setBgmKey] = useState('');
+  const [overlayText, setOverlayText] = useState('');
+  const [fadeInOut, setFadeInOut] = useState(true);
+  const [enhancedUrl, setEnhancedUrl] = useState('');
+  const [enhancing, setEnhancing] = useState(false);
+  const [enhanceError, setEnhanceError] = useState('');
+
+  // 載入 BGM catalog (lazy, 展開 Fx 面板才載)
+  useEffect(() => {
+    if (!showFx || bgmCatalog.catalog.length > 0) return;
+    fetch('/api/infuz/bgm/list', { cache: 'no-store' })
+      .then((r) => r.json()).then((d) => setBgmCatalog(d))
+      .catch(() => {});
+  }, [showFx]);
+
+  const effectiveVideoUrl = enhancedUrl || result.cloudinaryUrl;
+  const activeBgm = bgmCatalog.catalog.find((b) => b.key === bgmKey);
+
+  async function applyFx() {
+    setEnhancing(true); setEnhanceError('');
+    try {
+      const r = await fetch('/api/infuz/video/enhance', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          videoUrl: result.cloudinaryUrl,
+          bgmPublicId: activeBgm?.available ? activeBgm.publicId : undefined,
+          text: overlayText.trim() || undefined,
+          textPos: 'south',
+          textY: 100,
+          fadeInOut,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setEnhancedUrl(d.enhancedUrl);
+    } catch (e) {
+      setEnhanceError(e.message);
+    } finally {
+      setEnhancing(false);
+    }
+  }
 
   async function saveToAssets() {
     setSaving(true); setSaveError('');
@@ -380,8 +424,8 @@ function VideoResultCard({ result }) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          videoUrl: result.cloudinaryUrl,
-          kieModel: result.model,
+          videoUrl: effectiveVideoUrl, // 存當前顯示的 (若有 enhance 存 enhanced)
+          kieModel: result.model + (enhancedUrl ? ' + fx' : ''),
           costUsd: result.costUsd,
         }),
       });
@@ -405,23 +449,100 @@ function VideoResultCard({ result }) {
   return (
     <div className="rounded-lg border border-stone-200 bg-white p-3">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="text-xs font-semibold text-stone-900">{result.model}</div>
+        <div className="text-xs font-semibold text-stone-900">
+          {result.model}
+          {enhancedUrl && <span className="ml-1.5 text-[9px] bg-rose-100 text-rose-700 rounded px-1 py-0.5">+ FX</span>}
+        </div>
         <div className="text-[10px] font-mono tabular-nums text-stone-500">${result.costUsd?.toFixed(2)}</div>
       </div>
       <video
-        src={result.cloudinaryUrl}
+        key={effectiveVideoUrl}
+        src={effectiveVideoUrl}
         controls
         className="w-full aspect-[9/16] rounded bg-black object-cover"
         preload="metadata"
       />
       <div className="mt-2 flex items-center gap-2">
-        <a href={result.cloudinaryUrl} target="_blank" rel="noreferrer" download
+        <a href={effectiveVideoUrl} target="_blank" rel="noreferrer" download
           className="text-[11px] text-stone-600 hover:text-stone-900 underline">⬇ 下載</a>
+        <button onClick={() => setShowFx(!showFx)}
+          className={`text-[11px] rounded-md px-2 py-1 ${showFx ? 'bg-rose-100 text-rose-700' : 'text-stone-600 hover:bg-stone-100'}`}
+        >🎵 {showFx ? '收起' : '加特效'}</button>
         <button onClick={saveToAssets} disabled={saving || saved}
           className={`ml-auto rounded-md px-3 py-1 text-[11px] disabled:opacity-60 ${saved ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-900 text-white hover:bg-stone-700'}`}
-        >{saved ? '✓ 已存素材庫' : saving ? '存中…' : '💾 存素材庫'}</button>
+        >{saved ? '✓ 已存素材庫' : saving ? '存中…' : enhancedUrl ? '💾 存特效版' : '💾 存素材庫'}</button>
       </div>
       {saveError && <div className="mt-1 text-[10px] text-red-600">⚠ {saveError}</div>}
+
+      {/* FX 面板 */}
+      {showFx && (
+        <div className="mt-3 rounded-md border border-rose-200 bg-rose-50/50 p-3 space-y-3">
+          {/* BGM 選擇 */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-semibold text-stone-800">🎵 背景音樂</label>
+              <span className="text-[10px] text-stone-500">{bgmCatalog.hint}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button type="button"
+                onClick={() => setBgmKey('')}
+                className={`rounded border p-1.5 text-[10px] text-left ${!bgmKey ? 'border-rose-500 bg-white' : 'border-stone-200 bg-white hover:border-stone-400'}`}
+              >🔇 不加音樂</button>
+              {bgmCatalog.catalog.map((b) => (
+                <button key={b.key} type="button"
+                  onClick={() => b.available !== false && setBgmKey(b.key)}
+                  disabled={b.available === false}
+                  title={b.hint + (b.available === false ? ' · 待上傳' : '')}
+                  className={`rounded border p-1.5 text-[10px] text-left transition ${bgmKey === b.key ? 'border-rose-500 bg-white' : 'border-stone-200 bg-white hover:border-stone-400'} ${b.available === false ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  <div className="font-semibold text-stone-900">{b.label}</div>
+                  <div className="text-stone-500">{b.hint}</div>
+                  {b.available === false && <div className="mt-0.5 text-[9px] text-amber-700">⚠ 待上傳 Cloudinary</div>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 文字 overlay */}
+          <div>
+            <label className="text-[11px] font-semibold text-stone-800">🏷️ 文字疊字 (選填 · 1-2 句)</label>
+            <input
+              type="text"
+              className="input text-xs mt-1"
+              value={overlayText}
+              onChange={(e) => setOverlayText(e.target.value)}
+              placeholder="例: 新品上架 · 全館 85 折"
+              maxLength={30}
+            />
+            <div className="mt-0.5 text-[9px] text-stone-500">
+              繁中 OK · 自動放底部置中 · 黑底白字 · 最多 30 字
+            </div>
+          </div>
+
+          {/* 片頭片尾 fade */}
+          <label className="flex items-center gap-2 text-[11px] cursor-pointer">
+            <input type="checkbox" checked={fadeInOut} onChange={(e) => setFadeInOut(e.target.checked)}
+              className="size-3.5 rounded border-stone-300" />
+            🌙 片頭片尾各淡入淡出 1.5 秒
+          </label>
+
+          {enhanceError && <div className="text-[10px] text-red-600">⚠ {enhanceError}</div>}
+
+          <div className="flex items-center gap-2 pt-1 border-t border-rose-200">
+            <button type="button"
+              onClick={applyFx}
+              disabled={enhancing}
+              className="rounded-md bg-rose-600 text-white px-3 py-1.5 text-[11px] hover:bg-rose-700 disabled:opacity-60"
+            >{enhancing ? '合成中…' : '✨ 套用特效 (預覽)'}</button>
+            {enhancedUrl && (
+              <button type="button"
+                onClick={() => { setEnhancedUrl(''); setSaved(false); }}
+                className="text-[11px] text-stone-500 hover:text-stone-900 underline"
+              >還原原片</button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
