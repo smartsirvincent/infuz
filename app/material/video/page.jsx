@@ -216,25 +216,41 @@ export default function MaterialVideoPage() {
       <section className="card space-y-3">
         <h2 className="text-sm font-semibold text-stone-900">2. 動作指示 (prompt · 英文效果較好)</h2>
 
-        {/* 10 個影音模板 · 點 chip 套用 */}
+        {/* 影音模板 · 3 群分類 · 點 chip 套用 */}
         {modelCatalog.templates.length > 0 && (
-          <div>
-            <div className="text-[11px] text-stone-500 mb-1.5">💡 快速模板 (點套用 prompt)</div>
-            <div className="flex flex-wrap gap-1.5">
-              {modelCatalog.templates.map((t) => {
-                const on = activeTemplateKey === t.key;
-                return (
-                  <button key={t.key} type="button"
-                    onClick={() => {
-                      setPrompt(t.prompt);
-                      setActiveTemplateKey(t.key);
-                    }}
-                    title={t.use + ' · ' + t.prompt}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] transition ${on ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50'}`}
-                  >{t.label}</button>
-                );
-              })}
-            </div>
+          <div className="space-y-2.5">
+            <div className="text-[11px] text-stone-500">💡 快速模板 (點套用 prompt)</div>
+            {[
+              { cat: 'motion',     label: '🎞️ 動作類',       hint: '人有頭/手/表情微動' },
+              { cat: 'static',     label: '🎥 靜態類',       hint: '人完全不動 · 只相機或環境動 · 衣服 100% 保留' },
+              { cat: 'commercial', label: '✂️ 流行廣告類',  hint: '多鏡頭快剪 · Reels/TikTok 風 (model 不保證真剪, 需人物一致)' },
+            ].map((g) => {
+              const items = modelCatalog.templates.filter((t) => (t.category || 'motion') === g.cat);
+              if (items.length === 0) return null;
+              return (
+                <div key={g.cat}>
+                  <div className="text-[10px] text-stone-500 mb-1">
+                    <span className="font-semibold text-stone-700">{g.label}</span>
+                    <span className="text-stone-400 ml-1.5">{g.hint}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {items.map((t) => {
+                      const on = activeTemplateKey === t.key;
+                      return (
+                        <button key={t.key} type="button"
+                          onClick={() => {
+                            setPrompt(t.prompt);
+                            setActiveTemplateKey(t.key);
+                          }}
+                          title={t.use + ' · ' + t.prompt}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] transition ${on ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50'}`}
+                        >{t.label}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
